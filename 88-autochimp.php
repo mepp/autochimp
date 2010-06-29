@@ -4,10 +4,13 @@ Plugin Name: AutoChimp
 Plugin URI: http://www.wandererllc.com/company/plugins/autochimp/
 Description: Gives users the ability to update their MailChimp mailing lists when users subscribe, unsubscribe, and update their WordPress profiles.
 Author: Kyle Chapman
-Version: 0.5
+Version: 0.6
 */
 
-require_once 'inc/MCAPI.class.php';
+if ( !class_exists( 'MCAPI' ) )
+{
+	require_once 'inc/MCAPI.class.php';
+}
 
 define( "WP88_MC_APIKEY", "wp88_mc_apikey" );
 define( "WP88_MC_LISTS", "wp88_mc_selectedlists" );

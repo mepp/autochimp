@@ -1,10 +1,12 @@
 === AutoChimp ===
 Plugin Name: AutoChimp
+Contributors: WandererLLC
 Plugin URI: http://www.wandererllc.com/company/plugins/autochimp/
 Donate link: https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=HPCPB3GY5LUQW&lc=US
 Tags: admin, email, MailChimp, Mail, Chimp
 Requires at least: 2.8
 Tested up to: 3.0
+Stable tag: 0.6
 
 Gives users the ability to update their MailChimp mailing lists when users subscribe, unsubscribe, or update their WordPress profiles.
 
@@ -18,15 +20,17 @@ To use, save your MailChimp API Key on the options page then start adding your n
 
 1. The options page for AutoChimp works in a logical flow from top to bottom.  The first thing to do is to save your API key.  Once you do this, you only need to select the options that you want to support.
 
-== Special Notes and FAQ ==
+== Special Notes ==
 
 Special Notes:
 
 1)  Updating your mailing list when a user changes their profile has the potential to be problematic.  If you have alternate UIs or non-standard ways of updating users, then the correct sequence of calls may not happen and, as a result, the subscribed user will not be found in your MailChimp mailing list.  This is because there is the notion of an old email and a new email.  The old email must be fetched before the new email and if the plugin doesn't correctly pick up the old email, then it will be impossible to update a member.  The old email is fetched when the user's profile page is displayed.  The new email is saved when the user commits the update.
 
-FAQ:
+== Frequently Asked Questions ==
 
-1)  Q:  How do I make suggestions or report bugs for this plugin?  A:  Just go to <http://www.wandererllc.com/company/plugins/autochimp/> and follow the instructions.
+= How do I make suggestions or report bugs for this plugin? =
+
+Just go to <http://www.wandererllc.com/company/plugins/autochimp/> and follow the instructions.
 
 == License ==
 
