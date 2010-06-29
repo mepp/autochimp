@@ -6,7 +6,7 @@ Donate link: https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_i
 Tags: admin, email, MailChimp, Mail, Chimp
 Requires at least: 2.8
 Tested up to: 3.0
-Stable tag: trunk
+Stable tag: 0.6
 
 Gives users the ability to update their MailChimp mailing lists when users subscribe, unsubscribe, or update their WordPress profiles.
 
