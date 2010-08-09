@@ -191,14 +191,6 @@ if ( !empty( $apiKey ) )
 		print "checked";
 	print "> Create a campaign only once. Not checking this option will create an additional campaign each time you update your post. <em>Recommended <strong>ON</strong></em></p>";
 
-	// A little bit of info
-	print "<p><strong>Additional Information</strong></p>";
-
-
-	$email = get_bloginfo( 'admin_email' );
-	$blogTitle = get_bloginfo();
-	print "<p>Emails will be sent from '$blogTitle' using email address '$email'</p>";
-
 	// Show the user the last message
 	$lastMessage = get_option( WP88_MC_LAST_ERROR );
 	if ( empty( $lastMessage ) )

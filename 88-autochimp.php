@@ -66,7 +66,6 @@ function add_plugin_links($links, $file)
 	if ( $file == plugin_basename(__FILE__) )
 	{
 		$links[] = '<a href="http://wordpress.org/extend/plugins/autochimp/">' . __('Overview', 'autochimp') . '</a>';
-		$links[] = '<a href="http://www.wandererllc.com/company/plugins/autochimp/">' . __('Get help', 'autochimp') . '</a>';
 		$links[] = '<a href="https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=HPCPB3GY5LUQW&lc=US">' . __('Donate', 'autochimp') . '</a>';
 	}
 	return $links;
