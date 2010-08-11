@@ -1,32 +1,79 @@
 === AutoChimp ===
 Plugin Name: AutoChimp
+Contributors: WandererLLC
 Plugin URI: http://www.wandererllc.com/company/plugins/autochimp/
 Donate link: https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=HPCPB3GY5LUQW&lc=US
-Tags: admin, email, MailChimp, Mail, Chimp
+Tags: admin, email, MailChimp, Mail, Chimp, campaign, mailing list, create, automatically, subscribe
 Requires at least: 2.8
-Tested up to: 3.0
+Tested up to: 3.01
+Stable tag: 0.82
 
-Gives users the ability to update their MailChimp mailing lists when users subscribe, unsubscribe, or update their WordPress profiles.
+Keep website users and mailing lists in sync and create campaigns from posts.
 
 == Description ==
 
-Automatically add, remove, and update users to your MailChimp mailing list as users subscribe and unsubscribe to your site.  AutoChimp uses a single options page to help you to simply and quickly manage your preferred settings.  In order to use AutoChimp, you must already have an account with MailChimp and at least one mailing list.
+Automatically add, remove, and update users to your [MailChimp](http://eepurl.com/MnhD "Mail Chimp") mailing list as users subscribe and unsubscribe to your site.  Create MailChimp mail campaigns automatically from blog posts.  AutoChimp uses a single options page to help you to simply and quickly manage your preferred settings.  In order to use AutoChimp, you must already have an account with MailChimp and at least one mailing list.
 
-To use, save your MailChimp API Key on the options page then start adding your new registrations to any selected MailChimp mailing list.  You can configure the plugin to update your mailing list when 1) a new user subscribes, 2) a user unsubscribes, or 3) a user updates his information.  It's up to you to choose.
+To use, save your MailChimp API Key on the options page then start adding your new registrations to any selected MailChimp mailing list.  You can configure the plugin to update your mailing list when 1) a new user subscribes, 2) a user unsubscribes, or 3) a user updates his information.  You may also choose to create campaigns automatically from post categories of your choosing.  You can send the campaigns immediately or just save them.
 
 == Screenshots ==
 
 1. The options page for AutoChimp works in a logical flow from top to bottom.  The first thing to do is to save your API key.  Once you do this, you only need to select the options that you want to support.
 
-== Special Notes and FAQ ==
-
-Special Notes:
+== Special Notes ==
 
 1)  Updating your mailing list when a user changes their profile has the potential to be problematic.  If you have alternate UIs or non-standard ways of updating users, then the correct sequence of calls may not happen and, as a result, the subscribed user will not be found in your MailChimp mailing list.  This is because there is the notion of an old email and a new email.  The old email must be fetched before the new email and if the plugin doesn't correctly pick up the old email, then it will be impossible to update a member.  The old email is fetched when the user's profile page is displayed.  The new email is saved when the user commits the update.
 
-FAQ:
+2) Sometimes, plugin output may not render properly in your campaigns generated from posts.  This is usually because the plugin doesn't have access to information it needs until it is displaying its output on the screen for an end user.  The best suggestion in this case is to learn which of your plugins are problematic (most are fine) and adapt accordingly.  We'll look for ways to improve this in the future too.
 
-1)  Q:  How do I make suggestions or report bugs for this plugin?  A:  Just go to <http://www.wandererllc.com/company/plugins/autochimp/> and follow the instructions.
+3) Your campaign formatting may appear differently than your post formatting.  This is because your post uses formatting files that belong to your WordPress theme that your campaign doesn't have access to.  The best thing you can do is to use the HTML tab in the "Post Edit" page to add specific HTML instructions.  MailChimp campaigns speak HTML very well.
+
+4) The subject of your campaign is your blog post title.  The "From" email address and name are taken from your MailChimp configuration.  To change that, you'll need to log into your MailChimp account.  The "To" field is the "*|FNAME|*" merge code.
+
+== Frequently Asked Questions ==
+
+= How do I make suggestions or report bugs for this plugin? =
+
+Just go to <http://www.wandererllc.com/company/plugins/autochimp/> and follow the instructions.
+
+== Changelog ==
+
+= 0.82 =
+
+* Fixed issue of pending email posts to campaigns being sent prematurely.
+* Added "Read the full story here" with permalink URL to the blog post at the bottom of the campaign.
+
+= 0.81 =
+
+* A tiny update to make small updates to the UI.
+
+= 0.8 =
+
+* Users can now create mail campaigns from posts when publishing a new post.
+* Added additional UI to support basic preferences for creating campaigns from posts.
+
+= 0.6 =
+
+* Add, update, and delete users in your mailing list as your site's users change.  This synchronization is one-way:  from site to mailing list.
+* Basic UI for keeping a mailing list in sync with your site's users.
+
+== Upgrade Notice ==
+
+= 0.82 =
+
+Not a critical update.  Small fix for email-to-post users, plus a "Read more" link at the bottom of campaigns.
+
+= 0.81 =
+This version simply tightens down the 0.8 UI.
+
+= 0.8 =
+This version adds the ability to create campaigns from blog posts.
+
+== Acknowledgements ==
+
+There are many people who have suggested features for AutoChimp.  Special consideration needs to be made to the following people who had an active role in contributing by providing a detailed design, monetary sponsorship, or offering to test and provide useful feedback:
+
+1) Anton Alksnin at [Forex Alert](http://www.forex-alert.net "Forex Alert") for supporting the "blog post to campaign" feature.
 
 == License ==
 
