@@ -258,18 +258,27 @@ function CreateCampaignFromPost( $postID, $api )
 		$selectedLists = get_option( WP88_MC_LISTS );
 
 		// Does the user only want to create campaigns once?
-		if ( "1" == get_option( WP88_MC_CREATE_CAMPAIGN_ONCE ) )
+		if ( '1' == get_option( WP88_MC_CREATE_CAMPAIGN_ONCE ) )
 		{
-			if ( "1" == get_post_meta( $postID, WP88_MC_CAMPAIGN_CREATED, true ) )
-				return "-1";	// Don't create the campaign again!
+			if ( '1' == get_post_meta( $postID, WP88_MC_CAMPAIGN_CREATED, true ) )
+				return '-1';	// Don't create the campaign again!
+		}
+
+		// Get the info on this post
+		$post = get_post( $postID );
+
+		// If the post is somehow in an unsupported state (sometimes from email
+		// posts), then just skip the post.
+		if ('pending' == $post->post_status ||
+			'draft' == $post->post_status ||
+			'private' == $post->post_status )
+		{
+			return '-1'; // Don't create the campaign yet.
 		}
 
 		// Put all of the selected lists into an array to search later
 		$valuesArray = array();
 		$valuesArray = preg_split( "/[\s,]+/", $selectedLists );
-
-		// Get the info on this post
-		$post = get_post( $postID );
 
 		foreach ( $myLists as $list )
 		{
@@ -288,19 +297,22 @@ function CreateCampaignFromPost( $postID, $api )
 					$options['list_id']	= $list_id;
 					$options['subject']	= $post->post_title;
 					$options['from_email'] = $list['default_from_email'];
-					$options['to_email'] = "*|FNAME|*";
+					$options['to_email'] = '*|FNAME|*';
 					$options['from_name'] = $list['default_from_name'];
 					$options['tracking'] = array('opens' =>	true, 'html_clicks' => true, 'text_clicks' => false );
 					$options['authenticate'] = true;
 
 					$postContent = apply_filters( 'the_content', $post->post_content );
+					// Potentially an expensive call here to append text
+					$permalink = get_permalink( $postID );
+					$postContent .= "<p>Read the full story <a href=\"$permalink\">here</a>.</p>";
 					$postContent = str_replace( ']]>', ']]&gt;', $postContent );
 					$content = array();
 					$content['html'] = $postContent;
 					$content['text'] = strip_tags( $postContent );
 
 					// More info here:  http://www.mailchimp.com/api/1.2/campaigncreate.func.php
-					$result = $api->campaignCreate( "regular", $options, $content );
+					$result = $api->campaignCreate( 'regular', $options, $content );
 					if ($api->errorCode)
 					{
 						// Set latest activity - displayed in the admin panel
@@ -400,9 +412,9 @@ function OnPublishPost( $postID )
 				// Does the user want to send the campaigns right away?
 				$sendNow = get_option( WP88_MC_SEND_NOW );
 
-				// Send it, if necessary (if user wants it, and the $id is
-				// sufficiently long (just picking 2 for fun).
-				if ( "1" == $sendNow && ( strlen( $id ) > 2 ) )
+				// Send it, if necessary (if user wants it), and the $id is
+				// sufficiently long (just picking longer than 3 for fun).
+				if ( "1" == $sendNow && ( strlen( $id ) > 3 ) )
 				{
 					$api->campaignSendNow( $id );
 				}
