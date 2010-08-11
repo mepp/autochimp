@@ -6,7 +6,7 @@ Donate link: https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_i
 Tags: admin, email, MailChimp, Mail, Chimp, campaign, mailing list, create, automatically, subscribe
 Requires at least: 2.8
 Tested up to: 3.01
-Stable tag: 0.81
+Stable tag: 0.82
 
 Keep website users and mailing lists in sync and create campaigns from posts.
 
@@ -38,6 +38,11 @@ Just go to <http://www.wandererllc.com/company/plugins/autochimp/> and follow th
 
 == Changelog ==
 
+= 0.82 =
+
+* Fixed issue of pending email posts to campaigns being sent prematurely.
+* Added "Read the full story here" with permalink URL to the blog post at the bottom of the campaign.
+
 = 0.81 =
 
 * A tiny update to make small updates to the UI.
@@ -53,6 +58,10 @@ Just go to <http://www.wandererllc.com/company/plugins/autochimp/> and follow th
 * Basic UI for keeping a mailing list in sync with your site's users.
 
 == Upgrade Notice ==
+
+= 0.82 =
+
+Not a critical update.  Small fix for email-to-post users, plus a "Read more" link at the bottom of campaigns.
 
 = 0.81 =
 This version simply tightens down the 0.8 UI.
