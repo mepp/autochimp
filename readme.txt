@@ -22,13 +22,15 @@ To use, save your MailChimp API Key on the options page then start adding your n
 
 == Special Notes ==
 
-1)  Updating your mailing list when a user changes their profile has the potential to be problematic.  If you have alternate UIs or non-standard ways of updating users, then the correct sequence of calls may not happen and, as a result, the subscribed user will not be found in your MailChimp mailing list.  This is because there is the notion of an old email and a new email.  The old email must be fetched before the new email and if the plugin doesn't correctly pick up the old email, then it will be impossible to update a member.  The old email is fetched when the user's profile page is displayed.  The new email is saved when the user commits the update.
+1)  MailChimp, like all other major email campaign managers, sends newly subscribed members a confirmation email. So, you must wait until the new subscriber receives, accepts, and confirms the new subscription before you see them appear in your mailing list.  AutoChimp will trigger the confirmation email right away.
 
-2) Sometimes, plugin output may not render properly in your campaigns generated from posts.  This is usually because the plugin doesn't have access to information it needs until it is displaying its output on the screen for an end user.  The best suggestion in this case is to learn which of your plugins are problematic (most are fine) and adapt accordingly.  We'll look for ways to improve this in the future too.
+2)  Updating your mailing list when a user changes their profile has the potential to be problematic.  If you have alternate UIs or non-standard ways of updating users, then the correct sequence of calls may not happen and, as a result, the subscribed user will not be found in your MailChimp mailing list.  This is because there is the notion of an old email and a new email.  The old email must be fetched before the new email and if the plugin doesn't correctly pick up the old email, then it will be impossible to update a member.  The old email is fetched when the user's profile page is displayed.  The new email is saved when the user commits the update.
 
-3) Your campaign formatting may appear differently than your post formatting.  This is because your post uses formatting files that belong to your WordPress theme that your campaign doesn't have access to.  The best thing you can do is to use the HTML tab in the "Post Edit" page to add specific HTML instructions.  MailChimp campaigns speak HTML very well.
+3) Sometimes, plugin output may not render properly in your campaigns generated from posts.  This is usually because the plugin doesn't have access to information it needs until it is displaying its output on the screen for an end user.  The best suggestion in this case is to learn which of your plugins are problematic (most are fine) and adapt accordingly.  We'll look for ways to improve this in the future too.
 
-4) The subject of your campaign is your blog post title.  The "From" email address and name are taken from your MailChimp configuration.  To change that, you'll need to log into your MailChimp account.  The "To" field is the "*|FNAME|*" merge code.
+4) Your campaign formatting may appear differently than your post formatting.  This is because your post uses formatting files that belong to your WordPress theme that your campaign doesn't have access to.  The best thing you can do is to use the HTML tab in the "Post Edit" page to add specific HTML instructions.  MailChimp campaigns speak HTML very well.
+
+5) The subject of your campaign is your blog post title.  The "From" email address and name are taken from your MailChimp configuration.  To change that, you'll need to log into your MailChimp account.  The "To" field is the "*|FNAME|*" merge code.
 
 == Frequently Asked Questions ==
 
