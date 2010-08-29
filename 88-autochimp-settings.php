@@ -121,6 +121,12 @@ if ( !empty( $apiKey ) )
 		print "> When a user updates his information (see readme.txt for special info)</li>";
 
 		print "</ul>";
+
+		// Show the user the last message
+		$lastMessage = get_option( WP88_MC_LAST_MAIL_LIST_ERROR );
+		if ( empty( $lastMessage ) )
+			$lastMessage = "No campaign activity yet.";
+		print "<p><strong>Latest mailing list activity:</strong>  <em>$lastMessage</em></p>";
 	}
 	else
 	{
@@ -192,7 +198,7 @@ if ( !empty( $apiKey ) )
 	print "> Create a campaign only once. Not checking this option will create an additional campaign each time you update your post. <em>Recommended <strong>ON</strong></em></p>";
 
 	// Show the user the last message
-	$lastMessage = get_option( WP88_MC_LAST_ERROR );
+	$lastMessage = get_option( WP88_MC_LAST_CAMPAIGN_ERROR );
 	if ( empty( $lastMessage ) )
 		$lastMessage = "No campaign activity yet.";
 	print "<p><strong>Latest campaign activity:</strong>  <em>$lastMessage</em></p>";
