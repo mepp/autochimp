@@ -4,7 +4,7 @@ Plugin Name: AutoChimp
 Plugin URI: http://www.wandererllc.com/company/plugins/autochimp/
 Description: Gives users the ability to create MailChimp mail campaigns from blog posts. Also allows updating MailChimp mailing lists when users subscribe, unsubscribe, and update their WordPress profiles.
 Author: Wanderer LLC Dev Team
-Version: 0.82
+Version: 0.83
 */
 
 if ( !class_exists( 'MCAPI' ) )
@@ -108,6 +108,10 @@ function wp_set_password( $password, $user_id )
 	}
 }
 endif;
+
+//
+// 	End special management for Register Plus
+//
 
 //
 //	Filters to hook
