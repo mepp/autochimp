@@ -4,7 +4,7 @@ Plugin Name: AutoChimp
 Plugin URI: http://www.wandererllc.com/company/plugins/autochimp/
 Description: Gives users the ability to create MailChimp mail campaigns from blog posts. Also allows updating MailChimp mailing lists when users subscribe, unsubscribe, and update their WordPress profiles.
 Author: Wanderer LLC Dev Team
-Version: 0.83
+Version: 0.88
 */
 
 if ( !class_exists( 'MCAPI' ) )
@@ -49,9 +49,11 @@ add_action('xmlrpc_publish_post', 'OnPublishPost' );	// Same as above, but for X
 add_action('publish_phone', 'OnPublishPost' );			// Same as above, but for email.  No idea why it's called "phone".
 
 //
-//	Detect Register Plus
+//	START Register Plus Workaround
 //
-//	Register Plus overrides this:  http://codex.wordpress.org/Function_Reference/wp_new_user_notification
+//	Register Plus overrides this:  
+//	http://codex.wordpress.org/Function_Reference/wp_new_user_notification
+//
 //	Look at register-plus.php somewhere around line 1715.  More on Pluggable
 //	functions can be found here:  http://codex.wordpress.org/Pluggable_Functions
 //
@@ -62,7 +64,7 @@ add_action('publish_phone', 'OnPublishPost' );			// Same as above, but for email
 //	list with the user's first and last names.  NOTE:  This is a strange and non-
 //	standard place for Register Plus to write the user's meta information.  Other
 //	plugins like Wishlist Membership work with AutoChimp right out of the box.
-//	This hack is strictly to make AutoChimp work with Register Plus.
+//	This hack is strictly to make AutoChimp work with the misbehaving Register Plus.
 //
 //	The danger with this sort of code is that if the function that is overridden
 //	is updated by WordPress, we'll likely miss out!  The best solution is to
@@ -71,7 +73,7 @@ add_action('publish_phone', 'OnPublishPost' );			// Same as above, but for email
 function OverrideWarning()
 {
 	if( current_user_can(10) &&  $_GET['page'] == 'autochimp' )
-	echo '<div id="message" class="updated fade"><p><strong>You have another plugin installed that is conflicting with AutoChimpa and Register Plus.  This other plugin is overriding the user notification emails or password setting.  Please see <a href="http://www.wandererllc.com/plugins/">AutoChimp FAQ</a> for more information.</strong></p></div>';
+		echo '<div id="message" class="updated fade"><p><strong>You have another plugin installed that is conflicting with AutoChimp and Register Plus.  This other plugin is overriding the user notification emails or password setting.  Please see <a href="http://www.wandererllc.com/plugins/">AutoChimp FAQ</a> for more information.</strong></p></div>';
 }
 
 if ( function_exists( 'wp_set_password' ) )
@@ -79,9 +81,11 @@ if ( function_exists( 'wp_set_password' ) )
 	add_action( 'admin_notices', 'OverrideWarning' );
 }
 
+//
 // Override wp_set_password() which is called by Register Plus's overridden
 // pluggable function - the only place I can see to grab the user's first
 // and last name.
+//
 if ( !function_exists('wp_set_password') ) :
 function wp_set_password( $password, $user_id )
 {
@@ -95,7 +99,13 @@ function wp_set_password( $password, $user_id )
 	$wpdb->update($wpdb->users, array('user_pass' => $hash, 'user_activation_key' => ''), array('ID' => $user_id) );
 
 	wp_cache_delete($user_id, 'users');
+	//
 	// END original WordPress code
+	//
+	
+	//
+	// START Detect Register Plus
+	//
 	if ( class_exists( 'RegisterPlusPlugin' ) )
 	{
 		$lastMessage .= "Register Plus is ACTIVE.";
@@ -106,11 +116,14 @@ function wp_set_password( $password, $user_id )
 		$user_info = get_userdata( $user_id );
 		ManageMailUser( MMU_UPDATE, $user_info );
 	}
+	//
+	// END Detect
+	//
 }
 endif;
 
 //
-// 	End special management for Register Plus
+// 	END Register Plus Workaround
 //
 
 //
