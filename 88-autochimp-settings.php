@@ -111,17 +111,17 @@ if ( !empty( $apiKey ) )
 		print "<li><input type=CHECKBOX value=\"on_add_subscriber\" name=\"on_add_subscriber\" ";
 		if ( "0" === $onAddSubscriber ){} else
 			print "checked";
-		print "> When a user subscribes</li>";
+		print "> When a user subscribes <em>(Adds the user to your mailing list)</em></li>";
 
 		print "<li><input type=CHECKBOX value=\"on_delete_subscriber\" name=\"on_delete_subscriber\" ";
 		if ( "0" === $onDeleteSubscriber ){} else
 			print "checked";
-		print "> When a user unsubscribes</li>";
+		print "> When a user unsubscribes <em>(Removes the user from your mailing list)</em></li>";
 
 		print "<li><input type=CHECKBOX value=\"on_update_subscriber\" name=\"on_update_subscriber\" ";
 		if ( "0" === $onUpdateSubscriber ){} else
 			print "checked";
-		print "> When a user updates his information (see readme.txt for special info)</li>";
+		print "> When a user updates his information (see readme.txt for special info) <em>Updates first name, last name, and email</em></li>";
 
 		print "</ul>";
 
@@ -145,8 +145,7 @@ if ( !empty( $apiKey ) )
 	$campaignCategory = get_option( WP88_MC_CAMPAIGN_CATEGORY );
 	$createOnce = get_option( WP88_MC_CREATE_CAMPAIGN_ONCE );
 	$sendNow = get_option( WP88_MC_SEND_NOW );
-	$fixRegPlus = "1"; // get_option( WP88_MC_FIX_REGPLUS );
-	$syncBuddyPress = "1"; // get_option( WP88_MC_SYNC_BUDDYPRESS );
+	$fixRegPlus = get_option( WP88_MC_FIX_REGPLUS );
 
 	// If $createOnce isn't set, default to "1"
 	if ( 0 == strlen( $createOnce ) )
@@ -208,39 +207,34 @@ if ( !empty( $apiKey ) )
 	$lastMessage = get_option( WP88_MC_LAST_CAMPAIGN_ERROR );
 	if ( empty( $lastMessage ) )
 		$lastMessage = "No campaign activity yet.";
-		
+
 	print "<p><strong>Latest campaign activity:</strong>  <em>$lastMessage</em></p>";
 	print '</fieldset>';
-	
+
 	//
 	//	Plugin integration
 	//
-	print '<p><strong>Plugin Integration and Synchronization</strong></p>';
+	print '<p><strong>External Plugin Integration and Synchronization</strong></p>';
 	print '<fieldset style="margin-left: 20px;">';
-	
-	print '<p>AutoChimp provides integration and bux fixes for other plugins. If you are using any of these plugins, they will be listed here.</p>';
-	
+
+	print '<p>AutoChimp provides integration and bux fixes for other plugins. If you are using any of these plugins, they will be listed here:</p>';
+
 	if ( class_exists( 'RegisterPlusPlugin' ) )
 	{
-		print '<p>You are using the <a target="_blank" href="http://wordpress.org/extend/plugins/register-plus/">Register Plus</a> plugin which has a known issue preventing first and last name being synchronized with Mail Chimp. <em>AutoChimp can fix this</em>.</p>';
+		print '<p><strong>You are using <a target="_blank" href="http://wordpress.org/extend/plugins/register-plus/">Register Plus</a></strong> which has a known issue preventing first and last name being synchronized with Mail Chimp. <em>AutoChimp can fix this</em>.</p>';
+		print '<fieldset style="margin-left: 20px;">';
 		print "<p><input type=CHECKBOX value=\"on_fix_regplus\" name=\"on_fix_regplus\" ";
-		if ( "0" === $fixRegPlus || empty( $fixRegPlus ) ){} else
+		if ( '1' === $fixRegPlus )
 			print "checked";
 		print "> Patch Register Plus and sync first/last name with your selected mailing list. <em>Recommended <strong>ON</strong></em></p>";
+		print '</fieldset>';
 	}
-	
-//	if ( class_exists( 'BuddyPress' ) )
-//	{
-		print '<p>You are using <a target="_blank" href="http://wordpress.org/extend/plugins/buddypress/">BuddyPress</a>. With AutoChimp, you can synchronize your BuddyPress user Profile Fields with your selected MailChimp mailing lists.</p>';
-		print '<p><input type=CHECKBOX value="on_sync_buddypress" name="on_sync_buddypress" ';
-		if ( "0" === $syncBuddyPress || empty( $syncBuddyPress ) ){} else
-			print 'checked';
-		print '> Sync BuddyPress Profile Fields with Mail Chimp.</p>';
-		
-		print '<p>You can also perform a one-time sync with your existing user base.  This is recommended <em>only once</em>.  After you\'ve synchronized your users, and have the "Sync" checkbox checked, you will not need to do this again.';
-		print '<div class="submit"><input type="submit" name="sync_buddy_press" value="Sync BuddyPress Users" /></div>';
-//	}
-	
+
+	if ( function_exists( 'ShowBuddyPressUI' ) )
+	{
+		ShowBuddyPressUI();
+	}
+
 	print '</fieldset>';
 
 	//

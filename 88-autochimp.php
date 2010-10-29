@@ -25,6 +25,8 @@ define( "WP88_MC_SEND_NOW", "wp88_mc_send_now" );
 define( "WP88_MC_LAST_CAMPAIGN_ERROR", "wp88_mc_last_error" );
 define( "WP88_MC_LAST_MAIL_LIST_ERROR", "wp88_mc_last_ml_error" );
 define( "WP88_MC_CAMPAIGN_CREATED", "wp88_mc_campaign" );
+define( 'WP88_MC_FIX_REGPLUS', 'wp88_mc_fix_regplus' );
+define( 'WP88_MC_SYNC_BUDDYPRESS', 'wp88_mc_sync_buddypress' );
 
 define( "AC_DEFAULT_CATEGORY", "Any category" );
 
@@ -47,11 +49,22 @@ add_action('profile_update','OnUpdateUser' );			// Uses the saved email to updat
 add_action('publish_post','OnPublishPost' );			// Called when an author publishes a post.
 add_action('xmlrpc_publish_post', 'OnPublishPost' );	// Same as above, but for XMLRPC
 add_action('publish_phone', 'OnPublishPost' );			// Same as above, but for email.  No idea why it's called "phone".
+add_action('bp_init', 'OnBuddyPressInstalled');			// Only load the component if BuddyPress is loaded and initialized.
+
+//
+//	OnBuddyPressInstalled
+//
+//	Called when BuddyPress is installed and active
+//
+function OnBuddyPressInstalled()
+{
+	require_once('buddypress_integration.php');
+}
 
 //
 //	START Register Plus Workaround
 //
-//	Register Plus overrides this:  
+//	Register Plus overrides this:
 //	http://codex.wordpress.org/Function_Reference/wp_new_user_notification
 //
 //	Look at register-plus.php somewhere around line 1715.  More on Pluggable
@@ -78,7 +91,12 @@ function OverrideWarning()
 
 if ( function_exists( 'wp_set_password' ) )
 {
-	add_action( 'admin_notices', 'OverrideWarning' );
+	// Check if the user wants to patch
+	$fixRegPlus = get_option( WP88_MC_FIX_REGPLUS );
+	if ( '1' === $fixRegPlus )
+	{
+		add_action( 'admin_notices', 'OverrideWarning' );
+	}
 }
 
 //
@@ -86,7 +104,7 @@ if ( function_exists( 'wp_set_password' ) )
 // pluggable function - the only place I can see to grab the user's first
 // and last name.
 //
-if ( !function_exists('wp_set_password') ) :
+if ( !function_exists('wp_set_password') && '1' === get_option( WP88_MC_FIX_REGPLUS ) ) :
 function wp_set_password( $password, $user_id )
 {
 	$lastMessage = get_option( WP88_MC_LAST_MAIL_LIST_ERROR );
@@ -102,25 +120,22 @@ function wp_set_password( $password, $user_id )
 	//
 	// END original WordPress code
 	//
-	
+
 	//
 	// START Detect Register Plus
 	//
-	if ( class_exists( 'RegisterPlusPlugin' ) )
-	{
-		$lastMessage .= "Register Plus is ACTIVE.";
-		$lastMessage .= "YOU THERE!  Now updating $user_info->first_name $user_info->last_name ('$user_info->user_email') in list $list_id.";
-		update_option( WP88_MC_LAST_MAIL_LIST_ERROR, $lastMessage );
+	$lastMessage .= "Register Plus is ACTIVE.";
+	$lastMessage .= "YOU THERE!  Now updating $user_info->first_name $user_info->last_name ('$user_info->user_email') in list $list_id.";
+	update_option( WP88_MC_LAST_MAIL_LIST_ERROR, $lastMessage );
 
-		update_option( WP88_MC_TEMPEMAIL, "" );
-		$user_info = get_userdata( $user_id );
-		ManageMailUser( MMU_UPDATE, $user_info );
-	}
+	update_option( WP88_MC_TEMPEMAIL, "" );
+	$user_info = get_userdata( $user_id );
+	ManageMailUser( MMU_UPDATE, $user_info );
 	//
 	// END Detect
 	//
 }
-endif;
+endif;	// wp_set_password is not overridden yet
 
 //
 // 	END Register Plus Workaround
@@ -242,6 +257,18 @@ function AutoChimpOptions()
 
 		$category = $_POST['campaign_category'];
 		update_option( WP88_MC_CAMPAIGN_CATEGORY, $category );
+
+		// Step 4:  Save other plugin integration choices
+
+		if ( isset( $_POST['on_fix_regplus'] ) )
+			update_option( WP88_MC_FIX_REGPLUS, "1" );
+		else
+			update_option( WP88_MC_FIX_REGPLUS, "0" );
+
+		if ( isset( $_POST['on_sync_buddypress'] ) )
+			update_option( WP88_MC_SYNC_BUDDYPRESS, "1" );
+		else
+			update_option( WP88_MC_SYNC_BUDDYPRESS, "0" );
 	}
 
 	// The file that will handle uploads is this one (see the "if" above)
