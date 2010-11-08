@@ -1,11 +1,12 @@
 <?php
-function ShowBuddyPressUI()
+function ShowBuddyPressUI( $api, $list )
 {
 	// Need to query data in the BuddyPress extended profile table
 	global $wpdb;
 
 	// Get settings
 	$syncBuddyPress = get_option( WP88_MC_SYNC_BUDDYPRESS );
+	$staticText = get_option( WP88_MC_STATIC_TEXT );
 
 	// Start outputting UI
 	print '<p><strong>You are using <a target="_blank" href="http://wordpress.org/extend/plugins/buddypress/">BuddyPress</a></strong>. With AutoChimp, you can synchronize your BuddyPress user Profile Fields with your selected MailChimp mailing lists.</p>';
@@ -17,26 +18,22 @@ function ShowBuddyPressUI()
 	print '> Sync BuddyPress Profile Fields with Mail Chimp.</p>';
 	print '<p>Use the following table to assign your BuddyPress Profile Fields to your MailChimp fields.  You can use the static field at the bottom to assign the same value to each new user which will distinguish users from your site from users from other locations.</p>';
 
-	// Create a select box from Mail Chimp fields
-	$selectBox = '<select name="folder_to_delete">';
-	// Loop through each sub folder
-	$mcFields = array( "Ignore this field", "Name", "Birthday", "Clown or not", "Hometown", "Favorite Team", "Favorite Movie", "Something else" );
-	foreach( $mcFields as $mcField )
-	{
-		// print an option for each folder
-		$selectBox .= '<option>' . $mcField . '</option>';
-	}
-	$selectBox .= '</select>';
-
 	$fields = $wpdb->get_results( "SELECT name,type FROM wp_bp_xprofile_fields WHERE type != 'option'", ARRAY_A );
 	if ( $fields )
 	{
+		// Get the mailing list's Merge Variables
+		$mcFields = FetchMailChimpMergeVars( $api, $list );
+		
 		foreach ( $fields as $field )
 		{
-			$output .= '<tr class="alternate"><td width="50%">' . $field['name'] . '</td><td width="20%">' . $field['type'] . '</td><td width="30%">' . $selectBox . '</td></tr>';
+			// Generate a select box for this particular field
+			$selectBox = GenerateFieldSelectBox( $field['name'], $mcFields );
+			$output .= '<tr class="alternate">' . PHP_EOL . '<td width="50%">' . $field['name'] . '</td>' . PHP_EOL . '<td width="20%">' . $field['type'] . '</td>' . PHP_EOL . '<td width="30%">' . $selectBox . '</td>' . PHP_EOL . '</tr>' . PHP_EOL;
 		}
-		$output .= '<tr class="alternate"><td width="50%">Text:<input type="text" name="buddypress_static" size="25" /></td><td width="20%">static</td><td width="30%">' . $selectBox . '</td></tr>';
-		$tableText .= '<div id=\'filelist\'>';
+
+		$selectBox = GenerateFieldSelectBox( 'Static', $mcFields );
+		$output .= '<tr class="alternate"><td width="50%">Static Text:<input type="text" name="static_select" value="' . $staticText . '"size="25" /></td><td width="20%">static</td><td width="30%">' . $selectBox . '</td></tr>';
+		$tableText .= '<div id=\'filelist\'>' . PHP_EOL;
 		$tableText .= '<table class="widefat" style="width:650px">
 				<thead>
 				<tr>
@@ -45,7 +42,7 @@ function ShowBuddyPressUI()
 					<th scope="col">Assign to:</th>
 				</tr>
 				</thead>';
-		$tableText .= $output . PHP_EOL;
+		$tableText .= $output;
 		$tableText .= '</table>' . PHP_EOL . '</div>' . PHP_EOL;
 		print $tableText;
 	}
@@ -54,5 +51,41 @@ function ShowBuddyPressUI()
 	print '<div class="submit"><input type="submit" name="sync_buddy_press" value="Sync BuddyPress Users" /></div></p>';
 
 	print '</fieldset>';
+}
+
+//
+//	Given an BP XProfile field name, generates select box HTML.  Also takes an extra
+//	array argument holding the mailing lists's Merge Variable names.  This is simply
+//	a time-saver so that this data doesn't need to be queried several times.
+//
+function GenerateFieldSelectBox( $fieldName, $mcMergeVars )
+{
+	// Generate a tag name for the field
+	$fieldNameTag = WP88_BP_XPROFILE_FIELD_MAPPING . $fieldName;
+
+	// See which field should be selected (if any)
+	$selectedVal = get_option( $fieldNameTag );
+	
+	// Create a select box from Mail Chimp merge values
+	$selectBox = '<select name=' . $fieldNameTag . '>' . PHP_EOL;
+	
+	// Create an "Ignore" option
+	$selectBox .= '<option>Ignore this field</option>' . PHP_EOL;
+	
+	// Loop through each merge value
+	foreach( $mcMergeVars as $mcMergeVar )
+	{
+		// Not selected by default
+		$sel = '<option>';
+		
+		// Should it be selected?  Is it the same as the value that the user selcted?
+		if ( 0 === strcmp( $mcMergeVar, $selectedVal ) )
+			$sel = '<option selected>';
+			
+		// print an option for each merge value
+		$selectBox .= $sel . $mcMergeVar . '</option>' . PHP_EOL;
+	}
+	$selectBox .= '</select>' . PHP_EOL;
+	return $selectBox;
 }
 ?>

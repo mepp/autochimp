@@ -61,6 +61,9 @@ if ( !empty( $apiKey ) )
 	// Create an object to interface with MailChimp
 	$api = new MCAPI( $apiKey );
 
+	// This array holds the lists that have been selected
+	$listArray = array();
+
 	//
 	//	Options for managing mailing lists
 	//
@@ -75,8 +78,7 @@ if ( !empty( $apiKey ) )
 		$selectedLists = get_option( WP88_MC_LISTS );
 
 		// Put all of the selected lists into an array to search later
-		$valuesArray = array();
-		$valuesArray = preg_split( "/[\s,]+/", $selectedLists );
+		$listArray = preg_split( "/[\s,]+/", $selectedLists );
 
 		print "<p>Which mailing lists would you like to update?</p>";
 		print "<ul>";
@@ -89,7 +91,7 @@ if ( !empty( $apiKey ) )
 			$searchableListID = WP88_SEARCHABLE_PREFIX . $list_id;
 
 			// See if this mailing list should be selected
-			$selected = array_search( $searchableListID, $valuesArray );
+			$selected = array_search( $searchableListID, $listArray );
 
 			// Generate a checkbox here (checked if this list was selected previously)
 			print "<li><input type=CHECKBOX value=\"$searchableListID\" name=\"$searchableListID\" ";
@@ -232,7 +234,10 @@ if ( !empty( $apiKey ) )
 
 	if ( function_exists( 'ShowBuddyPressUI' ) )
 	{
-		ShowBuddyPressUI();
+		$list = $listArray[ 0 ];
+		// Strip out the searchable tag
+		$list = substr_replace( $list, '', 0, strlen( WP88_SEARCHABLE_PREFIX ) );
+		ShowBuddyPressUI( $api, $list );
 	}
 
 	print '</fieldset>';

@@ -27,6 +27,7 @@ define( "WP88_MC_LAST_MAIL_LIST_ERROR", "wp88_mc_last_ml_error" );
 define( "WP88_MC_CAMPAIGN_CREATED", "wp88_mc_campaign" );
 define( 'WP88_MC_FIX_REGPLUS', 'wp88_mc_fix_regplus' );
 define( 'WP88_MC_SYNC_BUDDYPRESS', 'wp88_mc_sync_buddypress' );
+define( 'WP88_MC_STATIC_TEXT', 'wp88_mc_static_text' );
 
 define( "AC_DEFAULT_CATEGORY", "Any category" );
 
@@ -35,6 +36,7 @@ define( "MMU_DELETE", 2 );
 define( "MMU_UPDATE", 3 );
 
 define( "WP88_SEARCHABLE_PREFIX", "wp88_mc" );
+define( 'WP88_BP_XPROFILE_FIELD_MAPPING', 'wp88_mc_bp' );
 
 //
 //	Actions to hook to allow AutoChimp to do it's work
@@ -266,7 +268,40 @@ function AutoChimpOptions()
 			update_option( WP88_MC_FIX_REGPLUS, "0" );
 
 		if ( isset( $_POST['on_sync_buddypress'] ) )
+		{
 			update_option( WP88_MC_SYNC_BUDDYPRESS, "1" );
+			
+			//
+			// Save the mappings of BuddyPress XProfile fields to MailChimp Merge Vars
+			//
+			
+			// Each XProfile field will have a select box selection assigned to it.
+			// Save this selection.
+			global $wpdb;
+			$fields = $wpdb->get_results( "SELECT name,type FROM wp_bp_xprofile_fields WHERE type != 'option'", ARRAY_A );
+			
+			foreach( $fields as $field )
+			{
+				// Generate the name of the selection box by prepending the special text
+				$selectName = WP88_BP_XPROFILE_FIELD_MAPPING . $field['name'];
+				
+				// Now dereference the selection
+				$selection = $_POST[ $selectName ];
+				
+				// Save the selection, unless it should be ignored
+				if ( "Ignore this field" !== $selection )
+					update_option( $selectName, $selection );
+			}
+			
+			// Now save the special static field and the mapping
+			$staticText = $_POST[ 'static_select' ];
+			update_option( WP88_MC_STATIC_TEXT, $staticText );
+
+			$staticSelectName = WP88_BP_XPROFILE_FIELD_MAPPING . 'Static';
+			if ( "Ignore this field" !== $_POST[ $staticSelectName ] )
+				update_option( $staticSelectName, $_POST[ $staticSelectName ] );
+			
+		}
 		else
 			update_option( WP88_MC_SYNC_BUDDYPRESS, "0" );
 	}
@@ -471,6 +506,21 @@ function CreateCampaignFromPost( $postID, $api )
 			}
 		}
 	}
+}
+
+//
+//	Given a mailing list, return an array of the names of the merge variables (custom 
+//	fields) for that mailing list.
+//
+function FetchMailChimpMergeVars( $api, $list_id )
+{
+	$mergeVars = array();
+	$result = $api->listMergeVars( $list_id );
+	foreach( $result as $i => $var ) 
+	{
+		$mergeVars[] = $var['name'];
+	}
+	return $mergeVars;
 }
 
 //
