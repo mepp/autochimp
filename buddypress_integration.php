@@ -1,4 +1,20 @@
 <?php
+
+// NOTE:  Functionality is currently failing because registering with a BuddyPress
+// system causes the ADD functionality to be called.  If you have any required fields
+// the ADD will fail 'cause that's not set yet (it gets set on activation).  If it
+// fails, then you'll later get an UPDATE failure 'cause that's what happens when
+// a user activates their account.
+
+//
+//	MailChimp Merge Data looks something like this:
+//	Array ( [name] => Years Shredding [req] => 1 [field_type] => text [public] => 1
+//	[show] => 1 [order] => 4 [default] => [helptext] => [size] => 25 [tag] => YEARSSHRED ) )
+//
+
+//
+//	Function for displaying the UI for BuddyPress integration
+//
 function ShowBuddyPressUI( $api, $list )
 {
 	// Need to query data in the BuddyPress extended profile table
@@ -23,7 +39,7 @@ function ShowBuddyPressUI( $api, $list )
 	{
 		// Get the mailing list's Merge Variables
 		$mcFields = FetchMailChimpMergeVars( $api, $list );
-		
+
 		foreach ( $fields as $field )
 		{
 			// Generate a select box for this particular field
@@ -47,43 +63,50 @@ function ShowBuddyPressUI( $api, $list )
 		print $tableText;
 	}
 
-	print '<p>You can also perform a one-time sync with your existing user base.  This is recommended <em>only once</em>.  After you\'ve synchronized your users, and have the "Sync" checkbox checked, you will not need to do this again.';
-	print '<div class="submit"><input type="submit" name="sync_buddy_press" value="Sync BuddyPress Users" /></div></p>';
+	print '<table><tr><td>You can also perform a one-time sync with your existing user base.  This is recommended <em>only once</em>.  After you\'ve synchronized your users, and have the "Sync" checkbox checked, you will not need to do this again.</td>';
+	print '<td><div class="submit"><input type="submit" name="sync_buddy_press" value="Sync BuddyPress Users" /></div></td></tr></table>';
 
 	print '</fieldset>';
 }
 
 //
-//	Given an BP XProfile field name, generates select box HTML.  Also takes an extra
-//	array argument holding the mailing lists's Merge Variable names.  This is simply
-//	a time-saver so that this data doesn't need to be queried several times.
+//	Given an BP XProfile field name, generates select box HTML.  Also takes an
+//	extra array argument holding the mailing lists's Merge Variable names.  This
+//	is simply a time-saver so that this data doesn't need to be queried several
+//	times.
 //
 function GenerateFieldSelectBox( $fieldName, $mcMergeVars )
 {
 	// Generate a tag name for the field
-	$fieldNameTag = WP88_BP_XPROFILE_FIELD_MAPPING . $fieldName;
+	$fieldNameTag = EncodeXProfileOptionName( $fieldName );
 
 	// See which field should be selected (if any)
 	$selectedVal = get_option( $fieldNameTag );
-	
+
 	// Create a select box from Mail Chimp merge values
 	$selectBox = '<select name=' . $fieldNameTag . '>' . PHP_EOL;
-	
+
 	// Create an "Ignore" option
 	$selectBox .= '<option>Ignore this field</option>' . PHP_EOL;
-	
-	// Loop through each merge value
-	foreach( $mcMergeVars as $mcMergeVar )
+
+	// Loop through each merge value; use the name as the selectable
+	// text and the tag as the value that gets selected.  The tag
+	// is what's used to lookup and set values in MailChimp.
+	foreach( $mcMergeVars as $field => $tag )
 	{
 		// Not selected by default
-		$sel = '<option>';
-		
-		// Should it be selected?  Is it the same as the value that the user selcted?
-		if ( 0 === strcmp( $mcMergeVar, $selectedVal ) )
-			$sel = '<option selected>';
-			
+		$sel = '<option value="' . $tag . '"';
+
+		// Should it be $tag?  Is it the same as the tag that the user selcted?
+		// Remember, the tag isn't visible in the combo box, but it's saved when
+		// the user makes a selection.
+		if ( 0 === strcmp( $tag, $selectedVal ) )
+			$sel .= ' selected>';
+		else
+			$sel .= '>';
+
 		// print an option for each merge value
-		$selectBox .= $sel . $mcMergeVar . '</option>' . PHP_EOL;
+		$selectBox .= $sel . $field . '</option>' . PHP_EOL;
 	}
 	$selectBox .= '</select>' . PHP_EOL;
 	return $selectBox;

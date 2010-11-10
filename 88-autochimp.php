@@ -27,7 +27,7 @@ define( "WP88_MC_LAST_MAIL_LIST_ERROR", "wp88_mc_last_ml_error" );
 define( "WP88_MC_CAMPAIGN_CREATED", "wp88_mc_campaign" );
 define( 'WP88_MC_FIX_REGPLUS', 'wp88_mc_fix_regplus' );
 define( 'WP88_MC_SYNC_BUDDYPRESS', 'wp88_mc_sync_buddypress' );
-define( 'WP88_MC_STATIC_TEXT', 'wp88_mc_static_text' );
+define( 'WP88_MC_STATIC_TEXT', 'wp88_mc_bp_static_text' );
 
 define( "AC_DEFAULT_CATEGORY", "Any category" );
 
@@ -52,6 +52,7 @@ add_action('publish_post','OnPublishPost' );			// Called when an author publishe
 add_action('xmlrpc_publish_post', 'OnPublishPost' );	// Same as above, but for XMLRPC
 add_action('publish_phone', 'OnPublishPost' );			// Same as above, but for email.  No idea why it's called "phone".
 add_action('bp_init', 'OnBuddyPressInstalled');			// Only load the component if BuddyPress is loaded and initialized.
+add_action('xprofile_updated_profile', 'OnBuddyPressUserUpdate' ); // Used to sync users with MailChimp
 
 //
 //	OnBuddyPressInstalled
@@ -61,6 +62,22 @@ add_action('bp_init', 'OnBuddyPressInstalled');			// Only load the component if 
 function OnBuddyPressInstalled()
 {
 	require_once('buddypress_integration.php');
+}
+
+//
+//	OnBuddyPressUserUpdate
+//
+//	Called when a BP user updates his profile.  This is used to update
+//	MailChimp Merge Variables.
+//
+function OnBuddyPressUserUpdate()
+{
+	$syncBuddyPress = get_option( WP88_MC_SYNC_BUDDYPRESS );
+
+	// Only do this if synchronizing is turned on
+	if ( "1" === $syncBuddyPress )
+	{
+	}
 }
 
 //
@@ -270,37 +287,35 @@ function AutoChimpOptions()
 		if ( isset( $_POST['on_sync_buddypress'] ) )
 		{
 			update_option( WP88_MC_SYNC_BUDDYPRESS, "1" );
-			
+
 			//
 			// Save the mappings of BuddyPress XProfile fields to MailChimp Merge Vars
 			//
-			
+
 			// Each XProfile field will have a select box selection assigned to it.
 			// Save this selection.
 			global $wpdb;
 			$fields = $wpdb->get_results( "SELECT name,type FROM wp_bp_xprofile_fields WHERE type != 'option'", ARRAY_A );
-			
+
 			foreach( $fields as $field )
 			{
-				// Generate the name of the selection box by prepending the special text
-				$selectName = WP88_BP_XPROFILE_FIELD_MAPPING . $field['name'];
-				
+				// Encode the name of the field
+				$selectName = EncodeXProfileOptionName( $field['name'] );
+
 				// Now dereference the selection
 				$selection = $_POST[ $selectName ];
-				
-				// Save the selection, unless it should be ignored
-				if ( "Ignore this field" !== $selection )
-					update_option( $selectName, $selection );
+
+				// Save the selection
+				update_option( $selectName, $selection );
 			}
-			
+
 			// Now save the special static field and the mapping
 			$staticText = $_POST[ 'static_select' ];
 			update_option( WP88_MC_STATIC_TEXT, $staticText );
 
 			$staticSelectName = WP88_BP_XPROFILE_FIELD_MAPPING . 'Static';
-			if ( "Ignore this field" !== $_POST[ $staticSelectName ] )
-				update_option( $staticSelectName, $_POST[ $staticSelectName ] );
-			
+			update_option( $staticSelectName, $_POST[ $staticSelectName ] );
+
 		}
 		else
 			update_option( WP88_MC_SYNC_BUDDYPRESS, "0" );
@@ -344,7 +359,16 @@ function ManageMailUser( $mode, $user_info )
 				if ( false === $pos ){}
 				else
 				{
-					$merge_vars = array('FNAME'=>$user_info->first_name, 'LNAME'=>$user_info->last_name, 'INTERESTS'=>'');
+					$merge_vars = array( 'FNAME'=>$user_info->first_name, 'LNAME'=>$user_info->last_name );
+
+					// Hunt down additional user data
+					$data = FetchMappedXProfileData( $user_info->ID );
+
+					// Add this data to the merge variables
+					foreach ( $data as $item )
+					{
+						$merge_vars[] = array( $item['tag'] => $item['value'] );
+					}
 
 					switch( $mode )
 					{
@@ -352,34 +376,35 @@ function ManageMailUser( $mode, $user_info )
 						{
 							// By default this sends a confirmation email - you will not see new members
 							// until the link contained in it is clicked!
-							update_option( WP88_MC_LAST_MAIL_LIST_ERROR, "Adding $user_info->first_name $user_info->last_name ('$user_info->user_email') in list $list_id." );
-//							$retval = $api->listSubscribe( $list_id, $user_info->user_email, $merge_vars );
-//							if ($api->errorCode)
-//							{
-//								// Set latest activity - displayed in the admin panel
-//								update_option( WP88_MC_LAST_MAIL_LIST_ERROR, "Problem adding $user_info->first_name $user_info->last_name ('$user_info->user_email') to list $list_id.  Error Code: $api->errorCode, Message: $api->errorMessage" );
-//							}
-//							else
-//							{
-//								update_option( WP88_MC_LAST_MAIL_LIST_ERROR, "Added $user_info->first_name $user_info->last_name ('$user_info->user_email') to list $list_id." );
-//							}
+							$retval = $api->listSubscribe( $list_id, $user_info->user_email, $merge_vars );
+							if ($api->errorCode)
+							{
+								// Set latest activity - displayed in the admin panel
+								$errorString = "Problem adding $user_info->first_name $user_info->last_name ('$user_info->user_email') to list $list_id.  Error Code: $api->errorCode, Message: $api->errorMessage, Data: ";
+								$errorString .= print_r( $merge_vars, TRUE );
+								update_option( WP88_MC_LAST_MAIL_LIST_ERROR, $errorString );
+							}
+							else
+							{
+								update_option( WP88_MC_LAST_MAIL_LIST_ERROR, "Added $user_info->first_name $user_info->last_name ('$user_info->user_email') to list $list_id." );
+							}
+							break;
 						}
 						case MMU_DELETE:
 						{
-							$lastMessage = get_option( WP88_MC_LAST_MAIL_LIST_ERROR );
-							$lastMessage .= "YOU THERE!  Deleting $user_info->first_name $user_info->last_name ('$user_info->user_email') in list $list_id.";
 							update_option( WP88_MC_LAST_MAIL_LIST_ERROR, $lastMessage );
 							// By default this sends a goodbye email and fires off a notification to the list owner
-//							$retval = $api->listUnsubscribe( $list_id, $user_info->user_email );
-//							if ($api->errorCode)
-//							{
-//								// Set latest activity - displayed in the admin panel
-//								update_option( WP88_MC_LAST_MAIL_LIST_ERROR, "Problem removing $user_info->first_name $user_info->last_name ('$user_info->user_email') from list $list_id.  Error Code: $api->errorCode, Message: $api->errorMessage" );
-//							}
-//							else
-//							{
-//								update_option( WP88_MC_LAST_MAIL_LIST_ERROR, "Removed $user_info->first_name $user_info->last_name ('$user_info->user_email') from list $list_id." );
-//							}
+							$retval = $api->listUnsubscribe( $list_id, $user_info->user_email );
+							if ($api->errorCode)
+							{
+								// Set latest activity - displayed in the admin panel
+								update_option( WP88_MC_LAST_MAIL_LIST_ERROR, "Problem removing $user_info->first_name $user_info->last_name ('$user_info->user_email') from list $list_id.  Error Code: $api->errorCode, Message: $api->errorMessage" );
+							}
+							else
+							{
+								update_option( WP88_MC_LAST_MAIL_LIST_ERROR, "Removed $user_info->first_name $user_info->last_name ('$user_info->user_email') from list $list_id." );
+							}
+							break;
 						}
 						case MMU_UPDATE:
 						{
@@ -399,9 +424,19 @@ function ManageMailUser( $mode, $user_info )
 							$merge_vars['EMAIL'] = $user_info->user_email;
 
 							// No emails are sent after a successful call to this function.
-							$lastMessage = get_option( WP88_MC_LAST_MAIL_LIST_ERROR );
-							$lastMessage .= "HEY!  Updating $user_info->first_name $user_info->last_name ('$user_info->user_email') in list $list_id.";
-							update_option( WP88_MC_LAST_MAIL_LIST_ERROR, $lastMessage );
+							$retval = $api->listUpdateMember( $list_id, $updateEmail, $merge_vars );
+							if ($api->errorCode)
+							{
+								// Set latest activity - displayed in the admin panel
+								$errorString = "Problem updating $user_info->first_name $user_info->last_name ('$user_info->user_email') from list $list_id.  Error Code: $api->errorCode, Message: $api->errorMessage, Data: ";
+								$errorString .= print_r( $merge_vars, TRUE );
+								update_option( WP88_MC_LAST_MAIL_LIST_ERROR, $errorString );
+							}
+							else
+							{
+								update_option( WP88_MC_LAST_MAIL_LIST_ERROR, "Updated $user_info->first_name $user_info->last_name ('$user_info->user_email') from list $list_id." );
+							}
+							break;
 						}
 					}
 				}
@@ -508,19 +543,119 @@ function CreateCampaignFromPost( $postID, $api )
 	}
 }
 
+function OnPublishPost( $postID )
+{
+	// Does the user want to create campaigns from posts
+	$campaignFromPost = get_option( WP88_MC_CAMPAIGN_FROM_POST );
+	if ( "1" == $campaignFromPost )
+	{
+		// Get the info on this post
+		$post = get_post( $postID );
+		$categories = get_the_category( $postID );	// Potentially several categories
+
+		// What category does the user want to use to create campaigns?
+		$campaignCategory = get_option( WP88_MC_CAMPAIGN_CATEGORY );
+
+		// If it matches the user's category choice or is any category, then
+		// do the work.  This needs to be a loop because a post can belong to
+		// multiple categories.
+		foreach( $categories as $category )
+		{
+			if ( $category->name == $campaignCategory || AC_DEFAULT_CATEGORY == $campaignCategory )
+			{
+				// Create an instance of the MailChimp API
+				$apiKey = get_option( WP88_MC_APIKEY );
+				$api = new MCAPI( $apiKey );
+
+				// Do the work
+				$id = CreateCampaignFromPost( $postID, $api );
+
+				// Does the user want to send the campaigns right away?
+				$sendNow = get_option( WP88_MC_SEND_NOW );
+
+				// Send it, if necessary (if user wants it), and the $id is
+				// sufficiently long (just picking longer than 3 for fun).
+				if ( "1" == $sendNow && ( strlen( $id ) > 3 ) )
+				{
+					$api->campaignSendNow( $id );
+				}
+
+				// As soon as the first match is found, break out.
+				break;
+			}
+		}
+	}
+}
+
 //
-//	Given a mailing list, return an array of the names of the merge variables (custom 
-//	fields) for that mailing list.
+//	Given a mailing list, return an associative array of the names and tags of
+//	the merge variables (custom fields) for that mailing list.
 //
 function FetchMailChimpMergeVars( $api, $list_id )
 {
 	$mergeVars = array();
 	$result = $api->listMergeVars( $list_id );
-	foreach( $result as $i => $var ) 
+	foreach( $result as $i => $var )
 	{
-		$mergeVars[] = $var['name'];
+		$mergeVars[ $var['name'] ] = $var['tag'];
 	}
 	return $mergeVars;
+}
+
+//
+//	Looks up the user's BP XProfile data and return a meaningful array of associations
+//	to the users based on what the user wants to sync.
+//
+function FetchMappedXProfileData( $userID )
+{
+	// User data array
+	$dataArray = array();
+
+	// Need to query data in the BuddyPress extended profile table
+	global $wpdb;
+
+	// Now, see which XProfile fields the user wants to sync.
+	$sql = "SELECT option_name,option_value FROM wp_options WHERE option_name LIKE 'wp88_mc_bp%' AND option_value != 'Ignore this field'";
+	$fieldNames = $wpdb->get_results( $sql, ARRAY_A );
+
+	// Loop through each field that the user wants to sync and hunt down the user's
+	// values for those fields and stick them into an array.
+	foreach ( $fieldNames as $field )
+	{
+		$optionName = DecodeXProfileOptionName( $field['option_name'] );
+
+		// Big JOIN to get the user's value for the field in question
+		// Best to offload this on SQL than PHP.
+		$sql = "SELECT name,value FROM wp_bp_xprofile_data JOIN wp_bp_xprofile_fields ON wp_bp_xprofile_fields.id = wp_bp_xprofile_data.field_id WHERE user_id = $userID AND name = '$optionName'";
+		$results = $wpdb->get_results( $sql, ARRAY_A );
+
+		// Populate the data array
+		if ( NULL != $results['value'] )
+		{
+			$dataArray['name'] = $optionName;
+			$dataArray['tag'] = $field['option_value'];
+			$dataArray['value'] = $results['value'];
+		}
+	}
+	return $dataArray;
+}
+
+function EncodeXProfileOptionName( $optionName )
+{
+	// Tack on the prefix to the option name
+	$encoded = WP88_BP_XPROFILE_FIELD_MAPPING . $optionName;
+
+	// Make sure the option name has no spaces; replace them with underscores
+	$encoded = str_replace( ' ', '_', $encoded );
+}
+
+function DecodeXProfileOptionName( $optionName )
+{
+	// Strip out the searchable tag
+	$decoded = substr_replace( $optionName, '', 0, strlen( WP88_BP_XPROFILE_FIELD_MAPPING ) );
+
+	// Replace understores with spaces
+	$decoded = str_replace( '_', ' ', $decoded );
 }
 
 //
@@ -566,50 +701,6 @@ function OnUpdateUser( $userID )
 	{
 		ManageMailUser( MMU_UPDATE, $user_info );
 		update_option( WP88_MC_TEMPEMAIL, "" );
-	}
-}
-
-function OnPublishPost( $postID )
-{
-	// Does the user want to create campaigns from posts
-	$campaignFromPost = get_option( WP88_MC_CAMPAIGN_FROM_POST );
-	if ( "1" == $campaignFromPost )
-	{
-		// Get the info on this post
-		$post = get_post( $postID );
-		$categories = get_the_category( $postID );	// Potentially several categories
-
-		// What category does the user want to use to create campaigns?
-		$campaignCategory = get_option( WP88_MC_CAMPAIGN_CATEGORY );
-
-		// If it matches the user's category choice or is any category, then
-		// do the work.  This needs to be a loop because a post can belong to
-		// multiple categories.
-		foreach( $categories as $category )
-		{
-			if ( $category->name == $campaignCategory || AC_DEFAULT_CATEGORY == $campaignCategory )
-			{
-				// Create an instance of the MailChimp API
-				$apiKey = get_option( WP88_MC_APIKEY );
-				$api = new MCAPI( $apiKey );
-
-				// Do the work
-				$id = CreateCampaignFromPost( $postID, $api );
-
-				// Does the user want to send the campaigns right away?
-				$sendNow = get_option( WP88_MC_SEND_NOW );
-
-				// Send it, if necessary (if user wants it), and the $id is
-				// sufficiently long (just picking longer than 3 for fun).
-				if ( "1" == $sendNow && ( strlen( $id ) > 3 ) )
-				{
-					$api->campaignSendNow( $id );
-				}
-
-				// As soon as the first match is found, break out.
-				break;
-			}
-		}
 	}
 }
 

@@ -31,6 +31,7 @@ $pluginFolder = get_bloginfo('wpurl') . '/wp-content/plugins/' . dirname( plugin
 </div>
 
 <p><strong>MailChimp API Key Management</strong></p>
+<fieldset style="margin-left: 20px;">
 
 <?php
 	// Fetch the Key from the DB here
@@ -51,6 +52,7 @@ $pluginFolder = get_bloginfo('wpurl') . '/wp-content/plugins/' . dirname( plugin
 
 <p>Set Your MailChimp API Key: <input type="text" name="api_key" size="55" /></p>
 <div class="submit"><input type="submit" name="save_api_key" value="Save API Key" /></div>
+</fieldset>
 
 <p><strong>Mailing List Management</strong></p>
 <fieldset style="margin-left: 20px;">
@@ -237,6 +239,7 @@ if ( !empty( $apiKey ) )
 		$list = $listArray[ 0 ];
 		// Strip out the searchable tag
 		$list = substr_replace( $list, '', 0, strlen( WP88_SEARCHABLE_PREFIX ) );
+
 		ShowBuddyPressUI( $api, $list );
 	}
 
