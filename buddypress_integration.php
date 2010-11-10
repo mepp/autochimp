@@ -84,10 +84,10 @@ function GenerateFieldSelectBox( $fieldName, $mcMergeVars )
 	$selectedVal = get_option( $fieldNameTag );
 
 	// Create a select box from Mail Chimp merge values
-	$selectBox = '<select name=' . $fieldNameTag . '>' . PHP_EOL;
+	$selectBox = '<select name="' . $fieldNameTag . '">' . PHP_EOL;
 
 	// Create an "Ignore" option
-	$selectBox .= '<option>Ignore this field</option>' . PHP_EOL;
+	$selectBox .= '<option>' . WP88_IGNORE_FIELD_TEXT . '</option>' . PHP_EOL;
 
 	// Loop through each merge value; use the name as the selectable
 	// text and the tag as the value that gets selected.  The tag

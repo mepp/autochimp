@@ -35,8 +35,9 @@ define( "MMU_ADD", 1 );
 define( "MMU_DELETE", 2 );
 define( "MMU_UPDATE", 3 );
 
-define( "WP88_SEARCHABLE_PREFIX", "wp88_mc" );
-define( 'WP88_BP_XPROFILE_FIELD_MAPPING', 'wp88_mc_bp' );
+define( "WP88_SEARCHABLE_PREFIX", 'wp88_mc' );
+define( 'WP88_BP_XPROFILE_FIELD_MAPPING', 'wp88_mc_bp_xpf_' );
+define( 'WP88_IGNORE_FIELD_TEXT', 'Ignore this field' );
 
 //
 //	Actions to hook to allow AutoChimp to do it's work
@@ -336,6 +337,7 @@ function ManageMailUser( $mode, $user_info )
 	$api = new MCAPI( $apiKey );
 
 	$myLists = $api->lists();
+	$errorCode = 0;
 
 	if ( null != $myLists )
 	{
@@ -363,11 +365,13 @@ function ManageMailUser( $mode, $user_info )
 
 					// Hunt down additional user data
 					$data = FetchMappedXProfileData( $user_info->ID );
+//					$message = print_r( $data, TRUE );
+//					update_option( "wp88_mc_fetched_xprofile_data", $message );
 
 					// Add this data to the merge variables
 					foreach ( $data as $item )
 					{
-						$merge_vars[] = array( $item['tag'] => $item['value'] );
+						$merge_vars[ $item['tag'] ] = $item['value'];
 					}
 
 					switch( $mode )
@@ -377,10 +381,11 @@ function ManageMailUser( $mode, $user_info )
 							// By default this sends a confirmation email - you will not see new members
 							// until the link contained in it is clicked!
 							$retval = $api->listSubscribe( $list_id, $user_info->user_email, $merge_vars );
-							if ($api->errorCode)
+							$errorCode = $api->errorCode;
+							if ( $errorCode )
 							{
 								// Set latest activity - displayed in the admin panel
-								$errorString = "Problem adding $user_info->first_name $user_info->last_name ('$user_info->user_email') to list $list_id.  Error Code: $api->errorCode, Message: $api->errorMessage, Data: ";
+								$errorString = "Problem adding $user_info->first_name $user_info->last_name ('$user_info->user_email') to list $list_id.  Error Code: $errorCode, Message: $api->errorMessage, Data: ";
 								$errorString .= print_r( $merge_vars, TRUE );
 								update_option( WP88_MC_LAST_MAIL_LIST_ERROR, $errorString );
 							}
@@ -395,10 +400,11 @@ function ManageMailUser( $mode, $user_info )
 							update_option( WP88_MC_LAST_MAIL_LIST_ERROR, $lastMessage );
 							// By default this sends a goodbye email and fires off a notification to the list owner
 							$retval = $api->listUnsubscribe( $list_id, $user_info->user_email );
-							if ($api->errorCode)
-							{
+							$errorCode = $api->errorCode;
+							if ( $errorCode )
+														{
 								// Set latest activity - displayed in the admin panel
-								update_option( WP88_MC_LAST_MAIL_LIST_ERROR, "Problem removing $user_info->first_name $user_info->last_name ('$user_info->user_email') from list $list_id.  Error Code: $api->errorCode, Message: $api->errorMessage" );
+								update_option( WP88_MC_LAST_MAIL_LIST_ERROR, "Problem removing $user_info->first_name $user_info->last_name ('$user_info->user_email') from list $list_id.  Error Code: $errorCode, Message: $api->errorMessage" );
 							}
 							else
 							{
@@ -425,10 +431,11 @@ function ManageMailUser( $mode, $user_info )
 
 							// No emails are sent after a successful call to this function.
 							$retval = $api->listUpdateMember( $list_id, $updateEmail, $merge_vars );
-							if ($api->errorCode)
-							{
+							$errorCode = $api->errorCode;
+							if ( $errorCode )
+														{
 								// Set latest activity - displayed in the admin panel
-								$errorString = "Problem updating $user_info->first_name $user_info->last_name ('$user_info->user_email') from list $list_id.  Error Code: $api->errorCode, Message: $api->errorMessage, Data: ";
+								$errorString = "Problem updating $user_info->first_name $user_info->last_name ('$user_info->user_email') from list $list_id.  Error Code: $errorCode, Message: $api->errorMessage, Data: ";
 								$errorString .= print_r( $merge_vars, TRUE );
 								update_option( WP88_MC_LAST_MAIL_LIST_ERROR, $errorString );
 							}
@@ -443,6 +450,7 @@ function ManageMailUser( $mode, $user_info )
 			}
 		}
 	}
+	return $errorCode;
 }
 
 //
@@ -615,26 +623,30 @@ function FetchMappedXProfileData( $userID )
 	global $wpdb;
 
 	// Now, see which XProfile fields the user wants to sync.
-	$sql = "SELECT option_name,option_value FROM wp_options WHERE option_name LIKE 'wp88_mc_bp%' AND option_value != 'Ignore this field'";
+	$sql = "SELECT option_name,option_value FROM wp_options WHERE option_name LIKE '" .
+			WP88_BP_XPROFILE_FIELD_MAPPING .
+			"%' AND option_value != '" .
+			WP88_IGNORE_FIELD_TEXT . "'";
 	$fieldNames = $wpdb->get_results( $sql, ARRAY_A );
 
 	// Loop through each field that the user wants to sync and hunt down the user's
 	// values for those fields and stick them into an array.
+	$counter = 0;
 	foreach ( $fieldNames as $field )
 	{
 		$optionName = DecodeXProfileOptionName( $field['option_name'] );
 
 		// Big JOIN to get the user's value for the field in question
 		// Best to offload this on SQL than PHP.
-		$sql = "SELECT name,value FROM wp_bp_xprofile_data JOIN wp_bp_xprofile_fields ON wp_bp_xprofile_fields.id = wp_bp_xprofile_data.field_id WHERE user_id = $userID AND name = '$optionName'";
+		$sql = "SELECT name,value FROM wp_bp_xprofile_data JOIN wp_bp_xprofile_fields ON wp_bp_xprofile_fields.id = wp_bp_xprofile_data.field_id WHERE user_id = $userID AND name = '$optionName' LIMIT 1";
 		$results = $wpdb->get_results( $sql, ARRAY_A );
 
 		// Populate the data array
-		if ( NULL != $results['value'] )
+		if ( !empty( $results[0] ) )
 		{
-			$dataArray['name'] = $optionName;
-			$dataArray['tag'] = $field['option_value'];
-			$dataArray['value'] = $results['value'];
+			$dataArray[] = array( 	"name" => $optionName,
+									"tag" => $field['option_value'],
+									"value" => $results[0]['value'] );
 		}
 	}
 	return $dataArray;
@@ -647,6 +659,8 @@ function EncodeXProfileOptionName( $optionName )
 
 	// Make sure the option name has no spaces; replace them with underscores
 	$encoded = str_replace( ' ', '_', $encoded );
+
+	return $encoded;
 }
 
 function DecodeXProfileOptionName( $optionName )
@@ -656,6 +670,8 @@ function DecodeXProfileOptionName( $optionName )
 
 	// Replace understores with spaces
 	$decoded = str_replace( '_', ' ', $decoded );
+
+	return $decoded;
 }
 
 //
@@ -699,8 +715,24 @@ function OnUpdateUser( $userID )
 	$onUpdateSubscriber = get_option( WP88_MC_UPDATE );
 	if ( "1" == $onUpdateSubscriber )
 	{
-		ManageMailUser( MMU_UPDATE, $user_info );
+		$result = ManageMailUser( MMU_UPDATE, $user_info );
 		update_option( WP88_MC_TEMPEMAIL, "" );
+
+		// 232 is the MailChimp error code for: "user doesn't exist".  This
+		// error can occur when a new user signs up but there's a required
+		// field in MailChimp which the software doesn't have access to yet.
+		// The field will be populated when the user finally activates their
+		// account, but their account won't exist.  So, catch that here and
+		// try to re-add them.  This is a costly workflow, but that's how
+		// it works.
+		if ( 232 == $result )
+		{
+			$onAddSubscriber = get_option( WP88_MC_ADD );
+			if ( "1" == $onAddSubscriber )
+			{
+				ManageMailUser( MMU_ADD, $user_info );
+			}
+		}
 	}
 }
 
