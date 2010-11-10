@@ -3,8 +3,8 @@
 Plugin Name: AutoChimp
 Plugin URI: http://www.wandererllc.com/company/plugins/autochimp/
 Description: Gives users the ability to create MailChimp mail campaigns from blog posts. Also allows updating MailChimp mailing lists when users subscribe, unsubscribe, and update their WordPress profiles.
-Author: Wanderer LLC Dev Team
-Version: 0.88
+Author: Kyle Chapman
+Version: 0.82
 */
 
 if ( !class_exists( 'MCAPI' ) )
@@ -22,12 +22,8 @@ define( "WP88_MC_CAMPAIGN_FROM_POST", "wp88_mc_campaign_from_post" );
 define( "WP88_MC_CAMPAIGN_CATEGORY", "wp88_mc_campaign_category" );
 define( "WP88_MC_CREATE_CAMPAIGN_ONCE", "wp88_mc_create_campaign_once" );
 define( "WP88_MC_SEND_NOW", "wp88_mc_send_now" );
-define( "WP88_MC_LAST_CAMPAIGN_ERROR", "wp88_mc_last_error" );
-define( "WP88_MC_LAST_MAIL_LIST_ERROR", "wp88_mc_last_ml_error" );
+define( "WP88_MC_LAST_ERROR", "wp88_mc_last_error" );
 define( "WP88_MC_CAMPAIGN_CREATED", "wp88_mc_campaign" );
-define( 'WP88_MC_FIX_REGPLUS', 'wp88_mc_fix_regplus' );
-define( 'WP88_MC_SYNC_BUDDYPRESS', 'wp88_mc_sync_buddypress' );
-define( 'WP88_MC_STATIC_TEXT', 'wp88_mc_static_text' );
 
 define( "AC_DEFAULT_CATEGORY", "Any category" );
 
@@ -36,7 +32,6 @@ define( "MMU_DELETE", 2 );
 define( "MMU_UPDATE", 3 );
 
 define( "WP88_SEARCHABLE_PREFIX", "wp88_mc" );
-define( 'WP88_BP_XPROFILE_FIELD_MAPPING', 'wp88_mc_bp' );
 
 //
 //	Actions to hook to allow AutoChimp to do it's work
@@ -51,102 +46,11 @@ add_action('profile_update','OnUpdateUser' );			// Uses the saved email to updat
 add_action('publish_post','OnPublishPost' );			// Called when an author publishes a post.
 add_action('xmlrpc_publish_post', 'OnPublishPost' );	// Same as above, but for XMLRPC
 add_action('publish_phone', 'OnPublishPost' );			// Same as above, but for email.  No idea why it's called "phone".
-add_action('bp_init', 'OnBuddyPressInstalled');			// Only load the component if BuddyPress is loaded and initialized.
-
-//
-//	OnBuddyPressInstalled
-//
-//	Called when BuddyPress is installed and active
-//
-function OnBuddyPressInstalled()
-{
-	require_once('buddypress_integration.php');
-}
-
-//
-//	START Register Plus Workaround
-//
-//	Register Plus overrides this:
-//	http://codex.wordpress.org/Function_Reference/wp_new_user_notification
-//
-//	Look at register-plus.php somewhere around line 1715.  More on Pluggable
-//	functions can be found here:  http://codex.wordpress.org/Pluggable_Functions
-//
-//	Register Plus's overridden wp_new_user_notification() naturally includes the
-//	original WordPress code for wp_new_user_notification().  This function calls
-//	wp_set_password() after it sets user meta data.  This, as far as I can tell,
-//	is the only place we can hook WordPress to update the user's MailChimp mailing
-//	list with the user's first and last names.  NOTE:  This is a strange and non-
-//	standard place for Register Plus to write the user's meta information.  Other
-//	plugins like Wishlist Membership work with AutoChimp right out of the box.
-//	This hack is strictly to make AutoChimp work with the misbehaving Register Plus.
-//
-//	The danger with this sort of code is that if the function that is overridden
-//	is updated by WordPress, we'll likely miss out!  The best solution is to
-//	have Register Plus perform it's work in a more standard way.
-//
-function OverrideWarning()
-{
-	if( current_user_can(10) &&  $_GET['page'] == 'autochimp' )
-		echo '<div id="message" class="updated fade"><p><strong>You have another plugin installed that is conflicting with AutoChimp and Register Plus.  This other plugin is overriding the user notification emails or password setting.  Please see <a href="http://www.wandererllc.com/plugins/">AutoChimp FAQ</a> for more information.</strong></p></div>';
-}
-
-if ( function_exists( 'wp_set_password' ) )
-{
-	// Check if the user wants to patch
-	$fixRegPlus = get_option( WP88_MC_FIX_REGPLUS );
-	if ( '1' === $fixRegPlus )
-	{
-		add_action( 'admin_notices', 'OverrideWarning' );
-	}
-}
-
-//
-// Override wp_set_password() which is called by Register Plus's overridden
-// pluggable function - the only place I can see to grab the user's first
-// and last name.
-//
-if ( !function_exists('wp_set_password') && '1' === get_option( WP88_MC_FIX_REGPLUS ) ) :
-function wp_set_password( $password, $user_id )
-{
-	$lastMessage = get_option( WP88_MC_LAST_MAIL_LIST_ERROR );
-	$lastMessage .= "In wp_set_password()...";
-
-	// START original WordPress code
-	global $wpdb;
-
-	$hash = wp_hash_password($password);
-	$wpdb->update($wpdb->users, array('user_pass' => $hash, 'user_activation_key' => ''), array('ID' => $user_id) );
-
-	wp_cache_delete($user_id, 'users');
-	//
-	// END original WordPress code
-	//
-
-	//
-	// START Detect Register Plus
-	//
-	$lastMessage .= "Register Plus is ACTIVE.";
-	$lastMessage .= "YOU THERE!  Now updating $user_info->first_name $user_info->last_name ('$user_info->user_email') in list $list_id.";
-	update_option( WP88_MC_LAST_MAIL_LIST_ERROR, $lastMessage );
-
-	update_option( WP88_MC_TEMPEMAIL, "" );
-	$user_info = get_userdata( $user_id );
-	ManageMailUser( MMU_UPDATE, $user_info );
-	//
-	// END Detect
-	//
-}
-endif;	// wp_set_password is not overridden yet
-
-//
-// 	END Register Plus Workaround
-//
 
 //
 //	Filters to hook
 //
-add_filter( 'plugin_row_meta', 'AddAutoChimpPluginLinks', 10, 2 ); // Expand the links on the plugins page
+add_filter( 'plugin_row_meta', 'add_plugin_links', 10, 2 ); // Expand the links on the plugins page
 
 //
 //	Function to create the menu and admin page handler
@@ -157,7 +61,7 @@ function OnPluginMenu()
 }
 
 // Inspired by NextGen Gallery by Alex Rabe
-function AddAutoChimpPluginLinks($links, $file)
+function add_plugin_links($links, $file)
 {
 	if ( $file == plugin_basename(__FILE__) )
 	{
@@ -259,51 +163,6 @@ function AutoChimpOptions()
 
 		$category = $_POST['campaign_category'];
 		update_option( WP88_MC_CAMPAIGN_CATEGORY, $category );
-
-		// Step 4:  Save other plugin integration choices
-
-		if ( isset( $_POST['on_fix_regplus'] ) )
-			update_option( WP88_MC_FIX_REGPLUS, "1" );
-		else
-			update_option( WP88_MC_FIX_REGPLUS, "0" );
-
-		if ( isset( $_POST['on_sync_buddypress'] ) )
-		{
-			update_option( WP88_MC_SYNC_BUDDYPRESS, "1" );
-			
-			//
-			// Save the mappings of BuddyPress XProfile fields to MailChimp Merge Vars
-			//
-			
-			// Each XProfile field will have a select box selection assigned to it.
-			// Save this selection.
-			global $wpdb;
-			$fields = $wpdb->get_results( "SELECT name,type FROM wp_bp_xprofile_fields WHERE type != 'option'", ARRAY_A );
-			
-			foreach( $fields as $field )
-			{
-				// Generate the name of the selection box by prepending the special text
-				$selectName = WP88_BP_XPROFILE_FIELD_MAPPING . $field['name'];
-				
-				// Now dereference the selection
-				$selection = $_POST[ $selectName ];
-				
-				// Save the selection, unless it should be ignored
-				if ( "Ignore this field" !== $selection )
-					update_option( $selectName, $selection );
-			}
-			
-			// Now save the special static field and the mapping
-			$staticText = $_POST[ 'static_select' ];
-			update_option( WP88_MC_STATIC_TEXT, $staticText );
-
-			$staticSelectName = WP88_BP_XPROFILE_FIELD_MAPPING . 'Static';
-			if ( "Ignore this field" !== $_POST[ $staticSelectName ] )
-				update_option( $staticSelectName, $_POST[ $staticSelectName ] );
-			
-		}
-		else
-			update_option( WP88_MC_SYNC_BUDDYPRESS, "0" );
 	}
 
 	// The file that will handle uploads is this one (see the "if" above)
@@ -352,34 +211,14 @@ function ManageMailUser( $mode, $user_info )
 						{
 							// By default this sends a confirmation email - you will not see new members
 							// until the link contained in it is clicked!
-							update_option( WP88_MC_LAST_MAIL_LIST_ERROR, "Adding $user_info->first_name $user_info->last_name ('$user_info->user_email') in list $list_id." );
-//							$retval = $api->listSubscribe( $list_id, $user_info->user_email, $merge_vars );
-//							if ($api->errorCode)
-//							{
-//								// Set latest activity - displayed in the admin panel
-//								update_option( WP88_MC_LAST_MAIL_LIST_ERROR, "Problem adding $user_info->first_name $user_info->last_name ('$user_info->user_email') to list $list_id.  Error Code: $api->errorCode, Message: $api->errorMessage" );
-//							}
-//							else
-//							{
-//								update_option( WP88_MC_LAST_MAIL_LIST_ERROR, "Added $user_info->first_name $user_info->last_name ('$user_info->user_email') to list $list_id." );
-//							}
+							$retval = $api->listSubscribe( $list_id, $user_info->user_email, $merge_vars );
+                            break;
 						}
 						case MMU_DELETE:
 						{
-							$lastMessage = get_option( WP88_MC_LAST_MAIL_LIST_ERROR );
-							$lastMessage .= "YOU THERE!  Deleting $user_info->first_name $user_info->last_name ('$user_info->user_email') in list $list_id.";
-							update_option( WP88_MC_LAST_MAIL_LIST_ERROR, $lastMessage );
 							// By default this sends a goodbye email and fires off a notification to the list owner
-//							$retval = $api->listUnsubscribe( $list_id, $user_info->user_email );
-//							if ($api->errorCode)
-//							{
-//								// Set latest activity - displayed in the admin panel
-//								update_option( WP88_MC_LAST_MAIL_LIST_ERROR, "Problem removing $user_info->first_name $user_info->last_name ('$user_info->user_email') from list $list_id.  Error Code: $api->errorCode, Message: $api->errorMessage" );
-//							}
-//							else
-//							{
-//								update_option( WP88_MC_LAST_MAIL_LIST_ERROR, "Removed $user_info->first_name $user_info->last_name ('$user_info->user_email') from list $list_id." );
-//							}
+							$retval = $api->listUnsubscribe( $list_id, $user_info->user_email );
+                            break;
 						}
 						case MMU_UPDATE:
 						{
@@ -388,20 +227,12 @@ function ManageMailUser( $mode, $user_info )
 							// get out of sync.  See the readme.txt for more.
 							$updateEmail = get_option( WP88_MC_TEMPEMAIL );
 
-							// If this email is empty, then it means that some method other than viewing
-							// the admin panel has invoked the update - another plugin like "Register
-							// Plus", for instance.  In that case, there is no danger in the email getting
-							// out of sync so AutoChimp can use the original email.
-							if ( strlen( $updateEmail ) == 0 )
-								$updateEmail = $user_info->user_email;
-
 							// Potential update to the email address (more likely than name!)
 							$merge_vars['EMAIL'] = $user_info->user_email;
 
 							// No emails are sent after a successful call to this function.
-							$lastMessage = get_option( WP88_MC_LAST_MAIL_LIST_ERROR );
-							$lastMessage .= "HEY!  Updating $user_info->first_name $user_info->last_name ('$user_info->user_email') in list $list_id.";
-							update_option( WP88_MC_LAST_MAIL_LIST_ERROR, $lastMessage );
+							$retval = $api->listUpdateMember( $list_id, $updateEmail, $merge_vars );
+                            break;
 						}
 					}
 				}
@@ -488,13 +319,13 @@ function CreateCampaignFromPost( $postID, $api )
 					if ($api->errorCode)
 					{
 						// Set latest activity - displayed in the admin panel
-						update_option( WP88_MC_LAST_CAMPAIGN_ERROR, "Problem with campaign with title '$post->post_title'.  Error Code: $api->errorCode, Message: $api->errorMessage" );
+						update_option( WP88_MC_LAST_ERROR, "Problem with campaign with title '$post->post_title'.  Error Code: $api->errorCode, Message: $api->errorMessage" );
 						$result = "0";
 					}
 					else
 					{
 						// Set latest activity
-						update_option( WP88_MC_LAST_CAMPAIGN_ERROR, "Your latest campaign created is titled '$post->post_title' with ID: $result" );
+						update_option( WP88_MC_LAST_ERROR, "Your latest campaign created is titled '$post->post_title' with ID: $result" );
 
 						// Mark this post as having a campaign created from it.
 						add_post_meta( $postID, WP88_MC_CAMPAIGN_CREATED, "1" );
@@ -506,21 +337,6 @@ function CreateCampaignFromPost( $postID, $api )
 			}
 		}
 	}
-}
-
-//
-//	Given a mailing list, return an array of the names of the merge variables (custom 
-//	fields) for that mailing list.
-//
-function FetchMailChimpMergeVars( $api, $list_id )
-{
-	$mergeVars = array();
-	$result = $api->listMergeVars( $list_id );
-	foreach( $result as $i => $var ) 
-	{
-		$mergeVars[] = $var['name'];
-	}
-	return $mergeVars;
 }
 
 //

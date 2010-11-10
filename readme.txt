@@ -6,7 +6,7 @@ Donate link: https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_i
 Tags: admin, email, MailChimp, Mail, Chimp, campaign, mailing list, create, automatically, subscribe
 Requires at least: 2.8
 Tested up to: 3.01
-Stable tag: 0.82
+Stable tag: 0.83
 
 Keep website users and mailing lists in sync and create campaigns from posts.
 
@@ -40,6 +40,10 @@ Just go to <http://www.wandererllc.com/company/plugins/autochimp/> and follow th
 
 == Changelog ==
 
+= 0.83 =
+
+* Fixed issue of missing break statements.
+
 = 0.82 =
 
 * Fixed issue of pending email posts to campaigns being sent prematurely.
@@ -60,6 +64,10 @@ Just go to <http://www.wandererllc.com/company/plugins/autochimp/> and follow th
 * Basic UI for keeping a mailing list in sync with your site's users.
 
 == Upgrade Notice ==
+
+= 0.83 =
+
+All users should upgrade to this version ASAP.
 
 = 0.82 =
 

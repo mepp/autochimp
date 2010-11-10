@@ -25,16 +25,14 @@ $pluginFolder = get_bloginfo('wpurl') . '/wp-content/plugins/' . dirname( plugin
     		</tr>
     	</table></li>
     	<li><a href="http://eepurl.com/MnhD"><img src="http://www.mailchimp.com/img/badges/banner3.gif" border="0"></a></li>
-    	<li>Contact <a href="http://www.wandererllc.com/company/contact/">Wanderer LLC</a> to sponsor a feature or write a plugin just for you.</li>
-    	<li>Leave a good rating or comments for <a href="http://wordpress.org/extend/plugins/autochimp/">AutoChimp</a>.</li>
 	</ul>
 </div>
-
-<p><strong>MailChimp API Key Management</strong></p>
 
 <?php
 	// Fetch the Key from the DB here
 	$apiKey = get_option( WP88_MC_APIKEY );
+
+	print "<p><strong>MailChimp API Key Management</strong></p>";
 
 	if ( empty( $apiKey ) )
 	{
@@ -53,16 +51,12 @@ $pluginFolder = get_bloginfo('wpurl') . '/wp-content/plugins/' . dirname( plugin
 <div class="submit"><input type="submit" name="save_api_key" value="Save API Key" /></div>
 
 <p><strong>Mailing List Management</strong></p>
-<fieldset style="margin-left: 20px;">
 
 <?php
 if ( !empty( $apiKey ) )
 {
 	// Create an object to interface with MailChimp
 	$api = new MCAPI( $apiKey );
-
-	// This array holds the lists that have been selected
-	$listArray = array();
 
 	//
 	//	Options for managing mailing lists
@@ -78,7 +72,8 @@ if ( !empty( $apiKey ) )
 		$selectedLists = get_option( WP88_MC_LISTS );
 
 		// Put all of the selected lists into an array to search later
-		$listArray = preg_split( "/[\s,]+/", $selectedLists );
+		$valuesArray = array();
+		$valuesArray = preg_split( "/[\s,]+/", $selectedLists );
 
 		print "<p>Which mailing lists would you like to update?</p>";
 		print "<ul>";
@@ -91,7 +86,7 @@ if ( !empty( $apiKey ) )
 			$searchableListID = WP88_SEARCHABLE_PREFIX . $list_id;
 
 			// See if this mailing list should be selected
-			$selected = array_search( $searchableListID, $listArray );
+			$selected = array_search( $searchableListID, $valuesArray );
 
 			// Generate a checkbox here (checked if this list was selected previously)
 			print "<li><input type=CHECKBOX value=\"$searchableListID\" name=\"$searchableListID\" ";
@@ -113,25 +108,19 @@ if ( !empty( $apiKey ) )
 		print "<li><input type=CHECKBOX value=\"on_add_subscriber\" name=\"on_add_subscriber\" ";
 		if ( "0" === $onAddSubscriber ){} else
 			print "checked";
-		print "> When a user subscribes <em>(Adds the user to your mailing list)</em></li>";
+		print "> When a user subscribes</li>";
 
 		print "<li><input type=CHECKBOX value=\"on_delete_subscriber\" name=\"on_delete_subscriber\" ";
 		if ( "0" === $onDeleteSubscriber ){} else
 			print "checked";
-		print "> When a user unsubscribes <em>(Removes the user from your mailing list)</em></li>";
+		print "> When a user unsubscribes</li>";
 
 		print "<li><input type=CHECKBOX value=\"on_update_subscriber\" name=\"on_update_subscriber\" ";
 		if ( "0" === $onUpdateSubscriber ){} else
 			print "checked";
-		print "> When a user updates his information (see readme.txt for special info) <em>Updates first name, last name, and email</em></li>";
+		print "> When a user updates his information (see readme.txt for special info)</li>";
 
 		print "</ul>";
-
-		// Show the user the last message
-		$lastMessage = get_option( WP88_MC_LAST_MAIL_LIST_ERROR );
-		if ( empty( $lastMessage ) )
-			$lastMessage = "No campaign activity yet.";
-		print "<p><strong>Latest mailing list activity:</strong>  <em>$lastMessage</em></p>";
 	}
 	else
 	{
@@ -147,7 +136,6 @@ if ( !empty( $apiKey ) )
 	$campaignCategory = get_option( WP88_MC_CAMPAIGN_CATEGORY );
 	$createOnce = get_option( WP88_MC_CREATE_CAMPAIGN_ONCE );
 	$sendNow = get_option( WP88_MC_SEND_NOW );
-	$fixRegPlus = get_option( WP88_MC_FIX_REGPLUS );
 
 	// If $createOnce isn't set, default to "1"
 	if ( 0 == strlen( $createOnce ) )
@@ -160,9 +148,7 @@ if ( !empty( $apiKey ) )
 	if ( empty( $campaignCategory ) )
 		$campaignCategory = AC_DEFAULT_CATEGORY;
 
-	print '</fieldset>';
-	print '<p><strong>Mail Campaigns from Posts</strong></p>';
-	print '<fieldset style="margin-left: 20px;">';
+	print "<p><strong>Mail Campaigns from Posts</strong></p>";
 
 	print "<p><input type=CHECKBOX value=\"on_campaign_from_post\" name=\"on_campaign_from_post\" ";
 	if ( "0" === $campaignFromPost || empty( $campaignFromPost ) ){} else
@@ -206,47 +192,16 @@ if ( !empty( $apiKey ) )
 	print "> Create a campaign only once. Not checking this option will create an additional campaign each time you update your post. <em>Recommended <strong>ON</strong></em></p>";
 
 	// Show the user the last message
-	$lastMessage = get_option( WP88_MC_LAST_CAMPAIGN_ERROR );
+	$lastMessage = get_option( WP88_MC_LAST_ERROR );
 	if ( empty( $lastMessage ) )
 		$lastMessage = "No campaign activity yet.";
-
 	print "<p><strong>Latest campaign activity:</strong>  <em>$lastMessage</em></p>";
-	print '</fieldset>';
-
-	//
-	//	Plugin integration
-	//
-	print '<p><strong>External Plugin Integration and Synchronization</strong></p>';
-	print '<fieldset style="margin-left: 20px;">';
-
-	print '<p>AutoChimp provides integration and bux fixes for other plugins. If you are using any of these plugins, they will be listed here:</p>';
-
-	if ( class_exists( 'RegisterPlusPlugin' ) )
-	{
-		print '<p><strong>You are using <a target="_blank" href="http://wordpress.org/extend/plugins/register-plus/">Register Plus</a></strong> which has a known issue preventing first and last name being synchronized with Mail Chimp. <em>AutoChimp can fix this</em>.</p>';
-		print '<fieldset style="margin-left: 20px;">';
-		print "<p><input type=CHECKBOX value=\"on_fix_regplus\" name=\"on_fix_regplus\" ";
-		if ( '1' === $fixRegPlus )
-			print "checked";
-		print "> Patch Register Plus and sync first/last name with your selected mailing list. <em>Recommended <strong>ON</strong></em></p>";
-		print '</fieldset>';
-	}
-
-	if ( function_exists( 'ShowBuddyPressUI' ) )
-	{
-		$list = $listArray[ 0 ];
-		// Strip out the searchable tag
-		$list = substr_replace( $list, '', 0, strlen( WP88_SEARCHABLE_PREFIX ) );
-		ShowBuddyPressUI( $api, $list );
-	}
-
-	print '</fieldset>';
 
 	//
 	//	Save button
 	//
 
-	print '	<div class="submit"><input type="submit" name="save_autochimp_options" value="Save AutoChimp Options" /></div>';
+	print "	<div class=\"submit\"><input type=\"submit\" name=\"save_autochimp_options\" value=\"Save AutoChimp Options\" /></div>";
 }
 ?>
 
