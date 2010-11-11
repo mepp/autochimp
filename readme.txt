@@ -84,6 +84,7 @@ This version adds the ability to create campaigns from blog posts.
 There are many people who have suggested features for AutoChimp.  Special consideration needs to be made to the following people who had an active role in contributing by providing a detailed design, monetary sponsorship, or offering to test and provide useful feedback:
 
 1) Anton Alksnin at [Forex Alert](http://www.forex-alert.net "Forex Alert") for supporting the "blog post to campaign" feature.
+2) Peter Michael at [FlowDrops](http://www.flowdrops.com/) for some quality testing.
 
 == License ==
 

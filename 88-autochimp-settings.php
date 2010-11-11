@@ -150,6 +150,7 @@ if ( !empty( $apiKey ) )
 	$createOnce = get_option( WP88_MC_CREATE_CAMPAIGN_ONCE );
 	$sendNow = get_option( WP88_MC_SEND_NOW );
 	$fixRegPlus = get_option( WP88_MC_FIX_REGPLUS );
+	$fixRegPlusRedux = get_option( WP88_MC_FIX_REGPLUSREDUX );
 
 	// If $createOnce isn't set, default to "1"
 	if ( 0 == strlen( $createOnce ) )
@@ -176,14 +177,15 @@ if ( !empty( $apiKey ) )
 
 	// Generate a category combo box
 
+	// Fetch this site's categories
+	$category_args=array(	'orderby' => 'name',
+	  						'order' => 'ASC',
+	  						'hide_empty' => 0 );
+	$categories=get_categories( $category_args );
+
 	// Add the default category first, and select it if necessary.
 	$selText = ( AC_DEFAULT_CATEGORY == $campaignCategory ) ? 'selected>' : '>';
 	print '<select name="campaign_category"><option ' . $selText . AC_DEFAULT_CATEGORY . '</option>';
-
-	// Fetch this site's categories
-	$category_args=array(	'orderby' => 'name',
-	  						'order' => 'ASC' );
-	$categories=get_categories( $category_args );
 
 	// Loop through each category and add them to the combo box
 	foreach($categories as $category)
@@ -231,6 +233,17 @@ if ( !empty( $apiKey ) )
 		if ( '1' === $fixRegPlus )
 			print "checked";
 		print "> Patch Register Plus and sync first/last name with your selected mailing list. <em>Recommended <strong>ON</strong></em></p>";
+		print '</fieldset>';
+	}
+
+	if ( class_exists( 'RegisterPlusReduxPlugin' ) )
+	{
+		print '<p><strong>You are using <a target="_blank" href="http://wordpress.org/extend/plugins/register-plus-redux/">Register Plus Redux</a></strong> which has a known issue preventing first and last name being synchronized with Mail Chimp. <em>AutoChimp can fix this</em>.</p>';
+		print '<fieldset style="margin-left: 20px;">';
+		print "<p><input type=CHECKBOX value=\"on_fix_regplusredux\" name=\"on_fix_regplusredux\" ";
+		if ( '1' === $fixRegPlusRedux )
+			print "checked";
+		print "> Patch Register Plus Redux and sync first/last name with your selected mailing list. <em>Recommended <strong>ON</strong></em></p>";
 		print '</fieldset>';
 	}
 

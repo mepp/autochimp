@@ -32,7 +32,7 @@ function ShowBuddyPressUI( $api, $list )
 	if ( '1' === $syncBuddyPress )
 		print 'checked';
 	print '> Sync BuddyPress Profile Fields with Mail Chimp.</p>';
-	print '<p>Use the following table to assign your BuddyPress Profile Fields to your MailChimp fields.  You can use the static field at the bottom to assign the same value to each new user which will distinguish users from your site from users from other locations.</p>';
+	print '<p>Use the following table to assign your BuddyPress Profile Fields to your MailChimp fields.  You can use the  field at the bottom to assign the same value to each new user which will distinguish users from your site from users from other locations.</p>';
 
 	$fields = $wpdb->get_results( "SELECT name,type FROM wp_bp_xprofile_fields WHERE type != 'option'", ARRAY_A );
 	if ( $fields )
@@ -43,19 +43,19 @@ function ShowBuddyPressUI( $api, $list )
 		foreach ( $fields as $field )
 		{
 			// Generate a select box for this particular field
-			$selectBox = GenerateFieldSelectBox( $field['name'], $mcFields );
-			$output .= '<tr class="alternate">' . PHP_EOL . '<td width="50%">' . $field['name'] . '</td>' . PHP_EOL . '<td width="20%">' . $field['type'] . '</td>' . PHP_EOL . '<td width="30%">' . $selectBox . '</td>' . PHP_EOL . '</tr>' . PHP_EOL;
+			$fieldNameTag = EncodeXProfileOptionName( $field['name'] );
+			$selectBox = GenerateFieldSelectBox( $fieldNameTag, $mcFields );
+			$output .= '<tr class="alternate">' . PHP_EOL . '<td width="70%">' . $field['name'] . '</td>' . PHP_EOL . '<td width="30%">' . $selectBox . '</td>' . PHP_EOL . '</tr>' . PHP_EOL;
 		}
 
-		$selectBox = GenerateFieldSelectBox( 'Static', $mcFields );
-		$output .= '<tr class="alternate"><td width="50%">Static Text:<input type="text" name="static_select" value="' . $staticText . '"size="25" /></td><td width="20%">static</td><td width="30%">' . $selectBox . '</td></tr>';
+		$selectBox = GenerateFieldSelectBox( WP88_MC_STATIC_FIELD, $mcFields );
+		$output .= '<tr class="alternate"><td width="70%">Static Text:<input type="text" name="static_select" value="' . $staticText . '"size="25" /></td><td width="30%">' . $selectBox . '</td></tr>';
 		$tableText .= '<div id=\'filelist\'>' . PHP_EOL;
 		$tableText .= '<table class="widefat" style="width:650px">
 				<thead>
 				<tr>
-					<th scope="col">Profile Field</th>
-					<th scope="col">Type</th>
-					<th scope="col">Assign to:</th>
+					<th scope="col">BuddyPress Profile Field:</th>
+					<th scope="col">Assign to MailChimp Field:</th>
 				</tr>
 				</thead>';
 		$tableText .= $output;
@@ -77,14 +77,11 @@ function ShowBuddyPressUI( $api, $list )
 //
 function GenerateFieldSelectBox( $fieldName, $mcMergeVars )
 {
-	// Generate a tag name for the field
-	$fieldNameTag = EncodeXProfileOptionName( $fieldName );
-
 	// See which field should be selected (if any)
-	$selectedVal = get_option( $fieldNameTag );
+	$selectedVal = get_option( $fieldName );
 
 	// Create a select box from Mail Chimp merge values
-	$selectBox = '<select name="' . $fieldNameTag . '">' . PHP_EOL;
+	$selectBox = '<select name="' . $fieldName . '">' . PHP_EOL;
 
 	// Create an "Ignore" option
 	$selectBox .= '<option>' . WP88_IGNORE_FIELD_TEXT . '</option>' . PHP_EOL;

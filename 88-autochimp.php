@@ -26,8 +26,10 @@ define( "WP88_MC_LAST_CAMPAIGN_ERROR", "wp88_mc_last_error" );
 define( "WP88_MC_LAST_MAIL_LIST_ERROR", "wp88_mc_last_ml_error" );
 define( "WP88_MC_CAMPAIGN_CREATED", "wp88_mc_campaign" );
 define( 'WP88_MC_FIX_REGPLUS', 'wp88_mc_fix_regplus' );
+define( 'WP88_MC_FIX_REGPLUSREDUX', 'wp88_mc_fix_regplusredux' );
 define( 'WP88_MC_SYNC_BUDDYPRESS', 'wp88_mc_sync_buddypress' );
 define( 'WP88_MC_STATIC_TEXT', 'wp88_mc_bp_static_text' );
+define( 'WP88_MC_STATIC_FIELD', 'wp88_mc_bp_static_field' );
 
 define( "AC_DEFAULT_CATEGORY", "Any category" );
 
@@ -54,6 +56,7 @@ add_action('xmlrpc_publish_post', 'OnPublishPost' );	// Same as above, but for X
 add_action('publish_phone', 'OnPublishPost' );			// Same as above, but for email.  No idea why it's called "phone".
 add_action('bp_init', 'OnBuddyPressInstalled');			// Only load the component if BuddyPress is loaded and initialized.
 add_action('xprofile_updated_profile', 'OnBuddyPressUserUpdate' ); // Used to sync users with MailChimp
+//add_action('xprofile_screen_edit_profile', 'OnBuddyPressUserScreenUpdate' );
 
 //
 //	OnBuddyPressInstalled
@@ -73,16 +76,14 @@ function OnBuddyPressInstalled()
 //
 function OnBuddyPressUserUpdate()
 {
-	$syncBuddyPress = get_option( WP88_MC_SYNC_BUDDYPRESS );
-
-	// Only do this if synchronizing is turned on
-	if ( "1" === $syncBuddyPress )
-	{
-	}
+	// Get the current user
+	$user = wp_get_current_user();
+	// Pass their ID to the function that does the work.
+	OnUpdateUser( $user->ID );
 }
 
 //
-//	START Register Plus Workaround
+//	START Register Plus Workaround (Register Plus REDUX)
 //
 //	Register Plus overrides this:
 //	http://codex.wordpress.org/Function_Reference/wp_new_user_notification
@@ -113,7 +114,8 @@ if ( function_exists( 'wp_set_password' ) )
 {
 	// Check if the user wants to patch
 	$fixRegPlus = get_option( WP88_MC_FIX_REGPLUS );
-	if ( '1' === $fixRegPlus )
+	$fixRegPlusRedux = get_option( WP88_MC_FIX_REGPLUSREDUX );
+	if ( '1' === $fixRegPlus || '1' === $fixRegPlusRedux )
 	{
 		add_action( 'admin_notices', 'OverrideWarning' );
 	}
@@ -124,13 +126,13 @@ if ( function_exists( 'wp_set_password' ) )
 // pluggable function - the only place I can see to grab the user's first
 // and last name.
 //
-if ( !function_exists('wp_set_password') && '1' === get_option( WP88_MC_FIX_REGPLUS ) ) :
+if ( !function_exists('wp_set_password') && ( '1' === get_option( WP88_MC_FIX_REGPLUS) ||
+											  '1' === get_option( WP88_MC_FIX_REGPLUSREDUX) ) ) :
 function wp_set_password( $password, $user_id )
 {
-	$lastMessage = get_option( WP88_MC_LAST_MAIL_LIST_ERROR );
-	$lastMessage .= "In wp_set_password()...";
-
+	//
 	// START original WordPress code
+	//
 	global $wpdb;
 
 	$hash = wp_hash_password($password);
@@ -144,11 +146,7 @@ function wp_set_password( $password, $user_id )
 	//
 	// START Detect Register Plus
 	//
-	$lastMessage .= "Register Plus is ACTIVE.";
-	$lastMessage .= "YOU THERE!  Now updating $user_info->first_name $user_info->last_name ('$user_info->user_email') in list $list_id.";
-	update_option( WP88_MC_LAST_MAIL_LIST_ERROR, $lastMessage );
-
-	update_option( WP88_MC_TEMPEMAIL, "" );
+	update_option( GenerateTempEmailOptionName( $user_id ), "" );
 	$user_info = get_userdata( $user_id );
 	ManageMailUser( MMU_UPDATE, $user_info );
 	//
@@ -171,7 +169,7 @@ add_filter( 'plugin_row_meta', 'AddAutoChimpPluginLinks', 10, 2 ); // Expand the
 //
 function OnPluginMenu()
 {
-	add_submenu_page('options-general.php', 'AutoChimp Options', 'AutoChimp', 'manage_options', basename(__FILE__), AutoChimpOptions );
+	add_submenu_page('options-general.php', 'AutoChimp Options', 'AutoChimp', 'add_users', basename(__FILE__), AutoChimpOptions );
 }
 
 // Inspired by NextGen Gallery by Alex Rabe
@@ -193,7 +191,7 @@ function AddAutoChimpPluginLinks($links, $file)
 function AutoChimpOptions()
 {
 	// Stop the user if they don't have permission
-	if (!current_user_can('manage_options'))
+	if (!current_user_can('add_users'))
 	{
     	wp_die( __('You do not have sufficient permissions to access this page.') );
   	}
@@ -285,6 +283,11 @@ function AutoChimpOptions()
 		else
 			update_option( WP88_MC_FIX_REGPLUS, "0" );
 
+		if ( isset( $_POST['on_fix_regplusredux'] ) )
+			update_option( WP88_MC_FIX_REGPLUSREDUX, "1" );
+		else
+			update_option( WP88_MC_FIX_REGPLUSREDUX, "0" );
+
 		if ( isset( $_POST['on_sync_buddypress'] ) )
 		{
 			update_option( WP88_MC_SYNC_BUDDYPRESS, "1" );
@@ -313,13 +316,35 @@ function AutoChimpOptions()
 			// Now save the special static field and the mapping
 			$staticText = $_POST[ 'static_select' ];
 			update_option( WP88_MC_STATIC_TEXT, $staticText );
-
-			$staticSelectName = WP88_BP_XPROFILE_FIELD_MAPPING . 'Static';
-			update_option( $staticSelectName, $_POST[ $staticSelectName ] );
-
+			update_option( WP88_MC_STATIC_FIELD, $_POST[ WP88_MC_STATIC_FIELD ] );
 		}
 		else
 			update_option( WP88_MC_SYNC_BUDDYPRESS, "0" );
+	}
+
+	if ( isset( $_POST['sync_buddy_press'] ) )
+	{
+		$numSuccess = 0;
+		$numFailed = 0;
+		$message = "";
+
+		// Get a list of users on this site.
+		$users = get_users_of_blog();
+
+		// Iterate over the array and retrieve that users' basic information.
+		foreach ( $users as $user )
+		{
+			$result = OnUpdateUser( $user->ID );
+			if ( 0 === $result )
+				$numSuccess++;
+			else
+			{
+				$numFailed++;
+	    		$message .= "(User ID: $user->ID, Error: $result), ";
+			}
+		}
+		// Tell the user that all is well
+		print '<div id="message" class="updated fade"><p>Successfully syncronized '. $numSuccess .' MailChimp users. ' . $numFailed . ' <strong>failed</strong>.  Failure Details: ' . $message . '</p></div>';
 	}
 
 	// The file that will handle uploads is this one (see the "if" above)
@@ -363,13 +388,21 @@ function ManageMailUser( $mode, $user_info )
 				{
 					$merge_vars = array( 'FNAME'=>$user_info->first_name, 'LNAME'=>$user_info->last_name );
 
-					// Hunt down additional user data
+					// Hunt down additional user data.  This first one gets
+					// XProfile data from BuddyPress.
 					$data = FetchMappedXProfileData( $user_info->ID );
-//					$message = print_r( $data, TRUE );
-//					update_option( "wp88_mc_fetched_xprofile_data", $message );
 
 					// Add this data to the merge variables
 					foreach ( $data as $item )
+					{
+						$merge_vars[ $item['tag'] ] = $item['value'];
+					}
+
+					// This one gets static data...add it to the current array.
+					$staticData = FetchStaticData();
+
+					// Add this static data to the merge variables
+					foreach ( $staticData as $item )
 					{
 						$merge_vars[ $item['tag'] ] = $item['value'];
 					}
@@ -381,9 +414,9 @@ function ManageMailUser( $mode, $user_info )
 							// By default this sends a confirmation email - you will not see new members
 							// until the link contained in it is clicked!
 							$retval = $api->listSubscribe( $list_id, $user_info->user_email, $merge_vars );
-							$errorCode = $api->errorCode;
-							if ( $errorCode )
+							if ( $api->errorCode )
 							{
+								$errorCode = $api->errorCode;
 								// Set latest activity - displayed in the admin panel
 								$errorString = "Problem adding $user_info->first_name $user_info->last_name ('$user_info->user_email') to list $list_id.  Error Code: $errorCode, Message: $api->errorMessage, Data: ";
 								$errorString .= print_r( $merge_vars, TRUE );
@@ -400,9 +433,9 @@ function ManageMailUser( $mode, $user_info )
 							update_option( WP88_MC_LAST_MAIL_LIST_ERROR, $lastMessage );
 							// By default this sends a goodbye email and fires off a notification to the list owner
 							$retval = $api->listUnsubscribe( $list_id, $user_info->user_email );
-							$errorCode = $api->errorCode;
-							if ( $errorCode )
-														{
+							if ( $api->errorCode )
+							{
+								$errorCode = $api->errorCode;
 								// Set latest activity - displayed in the admin panel
 								update_option( WP88_MC_LAST_MAIL_LIST_ERROR, "Problem removing $user_info->first_name $user_info->last_name ('$user_info->user_email') from list $list_id.  Error Code: $errorCode, Message: $api->errorMessage" );
 							}
@@ -417,7 +450,7 @@ function ManageMailUser( $mode, $user_info )
 							// Get the old email - this feels a little dangerous...'cause users have to go
 							// through the profile panel.  If they don't and email is updated, data can
 							// get out of sync.  See the readme.txt for more.
-							$updateEmail = get_option( WP88_MC_TEMPEMAIL );
+							$updateEmail = get_option( GenerateTempEmailOptionName( $user_info->ID ) );
 
 							// If this email is empty, then it means that some method other than viewing
 							// the admin panel has invoked the update - another plugin like "Register
@@ -431,9 +464,9 @@ function ManageMailUser( $mode, $user_info )
 
 							// No emails are sent after a successful call to this function.
 							$retval = $api->listUpdateMember( $list_id, $updateEmail, $merge_vars );
-							$errorCode = $api->errorCode;
-							if ( $errorCode )
-														{
+							if ( $api->errorCode )
+							{
+								$errorCode = $api->errorCode;
 								// Set latest activity - displayed in the admin panel
 								$errorString = "Problem updating $user_info->first_name $user_info->last_name ('$user_info->user_email') from list $list_id.  Error Code: $errorCode, Message: $api->errorMessage, Data: ";
 								$errorString .= print_r( $merge_vars, TRUE );
@@ -631,22 +664,49 @@ function FetchMappedXProfileData( $userID )
 
 	// Loop through each field that the user wants to sync and hunt down the user's
 	// values for those fields and stick them into an array.
-	$counter = 0;
 	foreach ( $fieldNames as $field )
 	{
 		$optionName = DecodeXProfileOptionName( $field['option_name'] );
 
 		// Big JOIN to get the user's value for the field in question
 		// Best to offload this on SQL than PHP.
-		$sql = "SELECT name,value FROM wp_bp_xprofile_data JOIN wp_bp_xprofile_fields ON wp_bp_xprofile_fields.id = wp_bp_xprofile_data.field_id WHERE user_id = $userID AND name = '$optionName' LIMIT 1";
+		$sql = "SELECT name,value,type FROM wp_bp_xprofile_data JOIN wp_bp_xprofile_fields ON wp_bp_xprofile_fields.id = wp_bp_xprofile_data.field_id WHERE user_id = $userID AND name = '$optionName' LIMIT 1";
 		$results = $wpdb->get_results( $sql, ARRAY_A );
 
 		// Populate the data array
 		if ( !empty( $results[0] ) )
 		{
+			$value = $results[0]['value'];
+			if ( 0 === strcmp( $results[0]['type'],"datebox" ) )
+			{
+				$value = date( "Y-m-d", $value );
+			}
 			$dataArray[] = array( 	"name" => $optionName,
 									"tag" => $field['option_value'],
-									"value" => $results[0]['value'] );
+									"value" => $value );
+		}
+	}
+	return $dataArray;
+}
+
+function FetchStaticData()
+{
+	// Will hold a row of static data...assuming user wants this data, of course
+	$dataArray = array();
+
+	// Does the user want static data?
+	$mapping = get_option( WP88_MC_STATIC_FIELD );
+
+	// If the mapping is set...
+	if ( 0 !== strcmp( $mapping, WP88_IGNORE_FIELD_TEXT ) )
+	{
+		$text = get_option( WP88_MC_STATIC_TEXT );
+
+		if ( !empty( $text ) )
+		{
+			$dataArray[] = array( 	"name" => WP88_MC_STATIC_FIELD,
+									"tag" => $mapping,
+									"value" => $text );
 		}
 	}
 	return $dataArray;
@@ -674,6 +734,14 @@ function DecodeXProfileOptionName( $optionName )
 	return $decoded;
 }
 
+// This function creates a user-unique email option name used as a field in
+// the wp_options table.  This is used to temporarily store the user's email
+// address.
+function GenerateTempEmailOptionName( $userID )
+{
+	return WP88_MC_TEMPEMAIL . $userID;
+}
+
 //
 //	WordPress Action handlers
 //
@@ -684,8 +752,9 @@ function OnRegisterUser( $userID )
 	$onAddSubscriber = get_option( WP88_MC_ADD );
 	if ( "1" == $onAddSubscriber )
 	{
-		ManageMailUser( MMU_ADD, $user_info );
+		$result = ManageMailUser( MMU_ADD, $user_info );
 	}
+	return $result;
 }
 
 function OnDeleteUser( $userID )
@@ -694,8 +763,9 @@ function OnDeleteUser( $userID )
 	$onDeleteSubscriber = get_option( WP88_MC_DELETE );
 	if ( "1" == $onDeleteSubscriber )
 	{
-		ManageMailUser( MMU_DELETE, $user_info );
+		$result = ManageMailUser( MMU_DELETE, $user_info );
 	}
+	return $result;
 }
 
 function OnAboutToUpdateUser( $userID )
@@ -705,7 +775,8 @@ function OnAboutToUpdateUser( $userID )
 	if ( "1" == $onUpdateSubscriber )
 	{
 		$updateEmail = $user_info->user_email;
-		update_option( WP88_MC_TEMPEMAIL, $updateEmail );
+		$optionName = GenerateTempEmailOptionName( $user_info->ID );
+		update_option( $optionName, $updateEmail );
 	}
 }
 
@@ -716,7 +787,7 @@ function OnUpdateUser( $userID )
 	if ( "1" == $onUpdateSubscriber )
 	{
 		$result = ManageMailUser( MMU_UPDATE, $user_info );
-		update_option( WP88_MC_TEMPEMAIL, "" );
+		update_option( GenerateTempEmailOptionName( $user_info->ID ), "" );
 
 		// 232 is the MailChimp error code for: "user doesn't exist".  This
 		// error can occur when a new user signs up but there's a required
@@ -734,6 +805,7 @@ function OnUpdateUser( $userID )
 			}
 		}
 	}
+	return $result;
 }
 
 ?>
