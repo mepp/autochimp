@@ -677,10 +677,27 @@ function FetchMappedXProfileData( $userID )
 		if ( !empty( $results[0] ) )
 		{
 			$value = $results[0]['value'];
+
+			// Do conversions based on field type
+
+			// First, convert a timestamp to a date
 			if ( 0 === strcmp( $results[0]['type'],"datebox" ) )
 			{
 				$value = date( "Y-m-d", $value );
 			}
+
+			// Now convert a checkbox type to a string
+			if ( 0 === strcmp( $results[0]['type'],"checkbox" ) )
+			{
+				$checkboxData = unserialize( $value );
+				$value = "";
+				foreach( $checkboxData as $item )
+				{
+					$value .= $item . ',';
+				}
+				$value = rtrim( $value, ',' );
+			}
+
 			$dataArray[] = array( 	"name" => $optionName,
 									"tag" => $field['option_value'],
 									"value" => $value );
