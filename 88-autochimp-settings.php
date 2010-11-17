@@ -132,7 +132,7 @@ if ( !empty( $apiKey ) )
 		// Show the user the last message
 		$lastMessage = get_option( WP88_MC_LAST_MAIL_LIST_ERROR );
 		if ( empty( $lastMessage ) )
-			$lastMessage = "No campaign activity yet.";
+			$lastMessage = "No mailing list activity yet.";
 		print "<p><strong>Latest mailing list activity:</strong>  <em>$lastMessage</em></p>";
 	}
 	else
@@ -227,7 +227,7 @@ if ( !empty( $apiKey ) )
 
 	if ( class_exists( 'RegisterPlusPlugin' ) )
 	{
-		print '<p><strong>You are using <a target="_blank" href="http://wordpress.org/extend/plugins/register-plus/">Register Plus</a></strong> which has a known issue preventing first and last name being synchronized with Mail Chimp. <em>AutoChimp can fix this</em>.</p>';
+		print '<p><strong>You are using <a target="_blank" href="http://wordpress.org/extend/plugins/register-plus/">Register Plus</a></strong> which has a known issue preventing first and last name being synchronized with MailChimp. <em>AutoChimp can fix this</em>.</p>';
 		print '<fieldset style="margin-left: 20px;">';
 		print "<p><input type=CHECKBOX value=\"on_fix_regplus\" name=\"on_fix_regplus\" ";
 		if ( '1' === $fixRegPlus )
@@ -238,7 +238,7 @@ if ( !empty( $apiKey ) )
 
 	if ( class_exists( 'RegisterPlusReduxPlugin' ) )
 	{
-		print '<p><strong>You are using <a target="_blank" href="http://wordpress.org/extend/plugins/register-plus-redux/">Register Plus Redux</a></strong> which has a known issue preventing first and last name being synchronized with Mail Chimp. <em>AutoChimp can fix this</em>.</p>';
+		print '<p><strong>You are using <a target="_blank" href="http://wordpress.org/extend/plugins/register-plus-redux/">Register Plus Redux</a></strong> which has a known issue preventing first and last name being synchronized with MailChimp. <em>AutoChimp can fix this</em>.</p>';
 		print '<fieldset style="margin-left: 20px;">';
 		print "<p><input type=CHECKBOX value=\"on_fix_regplusredux\" name=\"on_fix_regplusredux\" ";
 		if ( '1' === $fixRegPlusRedux )
@@ -249,10 +249,12 @@ if ( !empty( $apiKey ) )
 
 	if ( function_exists( 'ShowBuddyPressUI' ) )
 	{
+		// NOTE:  This just takes the FIRST selected list!  Multiple selected lists
+		// will cause trouble.
 		$list = $listArray[ 0 ];
 		// Strip out the searchable tag
 		$list = substr_replace( $list, '', 0, strlen( WP88_SEARCHABLE_PREFIX ) );
-
+		// Special function just for BuddyPress
 		ShowBuddyPressUI( $api, $list );
 	}
 
@@ -262,6 +264,7 @@ if ( !empty( $apiKey ) )
 	//	Save button
 	//
 
+	print '<p><strong>Save Your AutoChimp Options</strong></p>';
 	print '	<div class="submit"><input type="submit" name="save_autochimp_options" value="Save AutoChimp Options" /></div>';
 }
 ?>

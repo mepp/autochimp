@@ -25,13 +25,13 @@ function ShowBuddyPressUI( $api, $list )
 	$staticText = get_option( WP88_MC_STATIC_TEXT );
 
 	// Start outputting UI
-	print '<p><strong>You are using <a target="_blank" href="http://wordpress.org/extend/plugins/buddypress/">BuddyPress</a></strong>. With AutoChimp, you can synchronize your BuddyPress user Profile Fields with your selected MailChimp mailing lists.</p>';
+	print '<p><strong>You are using <a target="_blank" href="http://wordpress.org/extend/plugins/buddypress/">BuddyPress</a></strong>. With AutoChimp, you can synchronize your BuddyPress user Profile Fields with your selected MailChimp mailing list.  Please ensure that only one list is selected.</p>';
 	print '<fieldset style="margin-left: 20px;">';
 
 	print '<p><input type=CHECKBOX value="on_sync_buddypress" name="on_sync_buddypress" ';
 	if ( '1' === $syncBuddyPress )
 		print 'checked';
-	print '> Sync BuddyPress Profile Fields with Mail Chimp.</p>';
+	print '> Sync BuddyPress Profile Fields with MailChimp.</p>';
 	print '<p>Use the following table to assign your BuddyPress Profile Fields to your MailChimp fields.  You can use the  field at the bottom to assign the same value to each new user which will distinguish users from your site from users from other locations.</p>';
 
 	$fields = $wpdb->get_results( "SELECT name,type FROM wp_bp_xprofile_fields WHERE type != 'option'", ARRAY_A );
@@ -39,6 +39,8 @@ function ShowBuddyPressUI( $api, $list )
 	{
 		// Get the mailing list's Merge Variables
 		$mcFields = FetchMailChimpMergeVars( $api, $list );
+		if ( empty( $mcFields ) )
+			print "<p><em><strong>Problem: </strong>AutoChimp could not retrieve your MailChimp Merge Variables. Try saving your selected mailing list again.</em></p>";
 
 		foreach ( $fields as $field )
 		{
@@ -80,7 +82,7 @@ function GenerateFieldSelectBox( $fieldName, $mcMergeVars )
 	// See which field should be selected (if any)
 	$selectedVal = get_option( $fieldName );
 
-	// Create a select box from Mail Chimp merge values
+	// Create a select box from MailChimp merge values
 	$selectBox = '<select name="' . $fieldName . '">' . PHP_EOL;
 
 	// Create an "Ignore" option

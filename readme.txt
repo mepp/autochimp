@@ -38,6 +38,10 @@ To use, save your MailChimp API Key on the options page then start adding your n
 
 Just go to <http://www.wandererllc.com/company/plugins/autochimp/> and follow the instructions.
 
+= How do I add a signup box using AutoChimp? = 
+
+AutoChimp is not a visual plugin.  It does all it's work behind the scenes keeping your blog users in sync with your mailing list.  If you are looking for a registration widget for MailChimp, search for "MailChimp List Subscribe Form" on the WordPress plugin site.
+
 == Changelog ==
 
 = 0.83 =
@@ -85,6 +89,7 @@ There are many people who have suggested features for AutoChimp.  Special consid
 
 1) Anton Alksnin at [Forex Alert](http://www.forex-alert.net "Forex Alert") for supporting the "blog post to campaign" feature.
 2) Peter Michael at [FlowDrops](http://www.flowdrops.com/) for some quality testing.
+3) [Latinos a Morir](http://www.latinosamorir.com/) for supporting the BuddyPress Synchronization feature.
 
 == License ==
 

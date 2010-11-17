@@ -636,6 +636,8 @@ function FetchMailChimpMergeVars( $api, $list_id )
 {
 	$mergeVars = array();
 	$result = $api->listMergeVars( $list_id );
+	if ( NULL == $result )
+		return $mergeVars;
 	foreach( $result as $i => $var )
 	{
 		$mergeVars[ $var['name'] ] = $var['tag'];
