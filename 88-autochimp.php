@@ -83,7 +83,7 @@ function OnBuddyPressUserUpdate()
 }
 
 //
-//	START Register Plus Workaround (Register Plus REDUX)
+//	START Register Plus AND Register Plus Redux Workaround
 //
 //	Register Plus overrides this:
 //	http://codex.wordpress.org/Function_Reference/wp_new_user_notification
@@ -388,23 +388,12 @@ function ManageMailUser( $mode, $user_info )
 				{
 					$merge_vars = array( 'FNAME'=>$user_info->first_name, 'LNAME'=>$user_info->last_name );
 
-					// Hunt down additional user data.  This first one gets
-					// XProfile data from BuddyPress.
-					$data = FetchMappedXProfileData( $user_info->ID );
-
-					// Add this data to the merge variables
-					foreach ( $data as $item )
+					// Grab extra data IF the user wants to Sync Buddy Press
+					$syncBuddyPress = get_option( WP88_MC_SYNC_BUDDYPRESS );
+					if ( "1" === $syncBuddyPress )
 					{
-						$merge_vars[ $item['tag'] ] = $item['value'];
-					}
-
-					// This one gets static data...add it to the current array.
-					$staticData = FetchStaticData();
-
-					// Add this static data to the merge variables
-					foreach ( $staticData as $item )
-					{
-						$merge_vars[ $item['tag'] ] = $item['value'];
+						// This function adds fields to the array passed in.
+						AddXProfileFieldsToMergeArray( $merge_vars, $user_info->ID );
 					}
 
 					switch( $mode )
@@ -729,6 +718,32 @@ function FetchStaticData()
 		}
 	}
 	return $dataArray;
+}
+
+//
+//	Takes a by-reference array argument and adds XProfile merge variable data
+//	specific to the user ID passed in to the array.
+//
+function AddXProfileFieldsToMergeArray( &$mergeVariables, $userID )
+{
+	// Hunt down additional user data.  This first one gets
+	// XProfile data from BuddyPress.
+	$data = FetchMappedXProfileData( $userID );
+
+	// Add this data to the merge variables
+	foreach ( $data as $item )
+	{
+		$mergeVariables[ $item['tag'] ] = $item['value'];
+	}
+
+	// This one gets static data...add it to the current array.
+	$staticData = FetchStaticData();
+
+	// Add this static data to the merge variables
+	foreach ( $staticData as $item )
+	{
+		$mergeVariables[ $item['tag'] ] = $item['value'];
+	}
 }
 
 function EncodeXProfileOptionName( $optionName )
