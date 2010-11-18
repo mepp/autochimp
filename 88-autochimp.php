@@ -2,9 +2,9 @@
 /*
 Plugin Name: AutoChimp
 Plugin URI: http://www.wandererllc.com/company/plugins/autochimp/
-Description: Gives users the ability to create MailChimp mail campaigns from blog posts. Also allows updating MailChimp mailing lists when users subscribe, unsubscribe, and update their WordPress profiles.
+Description: Also allows updating MailChimp mailing lists when users subscribe, unsubscribe, and update their WordPress profiles.  The plugin integrates with BuddyPress and allows you to synchronize all of your profile fields.  Also, gives users the ability to create MailChimp mail campaigns from blog posts.
 Author: Wanderer LLC Dev Team
-Version: 0.88
+Version: 1.00
 */
 
 if ( !class_exists( 'MCAPI' ) )
