@@ -30,8 +30,9 @@ $pluginFolder = get_bloginfo('wpurl') . '/wp-content/plugins/' . dirname( plugin
 	</ul>
 </div>
 
-<p><strong>MailChimp API Key Management</strong></p>
-<fieldset style="margin-left: 20px;">
+<div id="mailchimp_api_key" class="postbox" style="width:450px;height:230px">
+<h3 class='hndle'><span>MailChimp API Key Management</span></h3>
+<div class="inside">
 
 <?php
 	// Fetch the Key from the DB here
@@ -42,20 +43,26 @@ $pluginFolder = get_bloginfo('wpurl') . '/wp-content/plugins/' . dirname( plugin
 		print "<p><em>No API Key has been saved yet!</em></p>";
 		print "<p>Set your Mailchimp API Key, which you can find on the <a href=\"http://us1.admin.mailchimp.com/account/api\">MailChimp website</a>, ";
 		print "in the text box below. Once the API Key is set, you will see the various options that AutoChimp provides.</p>";
+		print '<p>Set Your MailChimp API Key: ';
 	}
 	else
 	{
 		print "<p>Your Current MailChimp API Key:  <strong>$apiKey</strong><p/>";
 		print '<p><em>There is no need to set your API Key again unless you have acquired a new API key at <a href="http://eepurl.com/MnhD">mailchimp.com</a>.</em></p>';
+		print '<p>Change Your MailChimp API Key: ';
 	}
 ?>
 
-<p>Set Your MailChimp API Key: <input type="text" name="api_key" size="55" /></p>
+<input type="text" name="api_key" size="45" /></p>
 <div class="submit"><input type="submit" name="save_api_key" value="Save API Key" /></div>
-</fieldset>
 
-<p><strong>Mailing List Management</strong></p>
-<fieldset style="margin-left: 20px;">
+<div class="clear"></div>
+</div>
+</div>
+
+<div id="mailchimp_lists" class="postbox" style="width:450px">
+<h3 class='hndle'><span>Mailing List Management</span></h3>
+<div class="inside">
 
 <?php
 if ( !empty( $apiKey ) )
@@ -84,7 +91,7 @@ if ( !empty( $apiKey ) )
 
 		print "<p>Which mailing lists would you like to update?</p>";
 		print "<ul>";
-		foreach ( $myLists as $list )
+		foreach ( $myLists['data'] as $list )
 		{
 			$listName = $list['name'];
 			$list_id = $list['id'];
@@ -163,10 +170,17 @@ if ( !empty( $apiKey ) )
 	if ( empty( $campaignCategory ) )
 		$campaignCategory = AC_DEFAULT_CATEGORY;
 
-	print '</fieldset>';
-	print '<p><strong>Mail Campaigns from Posts</strong></p>';
-	print '<fieldset style="margin-left: 20px;">';
+?>
 
+<div class="clear"></div>
+</div>
+</div>
+
+<div id="mailchimp_campaigns" class="postbox">
+<h3 class='hndle'><span>Mail Campaigns from Posts</span></h3>
+<div class="inside">
+
+<?php
 	print "<p><input type=CHECKBOX value=\"on_campaign_from_post\" name=\"on_campaign_from_post\" ";
 	if ( "0" === $campaignFromPost || empty( $campaignFromPost ) ){} else
 		print "checked";
@@ -215,14 +229,18 @@ if ( !empty( $apiKey ) )
 		$lastMessage = "No campaign activity yet.";
 
 	print "<p><strong>Latest campaign activity:</strong>  <em>$lastMessage</em></p>";
-	print '</fieldset>';
 
-	//
-	//	Plugin integration
-	//
-	print '<p><strong>External Plugin Integration and Synchronization</strong></p>';
-	print '<fieldset style="margin-left: 20px;">';
+?>
 
+<div class="clear"></div>
+</div>
+</div>
+
+<div id="mailchimp_plugin_integration" class="postbox">
+<h3 class='hndle'><span>External Plugin Integration and Synchronization</span></h3>
+<div class="inside">
+
+<?php
 	print '<p>AutoChimp provides integration and bux fixes for other plugins. If you are using any of these plugins, they will be listed here:</p>';
 
 	if ( class_exists( 'RegisterPlusPlugin' ) )
@@ -257,15 +275,15 @@ if ( !empty( $apiKey ) )
 		// Special function just for BuddyPress
 		ShowBuddyPressUI( $api, $list );
 	}
+?>
 
-	print '</fieldset>';
+<div class="clear"></div>
+</div>
+</div>
 
-	//
-	//	Save button
-	//
+<div class="submit"><input type="submit" name="save_autochimp_options" class="button-primary" value="Save AutoChimp Options" /></div>
 
-	print '<p><strong>Save Your AutoChimp Options</strong></p>';
-	print '	<div class="submit"><input type="submit" name="save_autochimp_options" value="Save AutoChimp Options" /></div>';
+<?php
 }
 ?>
 

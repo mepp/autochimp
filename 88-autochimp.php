@@ -40,6 +40,8 @@ define( "MMU_UPDATE", 3 );
 define( "WP88_SEARCHABLE_PREFIX", 'wp88_mc' );
 define( 'WP88_BP_XPROFILE_FIELD_MAPPING', 'wp88_mc_bp_xpf_' );
 define( 'WP88_IGNORE_FIELD_TEXT', 'Ignore this field' );
+define( 'WP88_GROUPINGS_TEXT', 'GROUPINGS' );
+define( 'WP88_FIELD_DELIMITER', '+++' );
 
 //
 //	Actions to hook to allow AutoChimp to do it's work
@@ -375,7 +377,7 @@ function ManageMailUser( $mode, $user_info )
 		$valuesArray = array();
 		$valuesArray = preg_split( "/[\s,]+/", $selectedLists );
 
-		foreach ( $myLists as $list )
+		foreach ( $myLists['data'] as $list )
 		{
 			$list_id = $list['id'];
 
@@ -624,13 +626,30 @@ function OnPublishPost( $postID )
 function FetchMailChimpMergeVars( $api, $list_id )
 {
 	$mergeVars = array();
-	$result = $api->listMergeVars( $list_id );
-	if ( NULL == $result )
+	$mv = $api->listMergeVars( $list_id );
+
+	// NOTE: It appears this only returns ONE interest group. It also appears that
+	// this function has been deprecated in favor of listInterestGroupings(), but
+	// the 1.2 include file is not in sync with this new function.
+	$ig = $api->listInterestGroupings( $list_id );
+
+	// Bail here if nothing is returned
+	if ( NULL == $mv && NULL == $ig )
 		return $mergeVars;
-	foreach( $result as $i => $var )
+
+	// Copy over the merge variables
+	foreach( $mv as $i => $var )
 	{
 		$mergeVars[ $var['name'] ] = $var['tag'];
 	}
+
+	// Copy over the interest groups
+	foreach( $ig as $i => $var )
+	{
+		// Create a special encoding - grouping text, plus delimiter, then the name of the grouping
+		$mergeVars[ $var['name'] ] = WP88_GROUPINGS_TEXT . WP88_FIELD_DELIMITER . $var['name'];
+	}
+
 	return $mergeVars;
 }
 
@@ -730,10 +749,30 @@ function AddXProfileFieldsToMergeArray( &$mergeVariables, $userID )
 	// XProfile data from BuddyPress.
 	$data = FetchMappedXProfileData( $userID );
 
+	// Create a potentially used groupings array.  Tack this on at the end
+	$groupingsArray = array();
+
 	// Add this data to the merge variables
 	foreach ( $data as $item )
 	{
-		$mergeVariables[ $item['tag'] ] = $item['value'];
+		// Catch the "GROUPINGS" tag and create a special array for that
+		$groupTag = strpos( $item['tag'], WP88_GROUPINGS_TEXT );
+		if ( FALSE === $groupTag )
+		{
+			$mergeVariables[ $item['tag'] ] = $item['value'];
+		}
+		else
+		{
+			$fields = explode( WP88_FIELD_DELIMITER, $item['tag'] );
+			$groupingsArray[] = array('name' => $fields[1],
+									'groups' => $item['value'] );
+		}
+	}
+
+	// Tack on the group array now if there are groupings to add
+	if ( !empty( $groupingsArray ) )
+	{
+		$mergeVariables[ WP88_GROUPINGS_TEXT ] = $groupingsArray;
 	}
 
 	// This one gets static data...add it to the current array.

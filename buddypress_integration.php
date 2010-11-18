@@ -39,6 +39,7 @@ function ShowBuddyPressUI( $api, $list )
 	{
 		// Get the mailing list's Merge Variables
 		$mcFields = FetchMailChimpMergeVars( $api, $list );
+		print_r( $mcFields );
 		if ( empty( $mcFields ) )
 			print "<p><em><strong>Problem: </strong>AutoChimp could not retrieve your MailChimp Merge Variables. Try saving your selected mailing list again.</em></p>";
 
@@ -65,10 +66,8 @@ function ShowBuddyPressUI( $api, $list )
 		print $tableText;
 	}
 
-	print '<table><tr><td>You can also perform a one-time sync with your existing user base.  This is recommended <em>only once</em>.  After you\'ve synchronized your users, and have the "Sync" checkbox checked, you will not need to do this again.</td>';
-	print '<td><div class="submit"><input type="submit" name="sync_buddy_press" value="Sync BuddyPress Users" /></div></td></tr></table>';
-
-	print '</fieldset>';
+	print '<p /><p>You can also perform a one-time sync with your existing user base.  This is recommended <em>only once</em>.  After you\'ve synchronized your users, and have the "Sync" checkbox checked, you will not need to do this again.</p>';
+	print '<div class="submit"><input type="submit" name="sync_buddy_press" value="Sync BuddyPress Users" /></div>';
 }
 
 //
