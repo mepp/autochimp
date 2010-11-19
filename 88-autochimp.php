@@ -291,9 +291,14 @@ function AutoChimpOptions()
 			update_option( WP88_MC_FIX_REGPLUSREDUX, "0" );
 
 		if ( isset( $_POST['on_sync_buddypress'] ) )
-		{
 			update_option( WP88_MC_SYNC_BUDDYPRESS, "1" );
+		else
+			update_option( WP88_MC_SYNC_BUDDYPRESS, "0" );
 
+		// This hidden field allows the user to save their mappings even when the
+		// sync button isn't checked
+		if ( isset( $_POST['buddypress_running'] ) )
+		{
 			//
 			// Save the mappings of BuddyPress XProfile fields to MailChimp Merge Vars
 			//
@@ -320,8 +325,6 @@ function AutoChimpOptions()
 			update_option( WP88_MC_STATIC_TEXT, $staticText );
 			update_option( WP88_MC_STATIC_FIELD, $_POST[ WP88_MC_STATIC_FIELD ] );
 		}
-		else
-			update_option( WP88_MC_SYNC_BUDDYPRESS, "0" );
 	}
 
 	if ( isset( $_POST['sync_buddy_press'] ) )

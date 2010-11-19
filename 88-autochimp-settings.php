@@ -127,7 +127,7 @@ if ( !empty( $apiKey ) )
 		print "<li><input type=CHECKBOX value=\"on_delete_subscriber\" name=\"on_delete_subscriber\" ";
 		if ( "0" === $onDeleteSubscriber ){} else
 			print "checked";
-		print "> When a user unsubscribes <em>(Removes the user from your mailing list)</em></li>";
+		print "> When a user unsubscribes <em>(Unsubscribes the user from your mailing list)</em></li>";
 
 		print "<li><input type=CHECKBOX value=\"on_update_subscriber\" name=\"on_update_subscriber\" ";
 		if ( "0" === $onUpdateSubscriber ){} else
