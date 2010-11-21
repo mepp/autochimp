@@ -54,7 +54,7 @@ $pluginFolder = get_bloginfo('wpurl') . '/wp-content/plugins/' . dirname( plugin
 ?>
 
 <input type="text" name="api_key" size="45" /></p>
-<div class="submit"><input type="submit" name="save_api_key" value="Save API Key" /></div>
+<div class="submit"><input type="submit" class="button-primary" name="save_api_key" value="Save API Key" /></div>
 
 <div class="clear"></div>
 </div>
@@ -251,6 +251,7 @@ if ( !empty( $apiKey ) )
 		if ( '1' === $fixRegPlus )
 			print "checked";
 		print "> Patch Register Plus and sync first/last name with your selected mailing list. <em>Recommended <strong>ON</strong></em></p>";
+		print '<p><em>News:</em> The Register Plus Redux version 3.7.0 will also fix this; please delete Register Plus and install Register Plus Redux.  More info can be found <a href="http://radiok.info/blog/conflicts-begone/" target="_blank">here</a>.</p>';
 		print '</fieldset>';
 	}
 
@@ -262,6 +263,7 @@ if ( !empty( $apiKey ) )
 		if ( '1' === $fixRegPlusRedux )
 			print "checked";
 		print "> Patch Register Plus Redux and sync first/last name with your selected mailing list. <em>Recommended <strong>ON</strong></em></p>";
+		print '<p><em>News:</em> Register Plus Redux version 3.7.0 will fix this; please upgrade to that version ASAP.  More info can be found <a href="http://radiok.info/blog/conflicts-begone/" target="_blank">here</a>.</p>';
 		print '</fieldset>';
 	}
 
