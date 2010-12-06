@@ -16,17 +16,23 @@ $pluginFolder = get_bloginfo('wpurl') . '/wp-content/plugins/' . dirname( plugin
 <div style="float:right;width:220px;margin-left:10px;border: 1px solid #ddd;background: #fdffee; padding: 10px 0 10px 10px;">
  	<h2 style="margin: 0 0 5px 0 !important;">Information</h2>
  	<ul id="dbx-content" style="text-decoration:none;">
-    	<li><img src="<?php echo $pluginFolder;?>help.png"><a style="text-decoration:none;" href="http://www.wandererllc.com/company/plugins/autochimp"> Support and Help</a></li>
-		<li><a style="text-decoration:none;" href="https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=HPCPB3GY5LUQW&lc=US"><img src="<?php echo $pluginFolder;?>paypal.gif"></a></li>
+    	<li><img src="<?php echo $pluginFolder;?>help.png"><a style="text-decoration:none;" href="http://www.wandererllc.com/company/plugins/autochimp" target="_blank"> Support and Help</a></li>
+		<li><a style="text-decoration:none;" href="https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=HPCPB3GY5LUQW&lc=US" target="_blank"><img src="<?php echo $pluginFolder;?>paypal.gif"></a></li>
     	<li><table border="0">
     		<tr>
-    			<td><a href="http://member.wishlistproducts.com/wlp.php?af=1080050"><img src="http://www.wishlistproducts.com/affiliatetools/images/WLM_120X60.gif" border="0"></a></td>
-    			<td>Want a membership site? Try <a style="text-decoration:none;" href="http://member.wishlistproducts.com/wlp.php?af=1080050">Wishlist</a></td>
+    			<td><a href="http://member.wishlistproducts.com/wlp.php?af=1080050" target="_blank"><img src="http://www.wishlistproducts.com/affiliatetools/images/WLM_120X60.gif" border="0"></a></td>
+    			<td>Want a membership site? Try <a style="text-decoration:none;" href="http://member.wishlistproducts.com/wlp.php?af=1080050" target="_blank">Wishlist</a></td>
     		</tr>
     	</table></li>
-    	<li><a href="http://eepurl.com/MnhD"><img src="http://www.mailchimp.com/img/badges/banner3.gif" border="0"></a></li>
-    	<li>Contact <a href="http://www.wandererllc.com/company/contact/">Wanderer LLC</a> to sponsor a feature or write a plugin just for you.</li>
-    	<li>Leave a good rating or comments for <a href="http://wordpress.org/extend/plugins/autochimp/">AutoChimp</a>.</li>
+    	<li><table border="0">
+    		<tr>
+    			<td><a href="http://www.woothemes.com/amember/go.php?r=39127&i=b18" target="_blank"><img src="http://woothemes.com/ads/120x90c.jpg" border=0 alt="WooThemes - WordPress themes for everyone" width=120 height=90></a></td>
+    			<td>Make your site <em>stunning</em> with <a style="text-decoration:none;" href="http://www.woothemes.com/amember/go.php?r=39127&i=b18" target="_blank">WooThemes for WordPress</a></td>
+    		</tr>
+    	</table></li>
+    	<li><a href="http://eepurl.com/MnhD" target="_blank"><img src="http://www.mailchimp.com/img/badges/banner3.gif" border="0"></a></li>
+    	<li>Contact <a href="http://www.wandererllc.com/company/contact/" target="_blank">Wanderer LLC</a> to sponsor a feature or write a plugin just for you.</li>
+    	<li>Leave a good rating or comments for <a href="http://wordpress.org/extend/plugins/autochimp/" target="_blank">AutoChimp</a>.</li>
 	</ul>
 </div>
 
@@ -90,7 +96,6 @@ if ( !empty( $apiKey ) )
 		$listArray = preg_split( "/[\s,]+/", $selectedLists );
 
 		print "<p>Which mailing lists would you like to update?</p>";
-		print "<ul>";
 		foreach ( $myLists['data'] as $list )
 		{
 			$listName = $list['name'];
@@ -103,44 +108,50 @@ if ( !empty( $apiKey ) )
 			$selected = array_search( $searchableListID, $listArray );
 
 			// Generate a checkbox here (checked if this list was selected previously)
-			print "<li><input type=CHECKBOX value=\"$searchableListID\" name=\"$searchableListID\" ";
+			print "<p><input type=CHECKBOX value=\"$searchableListID\" name=\"$searchableListID\" ";
 			if ( false === $selected ){} else
 				print "checked";
-			print "> $listName</li>";
+			print "> $listName</p>";
 		}
-
-		print "</ul>";
 
 		// Now add options for when to update the mailing list (add, delete, update)
 		$onAddSubscriber = get_option( WP88_MC_ADD );
 		$onDeleteSubscriber = get_option( WP88_MC_DELETE );
 		$onUpdateSubscriber = get_option( WP88_MC_UPDATE );
+		$onBypassOptIn = get_option( WP88_MC_BYPASS_OPT_IN );
 
 		print "<p>When would you like to update your selected Mailing Lists?</p>";
-		print "<ul>";
 
-		print "<li><input type=CHECKBOX value=\"on_add_subscriber\" name=\"on_add_subscriber\" ";
+		print "<p><input type=CHECKBOX value=\"on_add_subscriber\" name=\"on_add_subscriber\" ";
 		if ( "0" === $onAddSubscriber ){} else
 			print "checked";
-		print "> When a user subscribes <em>(Adds the user to your mailing list)</em></li>";
+		print "> When a user subscribes <em>(Adds the user to your mailing list)</em></p>";
 
-		print "<li><input type=CHECKBOX value=\"on_delete_subscriber\" name=\"on_delete_subscriber\" ";
+		print "<p><fieldset style=\"margin-left: 20px;\"><input type=CHECKBOX value=\"on_bypass_opt_in\" name=\"on_bypass_opt_in\" ";
+		if ( "0" === $onBypassOptIn ){} else
+			print "checked";
+		print "> Bypass the MailChimp double opt-in.  New registrations will <em>not</em> recieve confirmation emails from MailChimp. <em>(MailChimp does not recommend this)</em></fieldset></p>";
+
+		print "<p><input type=CHECKBOX value=\"on_delete_subscriber\" name=\"on_delete_subscriber\" ";
 		if ( "0" === $onDeleteSubscriber ){} else
 			print "checked";
-		print "> When a user unsubscribes <em>(Unsubscribes the user from your mailing list)</em></li>";
+		print "> When a user unsubscribes <em>(Unsubscribes the user from your mailing list)</em></p>";
 
-		print "<li><input type=CHECKBOX value=\"on_update_subscriber\" name=\"on_update_subscriber\" ";
+		print "<p><input type=CHECKBOX value=\"on_update_subscriber\" name=\"on_update_subscriber\" ";
 		if ( "0" === $onUpdateSubscriber ){} else
 			print "checked";
-		print "> When a user updates his information (see readme.txt for special info) <em>Updates first name, last name, and email</em></li>";
-
-		print "</ul>";
+		print "> When a user updates his information</p>";
 
 		// Show the user the last message
 		$lastMessage = get_option( WP88_MC_LAST_MAIL_LIST_ERROR );
 		if ( empty( $lastMessage ) )
 			$lastMessage = "No mailing list activity yet.";
 		print "<p><strong>Latest mailing list activity:</strong>  <em>$lastMessage</em></p>";
+?>
+		<p>You can also perform a <em>manual</em> sync with your existing user base.  This is recommended only once to bring existing users in sync.  After you've synchronized your users, and you use AutoChimp to keep your users in sync, you should not need to do this again.  <strong>Note: </strong>Depending on how many users you have, this could take a while.  Please be patient.</p>
+		<div class="submit"><input type="submit" name="sync_existing_users" value="Sync Existing Users" /></div>
+		<div class="submit"><input type="submit" name="save_autochimp_options" class="button-primary" value="Save Options" /></div>
+<?php
 	}
 	else
 	{
@@ -215,7 +226,7 @@ if ( !empty( $apiKey ) )
 	print "<p><input type=CHECKBOX value=\"on_send_now\" name=\"on_send_now\" ";
 	if ( "0" === $sendNow || empty( $sendNow ) ){} else
 		print "checked";
-	print "> Send campaign <em>as soon as</em> a post is published. Not checking this option will only save your new MailChimp campaign.</p>";
+	print "> Send campaign <em>as soon as</em> a post is published. Not checking this option will save a draft version of your new MailChimp campaign.</p>";
 
 	// Create a checkbox asking the user if they want to suppress additional campaigns when posts are updated
 	print "<p><input type=CHECKBOX value=\"on_create_once\" name=\"on_create_once\" ";
@@ -229,8 +240,8 @@ if ( !empty( $apiKey ) )
 		$lastMessage = "No campaign activity yet.";
 
 	print "<p><strong>Latest campaign activity:</strong>  <em>$lastMessage</em></p>";
-
 ?>
+<div class="submit"><input type="submit" name="save_autochimp_options" class="button-primary" value="Save Options" /></div>
 
 <div class="clear"></div>
 </div>
@@ -279,11 +290,11 @@ if ( !empty( $apiKey ) )
 	}
 ?>
 
+<div class="submit"><input type="submit" name="save_autochimp_options" class="button-primary" value="Save Options" /></div>
+
 <div class="clear"></div>
 </div>
 </div>
-
-<div class="submit"><input type="submit" name="save_autochimp_options" class="button-primary" value="Save AutoChimp Options" /></div>
 
 <?php
 }

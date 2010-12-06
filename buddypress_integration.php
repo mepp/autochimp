@@ -35,7 +35,7 @@ function ShowBuddyPressUI( $api, $list )
 	if ( '1' === $syncBuddyPress )
 		print 'checked';
 	print '> Automatically Sync BuddyPress Profile Fields with MailChimp.</p>';
-	print '<p>Use the following table to assign your BuddyPress Profile Fields to your MailChimp fields.  You can use the  field at the bottom to assign the same value to each new user which will distinguish users from your site from users from other locations.</p>';
+	print '<p>Use the following table to assign your BuddyPress Profile Fields to your MailChimp fields.  You can use the "Static Text" field at the bottom to assign the same value to each new user which will distinguish users from your site from users from other locations.</p>';
 
 	$fields = $wpdb->get_results( "SELECT name,type FROM wp_bp_xprofile_fields WHERE type != 'option'", ARRAY_A );
 	if ( $fields )
@@ -67,9 +67,6 @@ function ShowBuddyPressUI( $api, $list )
 		$tableText .= '</table>' . PHP_EOL . '</div>' . PHP_EOL;
 		print $tableText;
 	}
-
-	print '<p /><p>You can also perform a <em>manual</em> sync with your existing user base.  This is recommended only once to bring existing users in sync.  After you\'ve synchronized your users, and have the "Sync" checkbox checked, you should not need to do this again.  Depending on how many users you have, this procedure could take a while.  Please be patient.</p>';
-	print '<div class="submit"><input type="submit" name="sync_buddy_press" value="Sync BuddyPress Users" /></div>';
 }
 
 //
