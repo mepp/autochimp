@@ -2,7 +2,7 @@
 /*
 Plugin Name: AutoChimp
 Plugin URI: http://www.wandererllc.com/company/plugins/autochimp/
-Description: Keeps MailChimp mailing lists in sync with your WordPress site.  It also leverages BuddyPress and allows you to synchronize all of your profile fields.  Gives users the ability to create MailChimp mail campaigns from their blog posts.
+Description: Keeps MailChimp mailing lists in sync with your WordPress site.  It also leverages BuddyPress and allows you to synchronize all of your profile fields.  Gives users the ability to create MailChimp mail campaigns from blog posts.
 Author: Wanderer LLC Dev Team
 Version: 1.00
 */
