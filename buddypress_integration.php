@@ -25,21 +25,23 @@ function ShowBuddyPressUI( $api, $list )
 	$staticText = get_option( WP88_MC_STATIC_TEXT );
 
 	// Start outputting UI
-	print '<p><strong>You are using <a target="_blank" href="http://wordpress.org/extend/plugins/buddypress/">BuddyPress</a></strong>. With AutoChimp, you can synchronize your BuddyPress user Profile Fields with your selected MailChimp mailing list.  Please ensure that only one list is selected.</p>';
+	print '<p><strong>You are using <a target="_blank" href="http://wordpress.org/extend/plugins/buddypress/">BuddyPress</a></strong>. With AutoChimp, you can automatically synchronize your BuddyPress user Profile Fields with your selected MailChimp mailing list as users join your site and update their profile.  Please ensure that only one list is selected.</p>';
 	print '<fieldset style="margin-left: 20px;">';
 
+	// Create a hidden field just to signal that the user can save their preferences
+	// even if the sync button
+	print '<input type="hidden" name="buddypress_running" />';
 	print '<p><input type=CHECKBOX value="on_sync_buddypress" name="on_sync_buddypress" ';
 	if ( '1' === $syncBuddyPress )
 		print 'checked';
-	print '> Sync BuddyPress Profile Fields with MailChimp.</p>';
-	print '<p>Use the following table to assign your BuddyPress Profile Fields to your MailChimp fields.  You can use the  field at the bottom to assign the same value to each new user which will distinguish users from your site from users from other locations.</p>';
+	print '> Automatically Sync BuddyPress Profile Fields with MailChimp.</p>';
+	print '<p>Use the following table to assign your BuddyPress Profile Fields to your MailChimp fields.  You can use the "Static Text" field at the bottom to assign the same value to each new user which will distinguish users from your site from users from other locations.</p>';
 
 	$fields = $wpdb->get_results( "SELECT name,type FROM wp_bp_xprofile_fields WHERE type != 'option'", ARRAY_A );
 	if ( $fields )
 	{
 		// Get the mailing list's Merge Variables
 		$mcFields = FetchMailChimpMergeVars( $api, $list );
-		print_r( $mcFields );
 		if ( empty( $mcFields ) )
 			print "<p><em><strong>Problem: </strong>AutoChimp could not retrieve your MailChimp Merge Variables. Try saving your selected mailing list again.</em></p>";
 
@@ -65,9 +67,6 @@ function ShowBuddyPressUI( $api, $list )
 		$tableText .= '</table>' . PHP_EOL . '</div>' . PHP_EOL;
 		print $tableText;
 	}
-
-	print '<p /><p>You can also perform a one-time sync with your existing user base.  This is recommended <em>only once</em>.  After you\'ve synchronized your users, and have the "Sync" checkbox checked, you will not need to do this again.</p>';
-	print '<div class="submit"><input type="submit" name="sync_buddy_press" value="Sync BuddyPress Users" /></div>';
 }
 
 //
