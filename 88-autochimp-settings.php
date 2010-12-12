@@ -261,8 +261,8 @@ if ( !empty( $apiKey ) )
 		print "<p><input type=CHECKBOX value=\"on_fix_regplus\" name=\"on_fix_regplus\" ";
 		if ( '1' === $fixRegPlus )
 			print "checked";
-		print "> Patch Register Plus and sync first/last name with your selected mailing list. <em>Recommended <strong>ON</strong></em></p>";
-		print '<p><em>News:</em> The Register Plus Redux version 3.7.0 will also fix this; please delete Register Plus and install Register Plus Redux.  More info can be found <a href="http://radiok.info/blog/conflicts-begone/" target="_blank">here</a>.</p>';
+		print "> Patch Register Plus and sync first/last name with your selected mailing list. <em>Recommended <strong>ON</strong></em>.</p>";
+		print '<p><em>News:</em> The Register Plus Redux version 3.7.0 will also fix this; please delete Register Plus and install <a href="http://wordpress.org/extend/plugins/register-plus-redux/" target="_blank">Register Plus Redux</a>.  More info can be found <a href="http://radiok.info/blog/conflicts-begone/" target="_blank">here</a>.</p>';
 		print '</fieldset>';
 	}
 
@@ -273,8 +273,8 @@ if ( !empty( $apiKey ) )
 		print "<p><input type=CHECKBOX value=\"on_fix_regplusredux\" name=\"on_fix_regplusredux\" ";
 		if ( '1' === $fixRegPlusRedux )
 			print "checked";
-		print "> Patch Register Plus Redux and sync first/last name with your selected mailing list. <em>Recommended <strong>ON</strong></em></p>";
-		print '<p><em>News:</em> Register Plus Redux version 3.7.0 will fix this; please upgrade to that version ASAP.  More info can be found <a href="http://radiok.info/blog/conflicts-begone/" target="_blank">here</a>.</p>';
+		print "> Patch Register Plus Redux and sync first/last name with your selected mailing list. <em>Recommended <strong>ON</strong></em>. <strong>Note:</strong> You must enable '<em>Require new users enter a password during registration...</em>' in your Register Plus Redux options in order for the AutoChimp patch to work.</p>";
+		print '<p><em>News:</em> Register Plus Redux version 3.7.0 will fix this; please upgrade to that version when it\'s available.  More info can be found <a href="http://radiok.info/blog/conflicts-begone/" target="_blank">here</a>.</p>';
 		print '</fieldset>';
 	}
 

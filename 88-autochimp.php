@@ -91,8 +91,9 @@ function OnBuddyPressUserUpdate()
 //	Register Plus overrides this:
 //	http://codex.wordpress.org/Function_Reference/wp_new_user_notification
 //
-//	Look at register-plus.php somewhere around line 1715.  More on Pluggable
-//	functions can be found here:  http://codex.wordpress.org/Pluggable_Functions
+//	Look at register-plus.php somewhere around line 1715.  Same thing in
+//	register-plus-redux.php around line 2324. More on Pluggable functions
+//	can be found here:  http://codex.wordpress.org/Pluggable_Functions
 //
 //	Register Plus's overridden wp_new_user_notification() naturally includes the
 //	original WordPress code for wp_new_user_notification().  This function calls
@@ -106,6 +107,9 @@ function OnBuddyPressUserUpdate()
 //	The danger with this sort of code is that if the function that is overridden
 //	is updated by WordPress, we'll likely miss out!  The best solution is to
 //	have Register Plus perform it's work in a more standard way.
+//
+//	See the readme for more information on this issue.  The good news is the folks
+//	at Register Plus explained this problem and are working on fixing it.
 //
 function OverrideWarning()
 {
@@ -129,8 +133,8 @@ if ( function_exists( 'wp_set_password' ) )
 // pluggable function - the only place I can see to grab the user's first
 // and last name.
 //
-if ( !function_exists('wp_set_password') && ( '1' === get_option( WP88_MC_FIX_REGPLUS) ||
-											  '1' === get_option( WP88_MC_FIX_REGPLUSREDUX) ) ) :
+if ( !function_exists('wp_set_password') && ( '1' === get_option( WP88_MC_FIX_REGPLUS ) ||
+											  '1' === get_option( WP88_MC_FIX_REGPLUSREDUX ) ) ) :
 function wp_set_password( $password, $user_id )
 {
 	//
@@ -151,6 +155,7 @@ function wp_set_password( $password, $user_id )
 	//
 	update_option( GenerateTempEmailOptionName( $user_id ), "" );
 	$user_info = get_userdata( $user_id );
+	update_option( WP88_MC_LAST_CAMPAIGN_ERROR, "Updating user:  $user_info->first_name $user_info->last_name" );
 	ManageMailUser( MMU_UPDATE, $user_info, TRUE );
 	//
 	// END Detect
@@ -245,41 +250,41 @@ function AutoChimpOptions()
 		// Step 2:  Save when the user wants to update the list
 
 		if ( isset( $_POST['on_add_subscriber'] ) )
-			update_option( WP88_MC_ADD, "1" );
+			update_option( WP88_MC_ADD, '1' );
 		else
-			update_option( WP88_MC_ADD, "0" );
+			update_option( WP88_MC_ADD, '0' );
 
 		if ( isset( $_POST['on_bypass_opt_in'] ) )
-			update_option( WP88_MC_BYPASS_OPT_IN, "1" );
+			update_option( WP88_MC_BYPASS_OPT_IN, '1' );
 		else
-			update_option( WP88_MC_BYPASS_OPT_IN, "0" );
+			update_option( WP88_MC_BYPASS_OPT_IN, '0' );
 
 		if ( isset( $_POST['on_delete_subscriber'] ) )
-			update_option( WP88_MC_DELETE, "1" );
+			update_option( WP88_MC_DELETE, '1' );
 		else
-			update_option( WP88_MC_DELETE, "0" );
+			update_option( WP88_MC_DELETE, '0' );
 
 		if ( isset( $_POST['on_update_subscriber'] ) )
-			update_option( WP88_MC_UPDATE, "1" );
+			update_option( WP88_MC_UPDATE, '1' );
 		else
-			update_option( WP88_MC_UPDATE, "0" );
+			update_option( WP88_MC_UPDATE, '0' );
 
 		// Step 3:  Save the user's campaign-from-post choices
 
 		if ( isset( $_POST['on_campaign_from_post'] ) )
-			update_option( WP88_MC_CAMPAIGN_FROM_POST, "1" );
+			update_option( WP88_MC_CAMPAIGN_FROM_POST, '1' );
 		else
-			update_option( WP88_MC_CAMPAIGN_FROM_POST, "0" );
+			update_option( WP88_MC_CAMPAIGN_FROM_POST, '0' );
 
 		if ( isset( $_POST['on_send_now'] ) )
-			update_option( WP88_MC_SEND_NOW, "1" );
+			update_option( WP88_MC_SEND_NOW, '1' );
 		else
-			update_option( WP88_MC_SEND_NOW, "0" );
+			update_option( WP88_MC_SEND_NOW, '0' );
 
 		if ( isset( $_POST['on_create_once'] ) )
-			update_option( WP88_MC_CREATE_CAMPAIGN_ONCE, "1" );
+			update_option( WP88_MC_CREATE_CAMPAIGN_ONCE, '1' );
 		else
-			update_option( WP88_MC_CREATE_CAMPAIGN_ONCE, "0" );
+			update_option( WP88_MC_CREATE_CAMPAIGN_ONCE, '0' );
 
 		$category = $_POST['campaign_category'];
 		update_option( WP88_MC_CAMPAIGN_CATEGORY, $category );
@@ -287,19 +292,19 @@ function AutoChimpOptions()
 		// Step 4:  Save other plugin integration choices
 
 		if ( isset( $_POST['on_fix_regplus'] ) )
-			update_option( WP88_MC_FIX_REGPLUS, "1" );
+			update_option( WP88_MC_FIX_REGPLUS, '1' );
 		else
-			update_option( WP88_MC_FIX_REGPLUS, "0" );
+			update_option( WP88_MC_FIX_REGPLUS, '0' );
 
 		if ( isset( $_POST['on_fix_regplusredux'] ) )
-			update_option( WP88_MC_FIX_REGPLUSREDUX, "1" );
+			update_option( WP88_MC_FIX_REGPLUSREDUX, '1' );
 		else
-			update_option( WP88_MC_FIX_REGPLUSREDUX, "0" );
+			update_option( WP88_MC_FIX_REGPLUSREDUX, '0' );
 
 		if ( isset( $_POST['on_sync_buddypress'] ) )
-			update_option( WP88_MC_SYNC_BUDDYPRESS, "1" );
+			update_option( WP88_MC_SYNC_BUDDYPRESS, '1' );
 		else
-			update_option( WP88_MC_SYNC_BUDDYPRESS, "0" );
+			update_option( WP88_MC_SYNC_BUDDYPRESS, '0' );
 
 		// This hidden field allows the user to save their mappings even when the
 		// sync button isn't checked
