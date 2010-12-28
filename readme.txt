@@ -3,22 +3,22 @@ Plugin Name: AutoChimp
 Contributors: WandererLLC
 Plugin URI: http://www.wandererllc.com/company/plugins/autochimp/
 Donate link: https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=HPCPB3GY5LUQW&lc=US
-Tags: admin, email, MailChimp, Mail, Chimp, campaign, mailing list, create, automatically, subscribe
+Tags: admin, email, MailChimp, Mail, Chimp, BuddyPress, Profile Fields, XProfile, Register, Plus, Redux, campaign, mailing list, create, automatically, subscribe, unsubscribe, sync, synchronize
 Requires at least: 2.8
-Tested up to: 3.01
-Stable tag: 0.83
+Tested up to: 3.03
+Stable tag: 1.00
 
-Keep website users and mailing lists in sync and create campaigns from posts.
+Keep website users and MailChimp mailing lists in sync and create campaigns from posts.
 
 == Description ==
 
-Automatically add, remove, and update users to your [MailChimp](http://eepurl.com/MnhD "Mail Chimp") mailing list as users subscribe and unsubscribe to your site.  Create MailChimp mail campaigns automatically from blog posts.  AutoChimp uses a single options page to help you to simply and quickly manage your preferred settings.  In order to use AutoChimp, you must already have an account with MailChimp and at least one mailing list.
+Automatically subscribe, unsubscribe, and update users to your [MailChimp](http://eepurl.com/MnhD "Mail Chimp") mailing list as users subscribe and unsubscribe to your site.  Sync your BuddyPress profile fields with your MaiChimp merge variables and groups.  Create MailChimp mail campaigns automatically from blog posts.  AutoChimp uses a single options page to help you manage your preferred settings.  In order to use AutoChimp, you must already have an account with MailChimp and at least one mailing list.
 
 To use, save your MailChimp API Key on the options page then start adding your new registrations to any selected MailChimp mailing list.  You can configure the plugin to update your mailing list when 1) a new user subscribes, 2) a user unsubscribes, or 3) a user updates his information.  You may also choose to create campaigns automatically from post categories of your choosing.  You can send the campaigns immediately or just save them.
 
 == Screenshots ==
 
-1. The options page for AutoChimp works in a logical flow from top to bottom.  The first thing to do is to save your API key.  Once you do this, you only need to select the options that you want to support.
+1. The options page for AutoChimp works in a logical flow from top to bottom.  The first thing to do is to save your API key.  Once you do this, you only need to select the options that you want to support. This screenshot shows the maximum available options, which can grow considerably if you are using BuddyPress. Don't forget to click "Save AutoChimp Options" when you're finished!
 
 == Special Notes ==
 
@@ -43,6 +43,18 @@ Just go to <http://www.wandererllc.com/company/plugins/autochimp/> and follow th
 AutoChimp is not a visual plugin.  It does all it's work behind the scenes keeping your blog users in sync with your mailing list.  If you are looking for a registration widget for MailChimp, search for "MailChimp List Subscribe Form" on the WordPress plugin site.
 
 == Changelog ==
+
+= 1.01 =
+
+* Bypass Double Opt-in is now OFF by default.
+* AutoChimp now can coexist with the MailChimp widget plugin.
+* Renamed functions to reduce conflicts with other plugins.
+
+= 1.00 =
+
+* Added integration with BuddyPress.  You can now sync your BuddyPress profile fields with your MailChimp merge variables and groups.
+* Added a fix/patch for Register Plus and Register Plus Redux.  You can now sync first name and last name with MailChimp successfully.
+* Improved the UI
 
 = 0.83 =
 
@@ -69,6 +81,14 @@ AutoChimp is not a visual plugin.  It does all it's work behind the scenes keepi
 
 == Upgrade Notice ==
 
+= 1.01 =
+
+Recommended for all users, especially those who also use the MailChimp widget plugin.
+
+= 1.0 =
+
+Recommended for all users.  This version greatly expands AutoChimp's feature set.
+
 = 0.83 =
 
 All users should upgrade to this version ASAP.
@@ -78,9 +98,11 @@ All users should upgrade to this version ASAP.
 Not a critical update.  Small fix for email-to-post users, plus a "Read more" link at the bottom of campaigns.
 
 = 0.81 =
+
 This version simply tightens down the 0.8 UI.
 
 = 0.8 =
+
 This version adds the ability to create campaigns from blog posts.
 
 == Acknowledgements ==
