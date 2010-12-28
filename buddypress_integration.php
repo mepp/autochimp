@@ -15,7 +15,7 @@
 //
 //	Function for displaying the UI for BuddyPress integration
 //
-function ShowBuddyPressUI( $api, $list )
+function AC_ShowBuddyPressUI( $api, $list )
 {
 	// Need to query data in the BuddyPress extended profile table
 	global $wpdb;
@@ -41,19 +41,19 @@ function ShowBuddyPressUI( $api, $list )
 	if ( $fields )
 	{
 		// Get the mailing list's Merge Variables
-		$mcFields = FetchMailChimpMergeVars( $api, $list );
+		$mcFields = AC_FetchMailChimpMergeVars( $api, $list );
 		if ( empty( $mcFields ) )
 			print "<p><em><strong>Problem: </strong>AutoChimp could not retrieve your MailChimp Merge Variables. Try saving your selected mailing list again.</em></p>";
 
 		foreach ( $fields as $field )
 		{
 			// Generate a select box for this particular field
-			$fieldNameTag = EncodeXProfileOptionName( $field['name'] );
-			$selectBox = GenerateFieldSelectBox( $fieldNameTag, $mcFields );
+			$fieldNameTag = AC_EncodeXProfileOptionName( $field['name'] );
+			$selectBox = AC_GenerateFieldSelectBox( $fieldNameTag, $mcFields );
 			$output .= '<tr class="alternate">' . PHP_EOL . '<td width="70%">' . $field['name'] . '</td>' . PHP_EOL . '<td width="30%">' . $selectBox . '</td>' . PHP_EOL . '</tr>' . PHP_EOL;
 		}
 
-		$selectBox = GenerateFieldSelectBox( WP88_MC_STATIC_FIELD, $mcFields );
+		$selectBox = AC_GenerateFieldSelectBox( WP88_MC_STATIC_FIELD, $mcFields );
 		$output .= '<tr class="alternate"><td width="70%">Static Text:<input type="text" name="static_select" value="' . $staticText . '"size="25" /></td><td width="30%">' . $selectBox . '</td></tr>';
 		$tableText .= '<div id=\'filelist\'>' . PHP_EOL;
 		$tableText .= '<table class="widefat" style="width:650px">
@@ -75,7 +75,7 @@ function ShowBuddyPressUI( $api, $list )
 //	is simply a time-saver so that this data doesn't need to be queried several
 //	times.
 //
-function GenerateFieldSelectBox( $fieldName, $mcMergeVars )
+function AC_GenerateFieldSelectBox( $fieldName, $mcMergeVars )
 {
 	// See which field should be selected (if any)
 	$selectedVal = get_option( $fieldName );

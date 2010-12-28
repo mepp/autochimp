@@ -6,7 +6,7 @@ Donate link: https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_i
 Tags: admin, email, MailChimp, Mail, Chimp, BuddyPress, Profile Fields, XProfile, Register, Plus, Redux, campaign, mailing list, create, automatically, subscribe, unsubscribe, sync, synchronize
 Requires at least: 2.8
 Tested up to: 3.03
-Stable tag: 1.00
+Stable tag: 1.01
 
 Keep website users and MailChimp mailing lists in sync and create campaigns from posts.
 
@@ -44,6 +44,12 @@ AutoChimp is not a visual plugin.  It does all it's work behind the scenes keepi
 
 == Changelog ==
 
+= 1.01 =
+
+* Bypass Double Opt-in is now OFF by default.
+* AutoChimp now can coexist with the MailChimp widget plugin.
+* Renamed functions to reduce conflicts with other plugins.
+
 = 1.00 =
 
 * Added integration with BuddyPress.  You can now sync your BuddyPress profile fields with your MailChimp merge variables and groups.
@@ -74,6 +80,10 @@ AutoChimp is not a visual plugin.  It does all it's work behind the scenes keepi
 * Basic UI for keeping a mailing list in sync with your site's users.
 
 == Upgrade Notice ==
+
+= 1.01 =
+
+Recommended for all users, especially those who also use the MailChimp widget plugin.
 
 = 1.0 =
 

@@ -74,7 +74,7 @@ $pluginFolder = get_bloginfo('wpurl') . '/wp-content/plugins/' . dirname( plugin
 if ( !empty( $apiKey ) )
 {
 	// Create an object to interface with MailChimp
-	$api = new MCAPI( $apiKey );
+	$api = new MCAPI_13( $apiKey );
 
 	// This array holds the lists that have been selected
 	$listArray = array();
@@ -128,7 +128,7 @@ if ( !empty( $apiKey ) )
 		print "> When a user subscribes <em>(Adds the user to your mailing list)</em></p>";
 
 		print "<p><fieldset style=\"margin-left: 20px;\"><input type=CHECKBOX value=\"on_bypass_opt_in\" name=\"on_bypass_opt_in\" ";
-		if ( "0" === $onBypassOptIn ){} else
+		if ( "1" === $onBypassOptIn )
 			print "checked";
 		print "> Bypass the MailChimp double opt-in.  New registrations will <em>not</em> recieve confirmation emails from MailChimp. <em>(MailChimp does not recommend this)</em></fieldset></p>";
 
@@ -278,7 +278,7 @@ if ( !empty( $apiKey ) )
 		print '</fieldset>';
 	}
 
-	if ( function_exists( 'ShowBuddyPressUI' ) )
+	if ( function_exists( 'AC_ShowBuddyPressUI' ) )
 	{
 		// NOTE:  This just takes the FIRST selected list!  Multiple selected lists
 		// will cause trouble.
@@ -286,7 +286,7 @@ if ( !empty( $apiKey ) )
 		// Strip out the searchable tag
 		$list = substr_replace( $list, '', 0, strlen( WP88_SEARCHABLE_PREFIX ) );
 		// Special function just for BuddyPress
-		ShowBuddyPressUI( $api, $list );
+		AC_ShowBuddyPressUI( $api, $list );
 	}
 ?>
 

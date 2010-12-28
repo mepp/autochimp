@@ -4,10 +4,10 @@ Plugin Name: AutoChimp
 Plugin URI: http://www.wandererllc.com/company/plugins/autochimp/
 Description: Keeps MailChimp mailing lists in sync with your WordPress site.  It also leverages BuddyPress and allows you to synchronize all of your profile fields.  Gives users the ability to create MailChimp mail campaigns from blog posts.
 Author: Wanderer LLC Dev Team
-Version: 1.00
+Version: 1.01
 */
 
-if ( !class_exists( 'MCAPI' ) )
+if ( !class_exists( 'MCAPI_13' ) )
 {
 	require_once 'inc/MCAPI.class.php';
 }
@@ -49,40 +49,40 @@ define( 'WP88_FIELD_DELIMITER', '+++' );
 //
 //	See:  http://codex.wordpress.org/Plugin_API/Action_Reference
 //
-add_action('admin_menu', 'OnPluginMenu');				// Sets up the menu and admin page
-add_action('user_register','OnRegisterUser');			// Called when a user registers on the site
-add_action('delete_user','OnDeleteUser');				//   "      "  "  "   unregisters "  "  "
-add_action('show_user_profile','OnAboutToUpdateUser');	// Little trickier for update...need to save email in order to track them down later
-add_action('profile_update','OnUpdateUser' );			// Uses the saved email to update the user.
-add_action('publish_post','OnPublishPost' );			// Called when an author publishes a post.
-add_action('xmlrpc_publish_post', 'OnPublishPost' );	// Same as above, but for XMLRPC
-add_action('publish_phone', 'OnPublishPost' );			// Same as above, but for email.  No idea why it's called "phone".
-add_action('bp_init', 'OnBuddyPressInstalled');			// Only load the component if BuddyPress is loaded and initialized.
-add_action('xprofile_updated_profile', 'OnBuddyPressUserUpdate' ); // Used to sync users with MailChimp
+add_action('admin_menu', 'AC_OnPluginMenu');				// Sets up the menu and admin page
+add_action('user_register','AC_OnRegisterUser');			// Called when a user registers on the site
+add_action('delete_user','AC_OnDeleteUser');				//   "      "  "  "   unregisters "  "  "
+add_action('show_user_profile','AC_OnAboutToUpdateUser');	// Little trickier for update...need to save email in order to track them down later
+add_action('profile_update','AC_OnUpdateUser' );			// Uses the saved email to update the user.
+add_action('publish_post','AC_OnPublishPost' );				// Called when an author publishes a post.
+add_action('xmlrpc_publish_post', 'AC_OnPublishPost' );		// Same as above, but for XMLRPC
+add_action('publish_phone', 'AC_OnPublishPost' );			// Same as above, but for email.  No idea why it's called "phone".
+add_action('bp_init', 'AC_OnBuddyPressInstalled');			// Only load the component if BuddyPress is loaded and initialized.
+add_action('xprofile_updated_profile', 'AC_OnBuddyPressUserUpdate' ); // Used to sync users with MailChimp
 //add_action('xprofile_screen_edit_profile', 'OnBuddyPressUserScreenUpdate' );
 
 //
-//	OnBuddyPressInstalled
+//	AC_OnBuddyPressInstalled
 //
 //	Called when BuddyPress is installed and active
 //
-function OnBuddyPressInstalled()
+function AC_OnBuddyPressInstalled()
 {
 	require_once('buddypress_integration.php');
 }
 
 //
-//	OnBuddyPressUserUpdate
+//	AC_OnBuddyPressUserUpdate
 //
 //	Called when a BP user updates his profile.  This is used to update
 //	MailChimp Merge Variables.
 //
-function OnBuddyPressUserUpdate()
+function AC_OnBuddyPressUserUpdate()
 {
 	// Get the current user
 	$user = wp_get_current_user();
 	// Pass their ID to the function that does the work.
-	OnUpdateUser( $user->ID );
+	AC_OnUpdateUser( $user->ID );
 }
 
 //
@@ -111,7 +111,7 @@ function OnBuddyPressUserUpdate()
 //	See the readme for more information on this issue.  The good news is the folks
 //	at Register Plus explained this problem and are working on fixing it.
 //
-function OverrideWarning()
+function AC_OverrideWarning()
 {
 	if( current_user_can(10) &&  $_GET['page'] == 'autochimp' )
 		echo '<div id="message" class="updated fade"><p><strong>You have another plugin installed that is conflicting with AutoChimp and Register Plus.  This other plugin is overriding the user notification emails or password setting.  Please see <a href="http://www.wandererllc.com/plugins/">AutoChimp FAQ</a> for more information.</strong></p></div>';
@@ -124,7 +124,7 @@ if ( function_exists( 'wp_set_password' ) )
 	$fixRegPlusRedux = get_option( WP88_MC_FIX_REGPLUSREDUX );
 	if ( '1' === $fixRegPlus || '1' === $fixRegPlusRedux )
 	{
-		add_action( 'admin_notices', 'OverrideWarning' );
+		add_action( 'admin_notices', 'AC_OverrideWarning' );
 	}
 }
 
@@ -153,10 +153,10 @@ function wp_set_password( $password, $user_id )
 	//
 	// START Detect Register Plus
 	//
-	update_option( GenerateTempEmailOptionName( $user_id ), "" );
+	update_option( AC_GenerateTempEmailOptionName( $user_id ), "" );
 	$user_info = get_userdata( $user_id );
 	update_option( WP88_MC_LAST_CAMPAIGN_ERROR, "Updating user:  $user_info->first_name $user_info->last_name" );
-	ManageMailUser( MMU_UPDATE, $user_info, TRUE );
+	AC_ManageMailUser( MMU_UPDATE, $user_info, TRUE );
 	//
 	// END Detect
 	//
@@ -170,18 +170,18 @@ endif;	// wp_set_password is not overridden yet
 //
 //	Filters to hook
 //
-add_filter( 'plugin_row_meta', 'AddAutoChimpPluginLinks', 10, 2 ); // Expand the links on the plugins page
+add_filter( 'plugin_row_meta', 'AC_AddAutoChimpPluginLinks', 10, 2 ); // Expand the links on the plugins page
 
 //
 //	Function to create the menu and admin page handler
 //
-function OnPluginMenu()
+function AC_OnPluginMenu()
 {
-	add_submenu_page('options-general.php', 'AutoChimp Options', 'AutoChimp', 'add_users', basename(__FILE__), AutoChimpOptions );
+	add_submenu_page('options-general.php', 'AutoChimp Options', 'AutoChimp', 'add_users', basename(__FILE__), AC_AutoChimpOptions );
 }
 
 // Inspired by NextGen Gallery by Alex Rabe
-function AddAutoChimpPluginLinks($links, $file)
+function AC_AddAutoChimpPluginLinks($links, $file)
 {
 	if ( $file == plugin_basename(__FILE__) )
 	{
@@ -196,7 +196,7 @@ function AddAutoChimpPluginLinks($links, $file)
 //	happens at the very bottom, with the require statement.  The rest of the code
 //	is for saving the options.
 //
-function AutoChimpOptions()
+function AC_AutoChimpOptions()
 {
 	// Stop the user if they don't have permission
 	if (!current_user_can('add_users'))
@@ -322,7 +322,7 @@ function AutoChimpOptions()
 			foreach( $fields as $field )
 			{
 				// Encode the name of the field
-				$selectName = EncodeXProfileOptionName( $field['name'] );
+				$selectName = AC_EncodeXProfileOptionName( $field['name'] );
 
 				// Now dereference the selection
 				$selection = $_POST[ $selectName ];
@@ -350,7 +350,7 @@ function AutoChimpOptions()
 		// Iterate over the array and retrieve that users' basic information.
 		foreach ( $users as $user )
 		{
-			$result = OnUpdateUser( $user->ID, FALSE );
+			$result = AC_OnUpdateUser( $user->ID, FALSE );
 			if ( 0 === $result )
 				$numSuccess++;
 			else
@@ -374,10 +374,10 @@ function AutoChimpOptions()
 //
 //	List of exceptions and error codes: http://www.mailchimp.com/api/1.3/exceptions.field.php
 //
-function ManageMailUser( $mode, $user_info, $writeDBMessages )
+function AC_ManageMailUser( $mode, $user_info, $writeDBMessages )
 {
 	$apiKey = get_option( WP88_MC_APIKEY );
-	$api = new MCAPI( $apiKey );
+	$api = new MCAPI_13( $apiKey );
 
 	$myLists = $api->lists();
 	$errorCode = 0;
@@ -406,12 +406,12 @@ function ManageMailUser( $mode, $user_info, $writeDBMessages )
 				{
 					$merge_vars = array( 'FNAME'=>$user_info->first_name, 'LNAME'=>$user_info->last_name );
 
-					// Grab extra data IF the user wants to Sync Buddy Press
+					// Grab extra data if the user wants to Sync Buddy Press
 					$syncBuddyPress = get_option( WP88_MC_SYNC_BUDDYPRESS );
 					if ( "1" === $syncBuddyPress )
 					{
 						// This function adds fields to the array passed in.
-						AddXProfileFieldsToMergeArray( $merge_vars, $user_info->ID );
+						AC_AddXProfileFieldsToMergeArray( $merge_vars, $user_info->ID );
 					}
 
 					switch( $mode )
@@ -467,7 +467,7 @@ function ManageMailUser( $mode, $user_info, $writeDBMessages )
 							// Get the old email - this feels a little dangerous...'cause users have to go
 							// through the profile panel.  If they don't and email is updated, data can
 							// get out of sync.  See the readme.txt for more.
-							$updateEmail = get_option( GenerateTempEmailOptionName( $user_info->ID ) );
+							$updateEmail = get_option( AC_GenerateTempEmailOptionName( $user_info->ID ) );
 
 							// If this email is empty, then it means that some method other than viewing
 							// the admin panel has invoked the update - another plugin like "Register
@@ -515,7 +515,7 @@ function ManageMailUser( $mode, $user_info, $writeDBMessages )
 //
 //	Pass the post ID and an instance of the MailChimp API class (for performance).
 //
-function CreateCampaignFromPost( $postID, $api )
+function AC_CreateCampaignFromPost( $postID, $api )
 {
 	$myLists = $api->lists();
 
@@ -605,7 +605,7 @@ function CreateCampaignFromPost( $postID, $api )
 	}
 }
 
-function OnPublishPost( $postID )
+function AC_OnPublishPost( $postID )
 {
 	// Does the user want to create campaigns from posts
 	$campaignFromPost = get_option( WP88_MC_CAMPAIGN_FROM_POST );
@@ -627,10 +627,10 @@ function OnPublishPost( $postID )
 			{
 				// Create an instance of the MailChimp API
 				$apiKey = get_option( WP88_MC_APIKEY );
-				$api = new MCAPI( $apiKey );
+				$api = new MCAPI_13( $apiKey );
 
 				// Do the work
-				$id = CreateCampaignFromPost( $postID, $api );
+				$id = AC_CreateCampaignFromPost( $postID, $api );
 
 				// Does the user want to send the campaigns right away?
 				$sendNow = get_option( WP88_MC_SEND_NOW );
@@ -653,7 +653,7 @@ function OnPublishPost( $postID )
 //	Given a mailing list, return an associative array of the names and tags of
 //	the merge variables (custom fields) for that mailing list.
 //
-function FetchMailChimpMergeVars( $api, $list_id )
+function AC_FetchMailChimpMergeVars( $api, $list_id )
 {
 	$mergeVars = array();
 	$mv = $api->listMergeVars( $list_id );
@@ -687,7 +687,7 @@ function FetchMailChimpMergeVars( $api, $list_id )
 //	Looks up the user's BP XProfile data and return a meaningful array of associations
 //	to the users based on what the user wants to sync.
 //
-function FetchMappedXProfileData( $userID )
+function AC_FetchMappedXProfileData( $userID )
 {
 	// User data array
 	$dataArray = array();
@@ -706,7 +706,7 @@ function FetchMappedXProfileData( $userID )
 	// values for those fields and stick them into an array.
 	foreach ( $fieldNames as $field )
 	{
-		$optionName = DecodeXProfileOptionName( $field['option_name'] );
+		$optionName = AC_DecodeXProfileOptionName( $field['option_name'] );
 
 		// Big JOIN to get the user's value for the field in question
 		// Best to offload this on SQL than PHP.
@@ -746,7 +746,7 @@ function FetchMappedXProfileData( $userID )
 	return $dataArray;
 }
 
-function FetchStaticData()
+function AC_FetchStaticData()
 {
 	// Will hold a row of static data...assuming user wants this data, of course
 	$dataArray = array();
@@ -773,11 +773,11 @@ function FetchStaticData()
 //	Takes a by-reference array argument and adds XProfile merge variable data
 //	specific to the user ID passed in to the array.
 //
-function AddXProfileFieldsToMergeArray( &$mergeVariables, $userID )
+function AC_AddXProfileFieldsToMergeArray( &$mergeVariables, $userID )
 {
 	// Hunt down additional user data.  This first one gets
 	// XProfile data from BuddyPress.
-	$data = FetchMappedXProfileData( $userID );
+	$data = AC_FetchMappedXProfileData( $userID );
 
 	// Create a potentially used groupings array.  Tack this on at the end
 	$groupingsArray = array();
@@ -806,7 +806,7 @@ function AddXProfileFieldsToMergeArray( &$mergeVariables, $userID )
 	}
 
 	// This one gets static data...add it to the current array.
-	$staticData = FetchStaticData();
+	$staticData = AC_FetchStaticData();
 
 	// Add this static data to the merge variables
 	foreach ( $staticData as $item )
@@ -815,7 +815,7 @@ function AddXProfileFieldsToMergeArray( &$mergeVariables, $userID )
 	}
 }
 
-function EncodeXProfileOptionName( $optionName )
+function AC_EncodeXProfileOptionName( $optionName )
 {
 	// Tack on the prefix to the option name
 	$encoded = WP88_BP_XPROFILE_FIELD_MAPPING . $optionName;
@@ -826,7 +826,7 @@ function EncodeXProfileOptionName( $optionName )
 	return $encoded;
 }
 
-function DecodeXProfileOptionName( $optionName )
+function AC_DecodeXProfileOptionName( $optionName )
 {
 	// Strip out the searchable tag
 	$decoded = substr_replace( $optionName, '', 0, strlen( WP88_BP_XPROFILE_FIELD_MAPPING ) );
@@ -840,7 +840,7 @@ function DecodeXProfileOptionName( $optionName )
 // This function creates a user-unique email option name used as a field in
 // the wp_options table.  This is used to temporarily store the user's email
 // address.
-function GenerateTempEmailOptionName( $userID )
+function AC_GenerateTempEmailOptionName( $userID )
 {
 	return WP88_MC_TEMPEMAIL . $userID;
 }
@@ -849,48 +849,48 @@ function GenerateTempEmailOptionName( $userID )
 //	WordPress Action handlers
 //
 
-function OnRegisterUser( $userID )
+function AC_OnRegisterUser( $userID )
 {
 	$user_info = get_userdata( $userID );
 	$onAddSubscriber = get_option( WP88_MC_ADD );
 	if ( "1" == $onAddSubscriber )
 	{
-		$result = ManageMailUser( MMU_ADD, $user_info, TRUE );
+		$result = AC_ManageMailUser( MMU_ADD, $user_info, TRUE );
 	}
 	return $result;
 }
 
-function OnDeleteUser( $userID )
+function AC_OnDeleteUser( $userID )
 {
 	$user_info = get_userdata( $userID );
 	$onDeleteSubscriber = get_option( WP88_MC_DELETE );
 	if ( "1" == $onDeleteSubscriber )
 	{
-		$result = ManageMailUser( MMU_DELETE, $user_info, TRUE );
+		$result = AC_ManageMailUser( MMU_DELETE, $user_info, TRUE );
 	}
 	return $result;
 }
 
-function OnAboutToUpdateUser( $userID )
+function AC_OnAboutToUpdateUser( $userID )
 {
 	$user_info = get_userdata( $userID );
 	$onUpdateSubscriber = get_option( WP88_MC_UPDATE );
 	if ( "1" == $onUpdateSubscriber )
 	{
 		$updateEmail = $user_info->user_email;
-		$optionName = GenerateTempEmailOptionName( $user_info->ID );
+		$optionName = AC_GenerateTempEmailOptionName( $user_info->ID );
 		update_option( $optionName, $updateEmail );
 	}
 }
 
-function OnUpdateUser( $userID, $writeDBMessages=TRUE )
+function AC_OnUpdateUser( $userID, $writeDBMessages=TRUE )
 {
 	$user_info = get_userdata( $userID );
 	$onUpdateSubscriber = get_option( WP88_MC_UPDATE );
 	if ( "1" == $onUpdateSubscriber )
 	{
-		$result = ManageMailUser( MMU_UPDATE, $user_info, $writeDBMessages );
-		update_option( GenerateTempEmailOptionName( $user_info->ID ), "" );
+		$result = AC_ManageMailUser( MMU_UPDATE, $user_info, $writeDBMessages );
+		update_option( AC_GenerateTempEmailOptionName( $user_info->ID ), "" );
 
 		// 232 is the MailChimp error code for: "user doesn't exist".  This
 		// error can occur when a new user signs up but there's a required
@@ -904,7 +904,7 @@ function OnUpdateUser( $userID, $writeDBMessages=TRUE )
 			$onAddSubscriber = get_option( WP88_MC_ADD );
 			if ( "1" == $onAddSubscriber )
 			{
-				ManageMailUser( MMU_ADD, $user_info, $writeDBMessages );
+				AC_ManageMailUser( MMU_ADD, $user_info, $writeDBMessages );
 			}
 		}
 	}
