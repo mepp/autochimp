@@ -3,10 +3,10 @@ Plugin Name: AutoChimp
 Contributors: WandererLLC
 Plugin URI: http://www.wandererllc.com/company/plugins/autochimp/
 Donate link: https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=HPCPB3GY5LUQW&lc=US
-Tags: admin, email, MailChimp, Mail, Chimp, BuddyPress, Profile Fields, XProfile, Register, Plus, Redux, campaign, mailing list, create, automatically, subscribe, unsubscribe, sync, synchronize
+Tags: MailChimp, Mail, Chimp, email, campaign, mailing list, BuddyPress, Register, Plus, Redux, Profile Fields, XProfile, merge, admin, create, automatically, subscribe, unsubscribe, sync, synchronize
 Requires at least: 2.8
-Tested up to: 3.03
-Stable tag: 1.01
+Tested up to: 3.04
+Stable tag: 1.02
 
 Keep website users and MailChimp mailing lists in sync and create campaigns from posts.
 

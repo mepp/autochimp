@@ -4,7 +4,7 @@ Plugin Name: AutoChimp
 Plugin URI: http://www.wandererllc.com/company/plugins/autochimp/
 Description: Keeps MailChimp mailing lists in sync with your WordPress site.  It also leverages BuddyPress and allows you to synchronize all of your profile fields.  Gives users the ability to create MailChimp mail campaigns from blog posts.
 Author: Wanderer LLC Dev Team
-Version: 1.01
+Version: 1.02
 */
 
 if ( !class_exists( 'MCAPI_13' ) )
@@ -216,7 +216,7 @@ function AC_AutoChimpOptions()
 		update_option( WP88_MC_APIKEY, $newAPIKey );
 
 		// Tell the user
-		print '<div id="message" class="updated fade"><p>Saved API Key!</p></div>';
+		print '<div id="message" class="updated fade"><p>Successfully saved your API Key!</p></div>';
 	}
 
 	// Save off the autochimp options here
@@ -360,7 +360,7 @@ function AC_AutoChimpOptions()
 			}
 		}
 		// Tell the user that all is well
-		print '<div id="message" class="updated fade"><p>Successfully syncronized '. $numSuccess .' MailChimp users. ' . $numFailed . ' <strong>failed</strong>.  Failure Details: ' . $message . '</p></div>';
+		print '<div id="message" class="updated fade"><p>Successfully syncronized '. $numSuccess .' MailChimp users. ' . $numFailed . ' <strong>failed</strong>.  Failure Details: ' . $message . 'If needed, you can look up error codes <a target="_blank" href="http://www.mailchimp.com/api/1.3/exceptions.field.php">here</a>.</p></div>';
 	}
 
 	// The file that will handle uploads is this one (see the "if" above)
@@ -887,7 +887,7 @@ function AC_OnUpdateUser( $userID, $writeDBMessages=TRUE )
 {
 	$user_info = get_userdata( $userID );
 	$onUpdateSubscriber = get_option( WP88_MC_UPDATE );
-	if ( "1" == $onUpdateSubscriber )
+	if ( "1" === $onUpdateSubscriber )
 	{
 		$result = AC_ManageMailUser( MMU_UPDATE, $user_info, $writeDBMessages );
 		update_option( AC_GenerateTempEmailOptionName( $user_info->ID ), "" );
@@ -899,12 +899,15 @@ function AC_OnUpdateUser( $userID, $writeDBMessages=TRUE )
 		// account, but their account won't exist.  So, catch that here and
 		// try to re-add them.  This is a costly workflow, but that's how
 		// it works.
-		if ( 232 == $result )
+		//
+		// This can also happen when synchronizing users with MailChimp who
+		// aren't subscribers to the MailChimp mailing list yet.
+		if ( 232 === $result )
 		{
 			$onAddSubscriber = get_option( WP88_MC_ADD );
-			if ( "1" == $onAddSubscriber )
+			if ( "1" === $onAddSubscriber )
 			{
-				AC_ManageMailUser( MMU_ADD, $user_info, $writeDBMessages );
+				$result = AC_ManageMailUser( MMU_ADD, $user_info, $writeDBMessages );
 			}
 		}
 	}

@@ -47,7 +47,7 @@ $pluginFolder = get_bloginfo('wpurl') . '/wp-content/plugins/' . dirname( plugin
 	if ( empty( $apiKey ) )
 	{
 		print "<p><em>No API Key has been saved yet!</em></p>";
-		print "<p>Set your Mailchimp API Key, which you can find on the <a href=\"http://us1.admin.mailchimp.com/account/api\">MailChimp website</a>, ";
+		print "<p>Set your Mailchimp API Key, which you can find on the <a target=\"_blank\" href=\"http://us1.admin.mailchimp.com/account/api\">MailChimp website</a>, ";
 		print "in the text box below. Once the API Key is set, you will see the various options that AutoChimp provides.</p>";
 		print '<p>Set Your MailChimp API Key: ';
 	}
@@ -93,9 +93,9 @@ if ( !empty( $apiKey ) )
 		$selectedLists = get_option( WP88_MC_LISTS );
 
 		// Put all of the selected lists into an array to search later
-		$listArray = preg_split( "/[\s,]+/", $selectedLists );
+		$listArray = preg_split( '/[\s,]+/', $selectedLists );
 
-		print "<p>Which mailing lists would you like to update?</p>";
+		print '<p>Which mailing lists would you like to update?</p>';
 		foreach ( $myLists['data'] as $list )
 		{
 			$listName = $list['name'];
@@ -110,7 +110,7 @@ if ( !empty( $apiKey ) )
 			// Generate a checkbox here (checked if this list was selected previously)
 			print "<p><input type=CHECKBOX value=\"$searchableListID\" name=\"$searchableListID\" ";
 			if ( false === $selected ){} else
-				print "checked";
+				print 'checked';
 			print "> $listName</p>";
 		}
 
@@ -120,32 +120,32 @@ if ( !empty( $apiKey ) )
 		$onUpdateSubscriber = get_option( WP88_MC_UPDATE );
 		$onBypassOptIn = get_option( WP88_MC_BYPASS_OPT_IN );
 
-		print "<p>When would you like to update your selected Mailing Lists?</p>";
+		print '<p>When would you like to update your selected Mailing Lists?</p>';
 
-		print "<p><input type=CHECKBOX value=\"on_add_subscriber\" name=\"on_add_subscriber\" ";
-		if ( "0" === $onAddSubscriber ){} else
-			print "checked";
-		print "> When a user subscribes <em>(Adds the user to your mailing list)</em></p>";
+		print '<p><input type=CHECKBOX value="on_add_subscriber" name="on_add_subscriber" ';
+		if ( '0' === $onAddSubscriber ){} else
+			print 'checked';
+		print '> When a user subscribes <em>(Adds the user to your mailing list)</em></p>';
 
-		print "<p><fieldset style=\"margin-left: 20px;\"><input type=CHECKBOX value=\"on_bypass_opt_in\" name=\"on_bypass_opt_in\" ";
-		if ( "1" === $onBypassOptIn )
-			print "checked";
-		print "> Bypass the MailChimp double opt-in.  New registrations will <em>not</em> recieve confirmation emails from MailChimp. <em>(MailChimp does not recommend this)</em></fieldset></p>";
+		print '<p><fieldset style="margin-left: 20px;"><input type=CHECKBOX value="on_bypass_opt_in" name="on_bypass_opt_in" ';
+		if ( '1' === $onBypassOptIn )
+			print 'checked';
+		print '> Bypass the MailChimp double opt-in.  New registrations will <em>not</em> recieve confirmation emails from MailChimp. <em>(MailChimp <a target="_blank" href="http://www.mailchimp.com/kb/article/how-does-confirmed-optin-or-double-optin-work">does not recommend</a> this)</em></fieldset></p>';
 
-		print "<p><input type=CHECKBOX value=\"on_delete_subscriber\" name=\"on_delete_subscriber\" ";
-		if ( "0" === $onDeleteSubscriber ){} else
-			print "checked";
-		print "> When a user unsubscribes <em>(Unsubscribes the user from your mailing list)</em></p>";
+		print '<p><input type=CHECKBOX value="on_delete_subscriber" name="on_delete_subscriber" ';
+		if ( '0' === $onDeleteSubscriber ){} else
+			print 'checked';
+		print '> When a user unsubscribes <em>(Unsubscribes the user from your mailing list)</em></p>';
 
-		print "<p><input type=CHECKBOX value=\"on_update_subscriber\" name=\"on_update_subscriber\" ";
-		if ( "0" === $onUpdateSubscriber ){} else
-			print "checked";
-		print "> When a user updates his information</p>";
+		print '<p><input type=CHECKBOX value="on_update_subscriber" name="on_update_subscriber" ';
+		if ( '0' === $onUpdateSubscriber ){} else
+			print 'checked';
+		print '> When a user updates his information</p>';
 
 		// Show the user the last message
 		$lastMessage = get_option( WP88_MC_LAST_MAIL_LIST_ERROR );
 		if ( empty( $lastMessage ) )
-			$lastMessage = "No mailing list activity yet.";
+			$lastMessage = 'No mailing list activity yet.';
 		print "<p><strong>Latest mailing list activity:</strong>  <em>$lastMessage</em></p>";
 ?>
 		<p>You can also perform a <em>manual</em> sync with your existing user base.  This is recommended only once to bring existing users in sync.  After you've synchronized your users, and you use AutoChimp to keep your users in sync, you should not need to do this again.  <strong>Note: </strong>Depending on how many users you have, this could take a while.  Please be patient.</p>
@@ -155,7 +155,7 @@ if ( !empty( $apiKey ) )
 	}
 	else
 	{
-		print "<p><em>Unable to retrieve your lists with this key!</em>  Did you paste it in correctly?  If so, make sure you're connected to the internet and not working offline.</p>";
+		print '<p><em>Unable to retrieve your lists with this key!</em>  Did you paste it in correctly?  If so, make sure you\'re connected to the internet and not working offline.</p>';
 	}
 
 	//
@@ -173,7 +173,7 @@ if ( !empty( $apiKey ) )
 	// If $createOnce isn't set, default to "1"
 	if ( 0 == strlen( $createOnce ) )
 	{
-		$createOnce = "1";
+		$createOnce = '1';
 		update_option( WP88_MC_CREATE_CAMPAIGN_ONCE, $createOnce );
 	}
 
@@ -192,13 +192,13 @@ if ( !empty( $apiKey ) )
 <div class="inside">
 
 <?php
-	print "<p><input type=CHECKBOX value=\"on_campaign_from_post\" name=\"on_campaign_from_post\" ";
-	if ( "0" === $campaignFromPost || empty( $campaignFromPost ) ){} else
-		print "checked";
-	print "> Create campaigns from posts. The campaign will be created for each of the mailing lists you selected above.</p>";
+	print '<p><input type=CHECKBOX value="on_campaign_from_post" name="on_campaign_from_post" ';
+	if ( '0' === $campaignFromPost || empty( $campaignFromPost ) ){} else
+		print 'checked';
+	print '> Create campaigns from posts. The campaign will be created for each of the mailing lists you selected above.</p>';
 
-	print "<p>";
-	print "Choose a category to create campaigns from: ";
+	print '<p>';
+	print 'Choose a category to create campaigns from: ';
 
 	// Generate a category combo box
 
@@ -220,24 +220,24 @@ if ( !empty( $apiKey ) )
 		print '<option ' .  $selText . $category->name . '</option>';
 	}
 
-	print "</select></p>";
+	print '</select></p>';
 
 	// Create a checkbox asking the user if they want to send campaigns right away
-	print "<p><input type=CHECKBOX value=\"on_send_now\" name=\"on_send_now\" ";
-	if ( "0" === $sendNow || empty( $sendNow ) ){} else
-		print "checked";
-	print "> Send campaign <em>as soon as</em> a post is published. Not checking this option will save a draft version of your new MailChimp campaign.</p>";
+	print '<p><input type=CHECKBOX value="on_send_now" name="on_send_now" ';
+	if ( '0' === $sendNow || empty( $sendNow ) ){} else
+		print 'checked';
+	print '> Send campaign <em>as soon as</em> a post is published. Not checking this option will save a draft version of your new MailChimp campaign.</p>';
 
 	// Create a checkbox asking the user if they want to suppress additional campaigns when posts are updated
-	print "<p><input type=CHECKBOX value=\"on_create_once\" name=\"on_create_once\" ";
-	if ( "0" === $createOnce || empty( $createOnce ) ){} else
-		print "checked";
-	print "> Create a campaign only once. Not checking this option will create an additional campaign each time you update your post. <em>Recommended <strong>ON</strong></em></p>";
+	print '<p><input type=CHECKBOX value="on_create_once" name="on_create_once" ';
+	if ( '0' === $createOnce || empty( $createOnce ) ){} else
+		print 'checked';
+	print '> Create a campaign only once. Not checking this option will create an additional campaign each time you update your post. <em>Recommended <strong>ON</strong></em></p>';
 
 	// Show the user the last message
 	$lastMessage = get_option( WP88_MC_LAST_CAMPAIGN_ERROR );
 	if ( empty( $lastMessage ) )
-		$lastMessage = "No campaign activity yet.";
+		$lastMessage = 'No campaign activity yet.';
 
 	print "<p><strong>Latest campaign activity:</strong>  <em>$lastMessage</em></p>";
 ?>
@@ -258,10 +258,10 @@ if ( !empty( $apiKey ) )
 	{
 		print '<p><strong>You are using <a target="_blank" href="http://wordpress.org/extend/plugins/register-plus/">Register Plus</a></strong> which has a known issue preventing first and last name being synchronized with MailChimp. <em>AutoChimp can fix this</em>.</p>';
 		print '<fieldset style="margin-left: 20px;">';
-		print "<p><input type=CHECKBOX value=\"on_fix_regplus\" name=\"on_fix_regplus\" ";
+		print '<p><input type=CHECKBOX value="on_fix_regplus" name="on_fix_regplus" ';
 		if ( '1' === $fixRegPlus )
 			print "checked";
-		print "> Patch Register Plus and sync first/last name with your selected mailing list. <em>Recommended <strong>ON</strong></em>.</p>";
+		print '> Patch Register Plus and sync first/last name with your selected mailing list. <em>Recommended <strong>ON</strong></em>.</p>';
 		print '<p><em>News:</em> The Register Plus Redux version 3.7.0 will also fix this; please delete Register Plus and install <a href="http://wordpress.org/extend/plugins/register-plus-redux/" target="_blank">Register Plus Redux</a>.  More info can be found <a href="http://radiok.info/blog/conflicts-begone/" target="_blank">here</a>.</p>';
 		print '</fieldset>';
 	}
@@ -273,7 +273,7 @@ if ( !empty( $apiKey ) )
 		print "<p><input type=CHECKBOX value=\"on_fix_regplusredux\" name=\"on_fix_regplusredux\" ";
 		if ( '1' === $fixRegPlusRedux )
 			print "checked";
-		print "> Patch Register Plus Redux and sync first/last name with your selected mailing list. <em>Recommended <strong>ON</strong></em>. <strong>Note:</strong> You must enable '<em>Require new users enter a password during registration...</em>' in your Register Plus Redux options in order for the AutoChimp patch to work.</p>";
+		print '> Patch Register Plus Redux and sync first/last name with your selected mailing list. <em>Recommended <strong>ON</strong></em>. <strong>Note:</strong> You must enable "<em>Require new users enter a password during registration...</em>" in your Register Plus Redux options in order for the AutoChimp patch to work.</p>';
 		print '<p><em>News:</em> Register Plus Redux version 3.7.0 will fix this; please upgrade to that version when it\'s available.  More info can be found <a href="http://radiok.info/blog/conflicts-begone/" target="_blank">here</a>.</p>';
 		print '</fieldset>';
 	}
