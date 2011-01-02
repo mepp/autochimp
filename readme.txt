@@ -44,6 +44,12 @@ AutoChimp is not a visual plugin.  It does all it's work behind the scenes keepi
 
 == Changelog ==
 
+= 1.02 =
+
+* Fixed issue where new blog users were synchronized with MailChimp but errors were incorrectly reported.
+* Added extra links in the UI to give users more info.
+* Cleaned up some strings.
+
 = 1.01 =
 
 * Bypass Double Opt-in is now OFF by default.
@@ -80,6 +86,10 @@ AutoChimp is not a visual plugin.  It does all it's work behind the scenes keepi
 * Basic UI for keeping a mailing list in sync with your site's users.
 
 == Upgrade Notice ==
+
+= 1.02 =
+
+Small changes and fixes which are recommended for all users.
 
 = 1.01 =
 
