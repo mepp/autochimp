@@ -3,26 +3,26 @@ Plugin Name: AutoChimp
 Contributors: WandererLLC
 Plugin URI: http://www.wandererllc.com/company/plugins/autochimp/
 Donate link: https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=HPCPB3GY5LUQW&lc=US
-Tags: admin, email, MailChimp, Mail, Chimp, campaign, mailing list, create, automatically, subscribe
+Tags: MailChimp, Mail, Chimp, email, campaign, mailing list, BuddyPress, Register, Plus, Redux, Profile Fields, XProfile, merge, admin, create, automatically, subscribe, unsubscribe, sync, synchronize
 Requires at least: 2.8
-Tested up to: 3.01
-Stable tag: 0.83
+Tested up to: 3.04
+Stable tag: 1.10
 
-Keep website users and mailing lists in sync and create campaigns from posts.
+Keep website users and MailChimp mailing lists in sync and create campaigns from posts.
 
 == Description ==
 
-Automatically add, remove, and update users to your [MailChimp](http://eepurl.com/MnhD "Mail Chimp") mailing list as users subscribe and unsubscribe to your site.  Create MailChimp mail campaigns automatically from blog posts.  AutoChimp uses a single options page to help you to simply and quickly manage your preferred settings.  In order to use AutoChimp, you must already have an account with MailChimp and at least one mailing list.
+Automatically subscribe, unsubscribe, and update users to your [MailChimp](http://eepurl.com/MnhD "Mail Chimp") mailing list as users subscribe and unsubscribe to your site.  Sync your BuddyPress profile fields with your MaiChimp merge variables and groups.  Create MailChimp mail campaigns automatically from blog posts.  AutoChimp uses a single options page to help you manage your preferred settings.  In order to use AutoChimp, you must already have an account with MailChimp and at least one mailing list.
 
 To use, save your MailChimp API Key on the options page then start adding your new registrations to any selected MailChimp mailing list.  You can configure the plugin to update your mailing list when 1) a new user subscribes, 2) a user unsubscribes, or 3) a user updates his information.  You may also choose to create campaigns automatically from post categories of your choosing.  You can send the campaigns immediately or just save them.
 
 == Screenshots ==
 
-1. The options page for AutoChimp works in a logical flow from top to bottom.  The first thing to do is to save your API key.  Once you do this, you only need to select the options that you want to support.
+1. The options page for AutoChimp works in a logical flow from top to bottom.  The first thing to do is to save your API key.  Once you do this, you only need to select the options that you want to support. This screenshot shows the maximum available options, which can grow considerably if you are using BuddyPress. Don't forget to click "Save AutoChimp Options" when you're finished!
 
 == Special Notes ==
 
-1)  MailChimp, like all other major email campaign managers, sends newly subscribed members a confirmation email. So, you must wait until the new subscriber receives, accepts, and confirms the new subscription before you see them appear in your mailing list.  AutoChimp will trigger the confirmation email right away.
+1)  MailChimp, like all other major email campaign managers, sends newly subscribed members a confirmation email. So, you must wait until the new subscriber receives, accepts, and confirms the new subscription before you see them appear in your mailing list.  AutoChimp will trigger the confirmation email right away.  However, this can all be bypassed by checking the "Bypass double opt-in" checkbox.
 
 2)  Updating your mailing list when a user changes their profile has the potential to be problematic.  If you have alternate UIs or non-standard ways of updating users, then the correct sequence of calls may not happen and, as a result, the subscribed user will not be found in your MailChimp mailing list.  This is because there is the notion of an old email and a new email.  The old email must be fetched before the new email and if the plugin doesn't correctly pick up the old email, then it will be impossible to update a member.  The old email is fetched when the user's profile page is displayed.  The new email is saved when the user commits the update.
 
@@ -34,6 +34,10 @@ To use, save your MailChimp API Key on the options page then start adding your n
 
 == Frequently Asked Questions ==
 
+= Why doesn't the AutoChimp menu appear under the Settings menu? =
+
+That's because you are likely running a version of WordPress before 3.0.  Please upgrade to the latest version.  3.x is a big step up from 2.x!
+
 = How do I make suggestions or report bugs for this plugin? =
 
 Just go to <http://www.wandererllc.com/company/plugins/autochimp/> and follow the instructions.
@@ -43,6 +47,30 @@ Just go to <http://www.wandererllc.com/company/plugins/autochimp/> and follow th
 AutoChimp is not a visual plugin.  It does all it's work behind the scenes keeping your blog users in sync with your mailing list.  If you are looking for a registration widget for MailChimp, search for "MailChimp List Subscribe Form" on the WordPress plugin site.
 
 == Changelog ==
+
+= 1.10 =
+
+* Can now synchronize all WordPress user fields.
+* Fixed bug associated with Register Plus Redux.
+* Moved the static text field from the BuddyPress UI to the main UI.
+
+= 1.02 =
+
+* Fixed issue where new blog users were synchronized with MailChimp but errors were incorrectly reported.
+* Added extra links in the UI to give users more info.
+* Cleaned up some strings.
+
+= 1.01 =
+
+* Bypass Double Opt-in is now OFF by default.
+* AutoChimp now can coexist with the MailChimp widget plugin.
+* Renamed functions to reduce conflicts with other plugins.
+
+= 1.00 =
+
+* Added integration with BuddyPress.  You can now sync your BuddyPress profile fields with your MailChimp merge variables and groups.
+* Added a fix/patch for Register Plus and Register Plus Redux.  You can now sync first name and last name with MailChimp successfully.
+* Improved the UI
 
 = 0.83 =
 
@@ -69,6 +97,22 @@ AutoChimp is not a visual plugin.  It does all it's work behind the scenes keepi
 
 == Upgrade Notice ==
 
+= 1.10 = 
+
+Recommended if you use Register Plus or Register Plus Redux.  Also, if you want to synchronize fields other than first name, last name, and email, please upgrade.
+
+= 1.02 =
+
+Small changes and fixes which are recommended for all users.
+
+= 1.01 =
+
+Recommended for all users, especially those who also use the MailChimp widget plugin.
+
+= 1.0 =
+
+Recommended for all users.  This version greatly expands AutoChimp's feature set.
+
 = 0.83 =
 
 All users should upgrade to this version ASAP.
@@ -78,9 +122,11 @@ All users should upgrade to this version ASAP.
 Not a critical update.  Small fix for email-to-post users, plus a "Read more" link at the bottom of campaigns.
 
 = 0.81 =
+
 This version simply tightens down the 0.8 UI.
 
 = 0.8 =
+
 This version adds the ability to create campaigns from blog posts.
 
 == Acknowledgements ==
@@ -90,6 +136,7 @@ There are many people who have suggested features for AutoChimp.  Special consid
 1) Anton Alksnin at [Forex Alert](http://www.forex-alert.net "Forex Alert") for supporting the "blog post to campaign" feature.
 2) Peter Michael at [FlowDrops](http://www.flowdrops.com/) for some quality testing.
 3) [Latinos a Morir](http://www.latinosamorir.com/) for supporting the BuddyPress Synchronization feature.
+4) Bryan Hoffman at [Dwell DFW Apartments](http://apartments.dwelldfw.com/dallas/) for supporting synchronizing all WordPress user fields.
 
 == License ==
 
