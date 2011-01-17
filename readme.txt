@@ -22,7 +22,7 @@ To use, save your MailChimp API Key on the options page then start adding your n
 
 == Special Notes ==
 
-1)  MailChimp, like all other major email campaign managers, sends newly subscribed members a confirmation email. So, you must wait until the new subscriber receives, accepts, and confirms the new subscription before you see them appear in your mailing list.  AutoChimp will trigger the confirmation email right away.
+1)  MailChimp, like all other major email campaign managers, sends newly subscribed members a confirmation email. So, you must wait until the new subscriber receives, accepts, and confirms the new subscription before you see them appear in your mailing list.  AutoChimp will trigger the confirmation email right away.  However, this can all be bypassed by checking the "Bypass double opt-in" checkbox.
 
 2)  Updating your mailing list when a user changes their profile has the potential to be problematic.  If you have alternate UIs or non-standard ways of updating users, then the correct sequence of calls may not happen and, as a result, the subscribed user will not be found in your MailChimp mailing list.  This is because there is the notion of an old email and a new email.  The old email must be fetched before the new email and if the plugin doesn't correctly pick up the old email, then it will be impossible to update a member.  The old email is fetched when the user's profile page is displayed.  The new email is saved when the user commits the update.
 
@@ -34,6 +34,10 @@ To use, save your MailChimp API Key on the options page then start adding your n
 
 == Frequently Asked Questions ==
 
+= Why doesn't the AutoChimp menu appear under the Settings menu? =
+
+That's because you are likely running a version of WordPress before 3.0.  Please upgrade to the latest version.  3.x is a big step up from 2.x!
+
 = How do I make suggestions or report bugs for this plugin? =
 
 Just go to <http://www.wandererllc.com/company/plugins/autochimp/> and follow the instructions.
@@ -43,6 +47,12 @@ Just go to <http://www.wandererllc.com/company/plugins/autochimp/> and follow th
 AutoChimp is not a visual plugin.  It does all it's work behind the scenes keeping your blog users in sync with your mailing list.  If you are looking for a registration widget for MailChimp, search for "MailChimp List Subscribe Form" on the WordPress plugin site.
 
 == Changelog ==
+
+= 1.10 =
+
+* Can now synchronize all WordPress user fields.
+* Fixed bug associated with Register Plus Redux.
+* Moved the static text field from the BuddyPress UI to the main UI.
 
 = 1.02 =
 
@@ -87,6 +97,10 @@ AutoChimp is not a visual plugin.  It does all it's work behind the scenes keepi
 
 == Upgrade Notice ==
 
+= 1.10 = 
+
+Recommended if you use Register Plus or Register Plus Redux.  Also, if you want to synchronize fields other than first name, last name, and email, please upgrade.
+
 = 1.02 =
 
 Small changes and fixes which are recommended for all users.
@@ -122,6 +136,7 @@ There are many people who have suggested features for AutoChimp.  Special consid
 1) Anton Alksnin at [Forex Alert](http://www.forex-alert.net "Forex Alert") for supporting the "blog post to campaign" feature.
 2) Peter Michael at [FlowDrops](http://www.flowdrops.com/) for some quality testing.
 3) [Latinos a Morir](http://www.latinosamorir.com/) for supporting the BuddyPress Synchronization feature.
+4) Bryan Hoffman at [Dwell DFW Apartments](http://apartments.dwelldfw.com/dallas/) for supporting synchronizing all WordPress user fields.
 
 == License ==
 

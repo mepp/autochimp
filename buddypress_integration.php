@@ -35,7 +35,7 @@ function AC_ShowBuddyPressUI( $api, $list )
 	if ( '1' === $syncBuddyPress )
 		print 'checked';
 	print '> Automatically Sync BuddyPress Profile Fields with MailChimp.</p>';
-	print '<p>Use the following table to assign your BuddyPress Profile Fields to your MailChimp fields.  You can use the "Static Text" field at the bottom to assign the same value to each new user which will distinguish users from your site from users from other locations.</p>';
+	print '<p>Use the following table to assign your BuddyPress Profile Fields to your MailChimp fields.  <strong>Tip:</strong> You can use the "Static Text" field at the bottom to assign the same value to each new user which will distinguish users from your site from users from other locations.</p>';
 
 	$fields = $wpdb->get_results( "SELECT name,type FROM wp_bp_xprofile_fields WHERE type != 'option'", ARRAY_A );
 	if ( $fields )
@@ -48,13 +48,13 @@ function AC_ShowBuddyPressUI( $api, $list )
 		foreach ( $fields as $field )
 		{
 			// Generate a select box for this particular field
-			$fieldNameTag = AC_EncodeXProfileOptionName( $field['name'] );
+			$fieldNameTag = AC_EncodeUserOptionName( WP88_BP_XPROFILE_FIELD_MAPPING, $field['name'] );
 			$selectBox = AC_GenerateFieldSelectBox( $fieldNameTag, $mcFields );
 			$output .= '<tr class="alternate">' . PHP_EOL . '<td width="70%">' . $field['name'] . '</td>' . PHP_EOL . '<td width="30%">' . $selectBox . '</td>' . PHP_EOL . '</tr>' . PHP_EOL;
 		}
 
-		$selectBox = AC_GenerateFieldSelectBox( WP88_MC_STATIC_FIELD, $mcFields );
-		$output .= '<tr class="alternate"><td width="70%">Static Text:<input type="text" name="static_select" value="' . $staticText . '"size="25" /></td><td width="30%">' . $selectBox . '</td></tr>';
+//		$selectBox = AC_GenerateFieldSelectBox( WP88_MC_STATIC_FIELD, $mcFields );
+//		$output .= '<tr class="alternate"><td width="70%">Static Text:<input type="text" name="static_select" value="' . $staticText . '"size="25" /></td><td width="30%">' . $selectBox . '</td></tr>';
 		$tableText .= '<div id=\'filelist\'>' . PHP_EOL;
 		$tableText .= '<table class="widefat" style="width:650px">
 				<thead>
@@ -62,50 +62,10 @@ function AC_ShowBuddyPressUI( $api, $list )
 					<th scope="col">BuddyPress Profile Field:</th>
 					<th scope="col">Assign to MailChimp Field:</th>
 				</tr>
-				</thead>';
+				</thead>' . PHP_EOL;
 		$tableText .= $output;
 		$tableText .= '</table>' . PHP_EOL . '</div>' . PHP_EOL;
 		print $tableText;
 	}
-}
-
-//
-//	Given an BP XProfile field name, generates select box HTML.  Also takes an
-//	extra array argument holding the mailing lists's Merge Variable names.  This
-//	is simply a time-saver so that this data doesn't need to be queried several
-//	times.
-//
-function AC_GenerateFieldSelectBox( $fieldName, $mcMergeVars )
-{
-	// See which field should be selected (if any)
-	$selectedVal = get_option( $fieldName );
-
-	// Create a select box from MailChimp merge values
-	$selectBox = '<select name="' . $fieldName . '">' . PHP_EOL;
-
-	// Create an "Ignore" option
-	$selectBox .= '<option>' . WP88_IGNORE_FIELD_TEXT . '</option>' . PHP_EOL;
-
-	// Loop through each merge value; use the name as the selectable
-	// text and the tag as the value that gets selected.  The tag
-	// is what's used to lookup and set values in MailChimp.
-	foreach( $mcMergeVars as $field => $tag )
-	{
-		// Not selected by default
-		$sel = '<option value="' . $tag . '"';
-
-		// Should it be $tag?  Is it the same as the tag that the user selcted?
-		// Remember, the tag isn't visible in the combo box, but it's saved when
-		// the user makes a selection.
-		if ( 0 === strcmp( $tag, $selectedVal ) )
-			$sel .= ' selected>';
-		else
-			$sel .= '>';
-
-		// print an option for each merge value
-		$selectBox .= $sel . $field . '</option>' . PHP_EOL;
-	}
-	$selectBox .= '</select>' . PHP_EOL;
-	return $selectBox;
 }
 ?>

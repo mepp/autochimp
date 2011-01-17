@@ -8,6 +8,7 @@
 
 <?php
 require_once 'inc/MCAPI.class.php';
+require_once 'ui_helpers.php';
 wp_nonce_field('mailchimpz-nonce');
 
 $pluginFolder = get_bloginfo('wpurl') . '/wp-content/plugins/' . dirname( plugin_basename( __FILE__ ) ) . '/';
@@ -95,7 +96,7 @@ if ( !empty( $apiKey ) )
 		// Put all of the selected lists into an array to search later
 		$listArray = preg_split( '/[\s,]+/', $selectedLists );
 
-		print '<p>Which mailing lists would you like to update?</p>';
+		print '<p><strong>1) Which mailing lists would you like to update?</strong></p>';
 		foreach ( $myLists['data'] as $list )
 		{
 			$listName = $list['name'];
@@ -120,7 +121,7 @@ if ( !empty( $apiKey ) )
 		$onUpdateSubscriber = get_option( WP88_MC_UPDATE );
 		$onBypassOptIn = get_option( WP88_MC_BYPASS_OPT_IN );
 
-		print '<p>When would you like to update your selected Mailing Lists?</p>';
+		print '<p><strong>2) When would you like to update your selected Mailing Lists?</strong></p>';
 
 		print '<p><input type=CHECKBOX value="on_add_subscriber" name="on_add_subscriber" ';
 		if ( '0' === $onAddSubscriber ){} else
@@ -130,17 +131,68 @@ if ( !empty( $apiKey ) )
 		print '<p><fieldset style="margin-left: 20px;"><input type=CHECKBOX value="on_bypass_opt_in" name="on_bypass_opt_in" ';
 		if ( '1' === $onBypassOptIn )
 			print 'checked';
-		print '> Bypass the MailChimp double opt-in.  New registrations will <em>not</em> recieve confirmation emails from MailChimp. <em>(MailChimp <a target="_blank" href="http://www.mailchimp.com/kb/article/how-does-confirmed-optin-or-double-optin-work">does not recommend</a> this)</em></fieldset></p>';
+		print '> Bypass the MailChimp double opt-in.  New registrants will <em>not</em> recieve confirmation emails from MailChimp. <em>(MailChimp <a target="_blank" href="http://www.mailchimp.com/kb/article/how-does-confirmed-optin-or-double-optin-work">does not recommend</a> abusing this so be careful)</em></fieldset></p>';
 
 		print '<p><input type=CHECKBOX value="on_delete_subscriber" name="on_delete_subscriber" ';
 		if ( '0' === $onDeleteSubscriber ){} else
 			print 'checked';
-		print '> When a user unsubscribes <em>(Unsubscribes the user from your mailing list)</em></p>';
+		print '> When a user leaves your site <em>(Unsubscribes the user from your mailing list)</em></p>';
 
 		print '<p><input type=CHECKBOX value="on_update_subscriber" name="on_update_subscriber" ';
 		if ( '0' === $onUpdateSubscriber ){} else
 			print 'checked';
-		print '> When a user updates his information</p>';
+		print '> When a user updates his information <em>(Syncs the user with your mailing list)</em></p>';
+
+		print '<p><strong>3) What additional WordPress user information do you want to sync with MailChimp?</strong></p>';
+		print '<p><em>First name, last name, and email are always synchronized.</em></p>';
+		print '<p>Use the following table to assign your WordPress User Fields to your MailChimp fields.  <strong>Tip:</strong> You can use the "Static Text" field at the bottom to assign the same value to each new user which will distinguish users from your site from users from other locations.</p>';
+
+		//
+		// START: 	Generate a list of controls here for basic WordPress user fields
+		//			(besides first and last name).
+		//
+
+		// Hold table output here
+		$output = '';
+
+		// NOTE:  This just takes the FIRST selected list!  Multiple selected lists
+		// will just not work.
+		$list = $listArray[ 0 ];
+		// Strip out the searchable tag
+		$list = substr_replace( $list, '', 0, strlen( WP88_SEARCHABLE_PREFIX ) );
+		$mergeVars = AC_FetchMailChimpMergeVars( $api, $list );
+		if ( empty( $mergeVars ) )
+			print "<p><em><strong>Problem: </strong>AutoChimp could not retrieve your MailChimp Merge Variables. Try saving your selected mailing list again.</em></p>";
+
+		global $wpUserDataArray;
+		foreach( $wpUserDataArray as $userField )
+		{
+			$fieldNameTag = AC_EncodeUserOptionName( WP88_WORDPRESS_FIELD_MAPPING, $userField );
+			$selectBox = AC_GenerateFieldSelectBox( $fieldNameTag, $mergeVars );
+			$output .= '<tr class="alternate">' . PHP_EOL . '<td width="70%">' . $userField . '</td>' . PHP_EOL . '<td width="30%">' . $selectBox . '</td>' . PHP_EOL . '</tr>' . PHP_EOL;
+		}
+
+		// This static field used to belong to the BuddyPress Sync UI, but has since
+		// been moved to the main UI.  It's still represented by a DB value that makes
+		// it look like it belongs to BuddyPress, so heads up.
+		$selectBox = AC_GenerateFieldSelectBox( WP88_MC_STATIC_FIELD, $mergeVars );
+		$output .= '<tr class="alternate"><td width="70%">Static Text:<input type="text" name="static_select" value="' . $staticText . '"size="18" /></td><td width="30%">' . $selectBox . '</td></tr>';
+
+		// Generate the table now
+		$tableText .= '<div id=\'filelist\'>' . PHP_EOL;
+		$tableText .= '<table class="widefat" style="width:425px">
+				<thead>
+				<tr>
+					<th scope="col">WordPress User Field:</th>
+					<th scope="col">Assign to MailChimp Field:</th>
+				</tr>
+				</thead>' . PHP_EOL;
+		$tableText .= $output;
+		$tableText .= '</table>' . PHP_EOL . '</div>' . PHP_EOL;
+		print $tableText;
+		//
+		// END:	Generate a list of controls
+		//
 
 		// Show the user the last message
 		$lastMessage = get_option( WP88_MC_LAST_MAIL_LIST_ERROR );
@@ -281,7 +333,7 @@ if ( !empty( $apiKey ) )
 	if ( function_exists( 'AC_ShowBuddyPressUI' ) )
 	{
 		// NOTE:  This just takes the FIRST selected list!  Multiple selected lists
-		// will cause trouble.
+		// will just not work.
 		$list = $listArray[ 0 ];
 		// Strip out the searchable tag
 		$list = substr_replace( $list, '', 0, strlen( WP88_SEARCHABLE_PREFIX ) );

@@ -4,7 +4,7 @@ Plugin Name: AutoChimp
 Plugin URI: http://www.wandererllc.com/company/plugins/autochimp/
 Description: Keeps MailChimp mailing lists in sync with your WordPress site.  It also leverages BuddyPress and allows you to synchronize all of your profile fields.  Gives users the ability to create MailChimp mail campaigns from blog posts.
 Author: Wanderer LLC Dev Team
-Version: 1.02
+Version: 1.10
 */
 
 if ( !class_exists( 'MCAPI_13' ) )
@@ -29,20 +29,29 @@ define( "WP88_MC_CAMPAIGN_CREATED", "wp88_mc_campaign" );
 define( 'WP88_MC_FIX_REGPLUS', 'wp88_mc_fix_regplus' );
 define( 'WP88_MC_FIX_REGPLUSREDUX', 'wp88_mc_fix_regplusredux' );
 define( 'WP88_MC_SYNC_BUDDYPRESS', 'wp88_mc_sync_buddypress' );
+// NOTE: The following two static defines shouldn't have anything to do with
+// BuddyPress, but they do; they were introduced when the BuddyPress sync feature
+// was written.  But, remember, these are always used regardless of additional
+// plugins that are used.
 define( 'WP88_MC_STATIC_TEXT', 'wp88_mc_bp_static_text' );
 define( 'WP88_MC_STATIC_FIELD', 'wp88_mc_bp_static_field' );
 
 define( "AC_DEFAULT_CATEGORY", "Any category" );
 
-define( "MMU_ADD", 1 );
-define( "MMU_DELETE", 2 );
-define( "MMU_UPDATE", 3 );
+define( 'MMU_ADD', 1 );
+define( 'MMU_DELETE', 2 );
+define( 'MMU_UPDATE', 3 );
 
-define( "WP88_SEARCHABLE_PREFIX", 'wp88_mc' );
+define( 'WP88_SEARCHABLE_PREFIX', 'wp88_mc' );
+define( 'WP88_WORDPRESS_FIELD_MAPPING', 'wp88_mc_wp_f_' );
 define( 'WP88_BP_XPROFILE_FIELD_MAPPING', 'wp88_mc_bp_xpf_' );
 define( 'WP88_IGNORE_FIELD_TEXT', 'Ignore this field' );
 define( 'WP88_GROUPINGS_TEXT', 'GROUPINGS' );
 define( 'WP88_FIELD_DELIMITER', '+++' );
+
+// Global variables - If you change this, be sure to see AC_FetchMappedWordPressData()
+// which has static comparisons to the values in this array.  FIX LATER.
+$wpUserDataArray = array( 'Username', 'Nickname', 'Website', 'Bio' , /*'AIM', 'Yahoo IM', 'Jabber-Google Chat'*/ );
 
 //
 //	Actions to hook to allow AutoChimp to do it's work
@@ -114,7 +123,7 @@ function AC_OnBuddyPressUserUpdate()
 function AC_OverrideWarning()
 {
 	if( current_user_can(10) &&  $_GET['page'] == 'autochimp' )
-		echo '<div id="message" class="updated fade"><p><strong>You have another plugin installed that is conflicting with AutoChimp and Register Plus.  This other plugin is overriding the user notification emails or password setting.  Please see <a href="http://www.wandererllc.com/plugins/">AutoChimp FAQ</a> for more information.</strong></p></div>';
+		echo '<div id="message" class="updated fade"><p><strong>You have another plugin installed that is conflicting with AutoChimp and Register Plus.  This other plugin is overriding the user notification emails or password setting.  Please see <a href="http://www.wandererllc.com/plugins/autochimp/">AutoChimp FAQ</a> for more information.</strong></p></div>';
 }
 
 if ( function_exists( 'wp_set_password' ) )
@@ -153,10 +162,15 @@ function wp_set_password( $password, $user_id )
 	//
 	// START Detect Register Plus
 	//
+
+	// Clear out any cached email
 	update_option( AC_GenerateTempEmailOptionName( $user_id ), "" );
+	// Write some basic info to the DB about the user being added
 	$user_info = get_userdata( $user_id );
 	update_option( WP88_MC_LAST_CAMPAIGN_ERROR, "Updating user:  $user_info->first_name $user_info->last_name" );
-	AC_ManageMailUser( MMU_UPDATE, $user_info, TRUE );
+	// Do the real work
+	AC_ManageMailUser( MMU_ADD, $user_info, TRUE );
+
 	//
 	// END Detect
 	//
@@ -269,7 +283,26 @@ function AC_AutoChimpOptions()
 		else
 			update_option( WP88_MC_UPDATE, '0' );
 
-		// Step 3:  Save the user's campaign-from-post choices
+		// Step 3:  Save the extra WordPress fields that the user wants to sync.
+		global $wpUserDataArray;
+		foreach( $wpUserDataArray as $userField )
+		{
+			// Encode the name of the field
+			$fieldName = AC_EncodeUserOptionName( WP88_WORDPRESS_FIELD_MAPPING, $userField );
+
+			// Now dereference the selection
+			$fieldData = $_POST[ $fieldName ];
+
+			// Save the selection
+			update_option( $fieldName, $fieldData );
+		}
+
+		// Now save the special static field and the mapping
+		$staticText = $_POST[ 'static_select' ];
+		update_option( WP88_MC_STATIC_TEXT, $staticText );
+		update_option( WP88_MC_STATIC_FIELD, $_POST[ WP88_MC_STATIC_FIELD ] );
+
+		// Step 4:  Save the user's campaign-from-post choices
 
 		if ( isset( $_POST['on_campaign_from_post'] ) )
 			update_option( WP88_MC_CAMPAIGN_FROM_POST, '1' );
@@ -289,7 +322,7 @@ function AC_AutoChimpOptions()
 		$category = $_POST['campaign_category'];
 		update_option( WP88_MC_CAMPAIGN_CATEGORY, $category );
 
-		// Step 4:  Save other plugin integration choices
+		// Step 5:  Save other plugin integration choices
 
 		if ( isset( $_POST['on_fix_regplus'] ) )
 			update_option( WP88_MC_FIX_REGPLUS, '1' );
@@ -322,7 +355,7 @@ function AC_AutoChimpOptions()
 			foreach( $fields as $field )
 			{
 				// Encode the name of the field
-				$selectName = AC_EncodeXProfileOptionName( $field['name'] );
+				$selectName = AC_EncodeUserOptionName( WP88_BP_XPROFILE_FIELD_MAPPING, $field['name'] );
 
 				// Now dereference the selection
 				$selection = $_POST[ $selectName ];
@@ -330,11 +363,6 @@ function AC_AutoChimpOptions()
 				// Save the selection
 				update_option( $selectName, $selection );
 			}
-
-			// Now save the special static field and the mapping
-			$staticText = $_POST[ 'static_select' ];
-			update_option( WP88_MC_STATIC_TEXT, $staticText );
-			update_option( WP88_MC_STATIC_FIELD, $_POST[ WP88_MC_STATIC_FIELD ] );
 		}
 	}
 
@@ -404,15 +432,30 @@ function AC_ManageMailUser( $mode, $user_info, $writeDBMessages )
 				if ( false === $pos ){}
 				else
 				{
+					// First and last names are always added.  NOTE:  Email is only
+					// managed when a user is updating info 'cause email is used as
+					// the key when adding a new user.
 					$merge_vars = array( 'FNAME'=>$user_info->first_name, 'LNAME'=>$user_info->last_name );
+
+					// Grab the extra WP user info
+					$data = AC_FetchMappedWordPressData( $user_info->ID );
+					// Add that info into the merge array.
+					AC_AddUserFieldsToMergeArray( $merge_vars, $data );
 
 					// Grab extra data if the user wants to Sync Buddy Press
 					$syncBuddyPress = get_option( WP88_MC_SYNC_BUDDYPRESS );
 					if ( "1" === $syncBuddyPress )
 					{
-						// This function adds fields to the array passed in.
-						AC_AddXProfileFieldsToMergeArray( $merge_vars, $user_info->ID );
+						// Hunt down Buddy Press user data.
+						$data = AC_FetchMappedXProfileData( $user_info->ID );
+						// Add BuddyPress's data into the merge array
+						AC_AddUserFieldsToMergeArray( $merge_vars, $data );
 					}
+
+					// This one gets static data...add it as well to the array.
+					$data = AC_FetchStaticData();
+					// Add that info into the merge array.
+					AC_AddUserFieldsToMergeArray( $merge_vars, $data );
 
 					switch( $mode )
 					{
@@ -495,7 +538,11 @@ function AC_ManageMailUser( $mode, $user_info, $writeDBMessages )
 							else
 							{
 								if ( FALSE != $writeDBMessages )
-									update_option( WP88_MC_LAST_MAIL_LIST_ERROR, "Updated $user_info->first_name $user_info->last_name ('$user_info->user_email') from list $list_id." );
+								{
+									$errorString = "Updated $user_info->first_name $user_info->last_name ('$user_info->user_email') from list $list_id.  Data: ";
+									$errorString .= print_r( $merge_vars, TRUE );
+									update_option( WP88_MC_LAST_MAIL_LIST_ERROR, $errorString );
+								}
 							}
 							break;
 						}
@@ -668,24 +715,112 @@ function AC_FetchMailChimpMergeVars( $api, $list_id )
 		return $mergeVars;
 
 	// Copy over the merge variables
-	foreach( $mv as $i => $var )
+	if ( !empty( $mv ) )
 	{
-		$mergeVars[ $var['name'] ] = $var['tag'];
+		foreach( $mv as $i => $var )
+		{
+			$mergeVars[ $var['name'] ] = $var['tag'];
+		}
 	}
 
 	// Copy over the interest groups
-	foreach( $ig as $i => $var )
+	if ( !empty( $ig ) )
 	{
-		// Create a special encoding - grouping text, plus delimiter, then the name of the grouping
-		$mergeVars[ $var['name'] ] = WP88_GROUPINGS_TEXT . WP88_FIELD_DELIMITER . $var['name'];
+		foreach( $ig as $i => $var )
+		{
+			// Create a special encoding - grouping text, plus delimiter, then the name of the grouping
+			$mergeVars[ $var['name'] ] = WP88_GROUPINGS_TEXT . WP88_FIELD_DELIMITER . $var['name'];
+		}
 	}
 
 	return $mergeVars;
 }
 
 //
-//	Looks up the user's BP XProfile data and return a meaningful array of associations
-//	to the users based on what the user wants to sync.
+//	Looks up the user's additional WordPress user data and returns a meaningful
+//	array of associations to the users based on what the user wants to sync.
+//
+function AC_FetchMappedWordPressData( $userID )
+{
+	// User data array
+	$dataArray = array();
+
+	// This global array holds the names of the WordPress user fields
+	global $wpUserDataArray;
+
+	// Get this user's data
+	$user_info = get_userdata( $userID );
+
+	// Loop through each field that the user wants to sync and hunt down the user's
+	// values for those fields and stick them into an array.
+	foreach ( $wpUserDataArray as $field )
+	{
+		// Figure out which MailChimp field to map to
+		$optionName = AC_EncodeUserOptionName( WP88_WORDPRESS_FIELD_MAPPING, $field );
+		$fieldData = get_option( $optionName );
+
+		// If the mapping is not set, then skip everything and go on to the next field
+		if ( 0 !== strcmp( $fieldData, WP88_IGNORE_FIELD_TEXT ) )
+		{
+			// Now, get the user's data.  Since the data is basically static,
+			// this is just a collection of "if"s.
+			if ( 0 === strcmp( $field, 'Username' ) )
+			{
+				$value = $user_info->user_login;
+				$dataArray[] = array( 	'name' => $optionName,
+										'tag' => $fieldData,
+										'value' => $value );
+			}
+			elseif ( 0 === strcmp( $field, 'Nickname' ) )
+			{
+				$value = $user_info->user_nicename;
+				$dataArray[] = array( 	'name' => $optionName,
+										'tag' => $fieldData,
+										'value' => $value );
+			}
+			elseif ( 0 === strcmp( $field, 'Website' ) )
+			{
+				$value = $user_info->user_url;
+				$dataArray[] = array( 	'name' => $optionName,
+										'tag' => $fieldData,
+										'value' => $value );
+			}
+			elseif ( 0 === strcmp( $field, 'Bio' ) )
+			{
+				$value = $user_info->user_description;
+				$dataArray[] = array( 	'name' => $optionName,
+										'tag' => $fieldData,
+										'value' => $value );
+			}
+			elseif ( 0 === strcmp( $field, 'AIM' ) )
+			{
+				$value = $user_info->user_description;
+				$dataArray[] = array( 	'name' => $optionName,
+										'tag' => $fieldData,
+										'value' => $value );
+			}
+			elseif ( 0 === strcmp( $field, 'Yahoo IM' ) )
+			{
+				$value = $user_info->user_description;
+				$dataArray[] = array( 	'name' => $optionName,
+										'tag' => $fieldData,
+										'value' => $value );
+			}
+			elseif ( 0 === strcmp( $field, 'Jabber-Google Chat' ) )
+			{
+				$value = $user_info->user_description;
+				$dataArray[] = array( 	'name' => $optionName,
+										'tag' => $fieldData,
+										'value' => $value );
+			}
+		}
+	}
+	return $dataArray;
+}
+
+//
+//	Looks up the user's BP XProfile data and returns a meaningful array of
+//	associations to the users based on what the user wants to sync.
 //
 function AC_FetchMappedXProfileData( $userID )
 {
@@ -706,7 +841,7 @@ function AC_FetchMappedXProfileData( $userID )
 	// values for those fields and stick them into an array.
 	foreach ( $fieldNames as $field )
 	{
-		$optionName = AC_DecodeXProfileOptionName( $field['option_name'] );
+		$optionName = AC_DecodeUserOptionName( WP88_BP_XPROFILE_FIELD_MAPPING, $field['option_name'] );
 
 		// Big JOIN to get the user's value for the field in question
 		// Best to offload this on SQL than PHP.
@@ -773,12 +908,8 @@ function AC_FetchStaticData()
 //	Takes a by-reference array argument and adds XProfile merge variable data
 //	specific to the user ID passed in to the array.
 //
-function AC_AddXProfileFieldsToMergeArray( &$mergeVariables, $userID )
+function AC_AddUserFieldsToMergeArray( &$mergeVariables, $data )
 {
-	// Hunt down additional user data.  This first one gets
-	// XProfile data from BuddyPress.
-	$data = AC_FetchMappedXProfileData( $userID );
-
 	// Create a potentially used groupings array.  Tack this on at the end
 	$groupingsArray = array();
 
@@ -804,21 +935,12 @@ function AC_AddXProfileFieldsToMergeArray( &$mergeVariables, $userID )
 	{
 		$mergeVariables[ WP88_GROUPINGS_TEXT ] = $groupingsArray;
 	}
-
-	// This one gets static data...add it to the current array.
-	$staticData = AC_FetchStaticData();
-
-	// Add this static data to the merge variables
-	foreach ( $staticData as $item )
-	{
-		$mergeVariables[ $item['tag'] ] = $item['value'];
-	}
 }
 
-function AC_EncodeXProfileOptionName( $optionName )
+function AC_EncodeUserOptionName( $encodePrefix, $optionName )
 {
 	// Tack on the prefix to the option name
-	$encoded = WP88_BP_XPROFILE_FIELD_MAPPING . $optionName;
+	$encoded = $encodePrefix . $optionName;
 
 	// Make sure the option name has no spaces; replace them with underscores
 	$encoded = str_replace( ' ', '_', $encoded );
@@ -826,10 +948,10 @@ function AC_EncodeXProfileOptionName( $optionName )
 	return $encoded;
 }
 
-function AC_DecodeXProfileOptionName( $optionName )
+function AC_DecodeUserOptionName( $decodePrefix, $optionName )
 {
 	// Strip out the searchable tag
-	$decoded = substr_replace( $optionName, '', 0, strlen( WP88_BP_XPROFILE_FIELD_MAPPING ) );
+	$decoded = substr_replace( $optionName, '', 0, strlen( $decodePrefix ) );
 
 	// Replace understores with spaces
 	$decoded = str_replace( '_', ' ', $decoded );
