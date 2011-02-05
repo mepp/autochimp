@@ -539,8 +539,10 @@ function AC_ManageMailUser( $mode, $user_info, $writeDBMessages )
 							{
 								if ( FALSE != $writeDBMessages )
 								{
-									$errorString = "Updated $user_info->first_name $user_info->last_name ('$user_info->user_email') from list $list_id.  Data: ";
-									$errorString .= print_r( $merge_vars, TRUE );
+									$errorString = "Updated $user_info->first_name $user_info->last_name ('$user_info->user_email') from list $list_id.";
+									// Uncomment this to see debug info on success
+									//$errorString .= ' Data: ';
+									//$errorString .= print_r( $merge_vars, TRUE );
 									update_option( WP88_MC_LAST_MAIL_LIST_ERROR, $errorString );
 								}
 							}
