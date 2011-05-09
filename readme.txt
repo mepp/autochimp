@@ -5,8 +5,8 @@ Plugin URI: http://www.wandererllc.com/company/plugins/autochimp/
 Donate link: https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=HPCPB3GY5LUQW&lc=US
 Tags: MailChimp, Mail, Chimp, email, campaign, mailing list, BuddyPress, Register, Plus, Redux, Profile Fields, XProfile, merge, admin, create, automatically, subscribe, unsubscribe, sync, synchronize
 Requires at least: 2.8
-Tested up to: 3.04
-Stable tag: 1.10
+Tested up to: 3.12
+Stable tag: 1.11
 
 Keep website users and MailChimp mailing lists in sync and create campaigns from posts.
 
@@ -22,15 +22,17 @@ To use, save your MailChimp API Key on the options page then start adding your n
 
 == Special Notes ==
 
-1)  MailChimp, like all other major email campaign managers, sends newly subscribed members a confirmation email. So, you must wait until the new subscriber receives, accepts, and confirms the new subscription before you see them appear in your mailing list.  AutoChimp will trigger the confirmation email right away.  However, this can all be bypassed by checking the "Bypass double opt-in" checkbox.
+1) MailChimp, like all other major email campaign managers, sends newly subscribed members a confirmation email. So, you must wait until the new subscriber receives, accepts, and confirms the new subscription before you see them appear in your mailing list.  AutoChimp will trigger the confirmation email right away.  However, this can all be bypassed by checking the "Bypass double opt-in" checkbox.
 
-2)  Updating your mailing list when a user changes their profile has the potential to be problematic.  If you have alternate UIs or non-standard ways of updating users, then the correct sequence of calls may not happen and, as a result, the subscribed user will not be found in your MailChimp mailing list.  This is because there is the notion of an old email and a new email.  The old email must be fetched before the new email and if the plugin doesn't correctly pick up the old email, then it will be impossible to update a member.  The old email is fetched when the user's profile page is displayed.  The new email is saved when the user commits the update.
+2) Updating your mailing list when a user changes their profile has the potential to be problematic.  If you have alternate UIs or non-standard ways of updating users, then the correct sequence of calls may not happen and, as a result, the subscribed user will not be found in your MailChimp mailing list.  This is because there is the notion of an old email and a new email.  The old email must be fetched before the new email and if the plugin doesn't correctly pick up the old email, then it will be impossible to update a member.  The old email is fetched when the user's profile page is displayed.  The new email is saved when the user commits the update.
 
 3) Sometimes, plugin output may not render properly in your campaigns generated from posts.  This is usually because the plugin doesn't have access to information it needs until it is displaying its output on the screen for an end user.  The best suggestion in this case is to learn which of your plugins are problematic (most are fine) and adapt accordingly.  We'll look for ways to improve this in the future too.
 
 4) Your campaign formatting may appear differently than your post formatting.  This is because your post uses formatting files that belong to your WordPress theme that your campaign doesn't have access to.  The best thing you can do is to use the HTML tab in the "Post Edit" page to add specific HTML instructions.  MailChimp campaigns speak HTML very well.
 
 5) The subject of your campaign is your blog post title.  The "From" email address and name are taken from your MailChimp configuration.  To change that, you'll need to log into your MailChimp account.  The "To" field is the "*|FNAME|*" merge code.
+
+6) AutoChimp creates several rows in the wp_options table of your WordPress database to store your options.  AutoChimp also stores email addresses in the database whenever the user views their profile information.  See item #2 for why.  These wp_options fields are not deleted when you uninstall AutoChimp.  If you have many users, you might consider deleting these rows.  You can do so in an application ike PHPMyAdmin using the following SQL query exactly as listed (the ending semi-colon may be optional):  DELETE FROM wp_options WHERE option_name LIKE 'wp88_mc_tempemail%';
 
 == Frequently Asked Questions ==
 
@@ -55,6 +57,11 @@ Just go to <http://www.wandererllc.com/company/plugins/autochimp/> and follow th
 AutoChimp is not a visual plugin.  It does all it's work behind the scenes keeping your blog users in sync with your mailing list.  If you are looking for a registration widget for MailChimp, search for "MailChimp List Subscribe Form" on the WordPress plugin site.
 
 == Changelog ==
+
+= 1.11 = 
+
+* Improved syncronization with Register Plus Redux.
+* Updated FAQ.
 
 = 1.10 =
 
@@ -104,6 +111,10 @@ AutoChimp is not a visual plugin.  It does all it's work behind the scenes keepi
 * Basic UI for keeping a mailing list in sync with your site's users.
 
 == Upgrade Notice ==
+
+= 1.11 =
+
+Recommended if you use Register Plus or Register Plus Redux.
 
 = 1.10 = 
 

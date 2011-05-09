@@ -4,7 +4,7 @@ Plugin Name: AutoChimp
 Plugin URI: http://www.wandererllc.com/company/plugins/autochimp/
 Description: Keeps MailChimp mailing lists in sync with your WordPress site.  It also leverages BuddyPress and allows you to synchronize all of your profile fields.  Gives users the ability to create MailChimp mail campaigns from blog posts.
 Author: Wanderer LLC Dev Team
-Version: 1.10
+Version: 1.11
 */
 
 if ( !class_exists( 'MCAPI_13' ) )
@@ -167,9 +167,9 @@ function wp_set_password( $password, $user_id )
 	update_option( AC_GenerateTempEmailOptionName( $user_id ), "" );
 	// Write some basic info to the DB about the user being added
 	$user_info = get_userdata( $user_id );
-	update_option( WP88_MC_LAST_CAMPAIGN_ERROR, "Updating user:  $user_info->first_name $user_info->last_name" );
+	update_option( WP88_MC_LAST_CAMPAIGN_ERROR, "Updating user within Register Plus Redux patch.  User name is:  $user_info->first_name $user_info->last_name" );
 	// Do the real work
-	AC_ManageMailUser( MMU_ADD, $user_info, TRUE );
+	AC_ManageMailUser( MMU_UPDATE, $user_info, TRUE );
 
 	//
 	// END Detect
@@ -191,10 +191,9 @@ add_filter( 'plugin_row_meta', 'AC_AddAutoChimpPluginLinks', 10, 2 ); // Expand 
 //
 function AC_OnPluginMenu()
 {
-	add_submenu_page('options-general.php', 'AutoChimp Options', 'AutoChimp', 'add_users', basename(__FILE__), AC_AutoChimpOptions );
+	add_submenu_page('options-general.php', 'AutoChimp Options', 'AutoChimp', 'add_users', basename(__FILE__), 'AC_AutoChimpOptions' );
 }
 
-// Inspired by NextGen Gallery by Alex Rabe
 function AC_AddAutoChimpPluginLinks($links, $file)
 {
 	if ( $file == plugin_basename(__FILE__) )
