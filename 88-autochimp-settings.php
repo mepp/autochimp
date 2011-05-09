@@ -27,8 +27,8 @@ $pluginFolder = get_bloginfo('wpurl') . '/wp-content/plugins/' . dirname( plugin
     	</table></li>
     	<li><table border="0">
     		<tr>
-    			<td><a href="http://www.woothemes.com/amember/go.php?r=39127&i=b18" target="_blank"><img src="http://woothemes.com/ads/120x90c.jpg" border=0 alt="WooThemes - WordPress themes for everyone" width=120 height=90></a></td>
-    			<td>Make your site <em>stunning</em> with <a style="text-decoration:none;" href="http://www.woothemes.com/amember/go.php?r=39127&i=b18" target="_blank">WooThemes for WordPress</a></td>
+    			<td><a href="http://themeforest.net?ref=Wanderer" target="_blank"><img src="http://envato.s3.amazonaws.com/referrer_adverts/tf_125x125_v5.gif" border=0 alt="ThemeForest - Premium WordPress Themes" width=125 height=125></a></td>
+    			<td>Make your site <em>stunning</em> with <a style="text-decoration:none;" href="http://themeforest.net?ref=Wanderer" target="_blank">premium themes for WordPress</a></td>
     		</tr>
     	</table></li>
     	<li><a href="http://eepurl.com/MnhD" target="_blank"><img src="http://www.mailchimp.com/img/badges/banner3.gif" border="0"></a></li>
@@ -314,7 +314,7 @@ if ( !empty( $apiKey ) )
 		if ( '1' === $fixRegPlus )
 			print "checked";
 		print '> Patch Register Plus and sync first/last name with your selected mailing list. <em>Recommended <strong>ON</strong></em>.</p>';
-		print '<p><em>News:</em> The Register Plus Redux version 3.7.0 will also fix this; please delete Register Plus and install <a href="http://wordpress.org/extend/plugins/register-plus-redux/" target="_blank">Register Plus Redux</a>.  More info can be found <a href="http://radiok.info/blog/conflicts-begone/" target="_blank">here</a>.</p>';
+		print '<p><em>News:</em> Register Plus <strong>Redux</strong> is the latest version of "Register Plus".  Please switch to the latest version of Register Plus Redux.</p>';
 		print '</fieldset>';
 	}
 
@@ -326,7 +326,7 @@ if ( !empty( $apiKey ) )
 		if ( '1' === $fixRegPlusRedux )
 			print "checked";
 		print '> Patch Register Plus Redux and sync first/last name with your selected mailing list. <em>Recommended <strong>ON</strong></em>. <strong>Note:</strong> You must enable "<em>Require new users enter a password during registration...</em>" in your Register Plus Redux options in order for the AutoChimp patch to work.</p>';
-		print '<p><em>News:</em> Register Plus Redux version 3.7.0 will fix this; please upgrade to that version when it\'s available.  More info can be found <a href="http://radiok.info/blog/conflicts-begone/" target="_blank">here</a>.</p>';
+		print '<p><em>News:</em> Sorry to the folks who were hoping that Register Plus Redux version 3.7.0 and up would fix this.  This patch is still required when running Register Plus Redux.  More info can be found <a href="http://radiok.info/blog/conflicts-begone/" target="_blank">here</a>.</p>';
 		print '</fieldset>';
 	}
 
