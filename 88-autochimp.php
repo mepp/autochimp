@@ -62,6 +62,7 @@ add_action('admin_menu', 'AC_OnPluginMenu');				// Sets up the menu and admin pa
 add_action('user_register','AC_OnRegisterUser');			// Called when a user registers on the site
 add_action('delete_user','AC_OnDeleteUser');				//   "      "  "  "   unregisters "  "  "
 add_action('show_user_profile','AC_OnAboutToUpdateUser');	// Little trickier for update...need to save email in order to track them down later
+add_action('edit_user_profile', 'AC_OnAboutToUpdateUser');	// This is called if the admin updates a user's info
 add_action('profile_update','AC_OnUpdateUser' );			// Uses the saved email to update the user.
 add_action('publish_post','AC_OnPublishPost' );				// Called when an author publishes a post.
 add_action('xmlrpc_publish_post', 'AC_OnPublishPost' );		// Same as above, but for XMLRPC
@@ -994,14 +995,14 @@ function AC_OnDeleteUser( $userID )
 	return $result;
 }
 
-function AC_OnAboutToUpdateUser( $userID )
+// 	This argument is an object, not an ID.  Thanks for catching this bug, Sarah!
+function AC_OnAboutToUpdateUser( $user )
 {
-	$user_info = get_userdata( $userID );
 	$onUpdateSubscriber = get_option( WP88_MC_UPDATE );
 	if ( "1" == $onUpdateSubscriber )
 	{
-		$updateEmail = $user_info->user_email;
-		$optionName = AC_GenerateTempEmailOptionName( $user_info->ID );
+		$updateEmail = $user->user_email;
+		$optionName = AC_GenerateTempEmailOptionName( $user->ID );
 		update_option( $optionName, $updateEmail );
 	}
 }
@@ -1013,7 +1014,11 @@ function AC_OnUpdateUser( $userID, $writeDBMessages=TRUE )
 	if ( "1" === $onUpdateSubscriber )
 	{
 		$result = AC_ManageMailUser( MMU_UPDATE, $user_info, $writeDBMessages );
-		update_option( AC_GenerateTempEmailOptionName( $user_info->ID ), "" );
+		
+		// If the user's email has been temporarily stored, then clear it.
+		$optionName = AC_GenerateTempEmailOptionName( $user_info->ID );
+		if ( FALSE !== get_option( $optionName ) )
+			update_option( $optionName, "" );
 
 		// 232 is the MailChimp error code for: "user doesn't exist".  This
 		// error can occur when a new user signs up but there's a required
@@ -1025,7 +1030,12 @@ function AC_OnUpdateUser( $userID, $writeDBMessages=TRUE )
 		//
 		// This can also happen when synchronizing users with MailChimp who
 		// aren't subscribers to the MailChimp mailing list yet.
-		if ( 232 === $result )
+		//
+		// 215 is the "List_NotSubscribed" error message which can happen if 
+		// the user is in the system but not subscribed to that list.  So, do
+		// an add for that too.
+		//
+		if ( 232 === $result || 215 === $result )
 		{
 			$onAddSubscriber = get_option( WP88_MC_ADD );
 			if ( "1" === $onAddSubscriber )
