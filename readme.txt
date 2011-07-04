@@ -6,7 +6,7 @@ Donate link: https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_i
 Tags: MailChimp, Mail, Chimp, email, campaign, mailing list, BuddyPress, Register, Plus, Redux, Profile Fields, XProfile, merge, admin, create, automatically, subscribe, unsubscribe, sync, synchronize
 Requires at least: 2.8
 Tested up to: 3.12
-Stable tag: 1.11
+Stable tag: 1.12
 
 Keep website users and MailChimp mailing lists in sync and create campaigns from posts.
 
@@ -57,6 +57,11 @@ Just go to <http://www.wandererllc.com/company/plugins/autochimp/> and follow th
 AutoChimp is not a visual plugin.  It does all it's work behind the scenes keeping your blog users in sync with your mailing list.  If you are looking for a registration widget for MailChimp, search for "MailChimp List Subscribe Form" on the WordPress plugin site.
 
 == Changelog ==
+
+= 1.12 =
+
+* Fixed bug - updating a subscriber by email inadverdently created a new subscriber in MailChimp
+* Fixed bug - 'Sync Users' reactivates a user in the system instead of failing.
 
 = 1.11 = 
 
@@ -112,6 +117,10 @@ AutoChimp is not a visual plugin.  It does all it's work behind the scenes keepi
 
 == Upgrade Notice ==
 
+= 1.12 =
+
+Recommended for all.  Please upgrade.
+
 = 1.11 =
 
 Recommended if you use Register Plus or Register Plus Redux.
@@ -156,6 +165,7 @@ There are many people who have suggested features for AutoChimp.  Special consid
 2) Peter Michael at [FlowDrops](http://www.flowdrops.com/) for some quality testing.
 3) [Latinos a Morir](http://www.latinosamorir.com/) for supporting the BuddyPress Synchronization feature.
 4) Bryan Hoffman at [Dwell DFW Apartments](http://apartments.dwelldfw.com/dallas/) for supporting synchronizing all WordPress user fields.
+5) Sarah Anderson for quality testing.
 
 == License ==
 
