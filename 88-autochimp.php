@@ -165,7 +165,7 @@ function wp_set_password( $password, $user_id )
 	//
 
 	// Clear out any cached email
-	update_option( AC_GenerateTempEmailOptionName( $user_id ), "" );
+	delete_option( AC_GenerateTempEmailOptionName( $user_id ) );
 	// Write some basic info to the DB about the user being added
 	$user_info = get_userdata( $user_id );
 	update_option( WP88_MC_LAST_CAMPAIGN_ERROR, "Updating user within Register Plus Redux patch.  User name is:  $user_info->first_name $user_info->last_name" );
@@ -1018,7 +1018,7 @@ function AC_OnUpdateUser( $userID, $writeDBMessages=TRUE )
 		// If the user's email has been temporarily stored, then clear it.
 		$optionName = AC_GenerateTempEmailOptionName( $user_info->ID );
 		if ( FALSE !== get_option( $optionName ) )
-			update_option( $optionName, "" );
+			delete_option( $optionName );
 
 		// 232 is the MailChimp error code for: "user doesn't exist".  This
 		// error can occur when a new user signs up but there's a required

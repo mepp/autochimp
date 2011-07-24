@@ -32,7 +32,7 @@ To use, save your MailChimp API Key on the options page then start adding your n
 
 5) The subject of your campaign is your blog post title.  The "From" email address and name are taken from your MailChimp configuration.  To change that, you'll need to log into your MailChimp account.  The "To" field is the "*|FNAME|*" merge code.
 
-6) AutoChimp creates several rows in the wp_options table of your WordPress database to store your options.  AutoChimp also stores email addresses in the database whenever the user views their profile information.  See item #2 for why.  These wp_options fields are not deleted when you uninstall AutoChimp.  If you have many users, you might consider deleting these rows.  You can do so in an application ike PHPMyAdmin using the following SQL query exactly as listed (the ending semi-colon may be optional):  DELETE FROM wp_options WHERE option_name LIKE 'wp88_mc_tempemail%';
+6) AutoChimp creates several rows in the wp_options table of your WordPress database to store your options.  AutoChimp also stores email addresses in temporary options rows in the database whenever the user views their profile information.  See item #2 for why.  These wp_options fields are usually deleted when the update finishes.  However, if something slips through the cracks, you can delete them in an application ike PHPMyAdmin using the following SQL query exactly as listed (the ending semi-colon may be optional):  DELETE FROM wp_options WHERE option_name LIKE 'wp88_mc_tempemail%';
 
 == Frequently Asked Questions ==
 
