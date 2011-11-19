@@ -4,7 +4,7 @@ Plugin Name: AutoChimp
 Plugin URI: http://www.wandererllc.com/company/plugins/autochimp/
 Description: Keeps MailChimp mailing lists in sync with your WordPress site.  It also leverages BuddyPress and allows you to synchronize all of your profile fields.  Gives users the ability to create MailChimp mail campaigns from blog posts.
 Author: Wanderer LLC Dev Team
-Version: 1.11
+Version: 1.13
 */
 
 if ( !class_exists( 'MCAPI_13' ) )
@@ -62,6 +62,7 @@ add_action('admin_menu', 'AC_OnPluginMenu');				// Sets up the menu and admin pa
 add_action('user_register','AC_OnRegisterUser');			// Called when a user registers on the site
 add_action('delete_user','AC_OnDeleteUser');				//   "      "  "  "   unregisters "  "  "
 add_action('show_user_profile','AC_OnAboutToUpdateUser');	// Little trickier for update...need to save email in order to track them down later
+add_action('edit_user_profile', 'AC_OnAboutToUpdateUser');	// This is called if the admin updates a user's info
 add_action('profile_update','AC_OnUpdateUser' );			// Uses the saved email to update the user.
 add_action('publish_post','AC_OnPublishPost' );				// Called when an author publishes a post.
 add_action('xmlrpc_publish_post', 'AC_OnPublishPost' );		// Same as above, but for XMLRPC
@@ -164,7 +165,7 @@ function wp_set_password( $password, $user_id )
 	//
 
 	// Clear out any cached email
-	update_option( AC_GenerateTempEmailOptionName( $user_id ), "" );
+	delete_option( AC_GenerateTempEmailOptionName( $user_id ) );
 	// Write some basic info to the DB about the user being added
 	$user_info = get_userdata( $user_id );
 	update_option( WP88_MC_LAST_CAMPAIGN_ERROR, "Updating user within Register Plus Redux patch.  User name is:  $user_info->first_name $user_info->last_name" );
@@ -349,7 +350,8 @@ function AC_AutoChimpOptions()
 			// Each XProfile field will have a select box selection assigned to it.
 			// Save this selection.
 			global $wpdb;
-			$fields = $wpdb->get_results( "SELECT name,type FROM wp_bp_xprofile_fields WHERE type != 'option'", ARRAY_A );
+			$xprofile_table_name = $wpdb->prefix . 'bp_xprofile_fields';
+			$fields = $wpdb->get_results( "SELECT name,type FROM $xprofile_table_name WHERE type != 'option'", ARRAY_A );
 
 			foreach( $fields as $field )
 			{
@@ -830,9 +832,14 @@ function AC_FetchMappedXProfileData( $userID )
 
 	// Need to query data in the BuddyPress extended profile table
 	global $wpdb;
-
+	
+	// Generate table names
+	$option_table = $wpdb->prefix . 'options';
+	$xprofile_data_table = $wpdb->prefix . 'bp_xprofile_data';
+	$xprofile_fields_table = $wpdb->prefix . 'bp_xprofile_fields';
+	
 	// Now, see which XProfile fields the user wants to sync.
-	$sql = "SELECT option_name,option_value FROM wp_options WHERE option_name LIKE '" .
+	$sql = "SELECT option_name,option_value FROM $option_table WHERE option_name LIKE '" .
 			WP88_BP_XPROFILE_FIELD_MAPPING .
 			"%' AND option_value != '" .
 			WP88_IGNORE_FIELD_TEXT . "'";
@@ -846,7 +853,7 @@ function AC_FetchMappedXProfileData( $userID )
 
 		// Big JOIN to get the user's value for the field in question
 		// Best to offload this on SQL than PHP.
-		$sql = "SELECT name,value,type FROM wp_bp_xprofile_data JOIN wp_bp_xprofile_fields ON wp_bp_xprofile_fields.id = wp_bp_xprofile_data.field_id WHERE user_id = $userID AND name = '$optionName' LIMIT 1";
+		$sql = "SELECT name,value,type FROM $xprofile_data_table JOIN $xprofile_fields_table ON $xprofile_fields_table.id = $xprofile_data_table.field_id WHERE user_id = $userID AND name = '$optionName' LIMIT 1";
 		$results = $wpdb->get_results( $sql, ARRAY_A );
 
 		// Populate the data array
@@ -961,7 +968,7 @@ function AC_DecodeUserOptionName( $decodePrefix, $optionName )
 }
 
 // This function creates a user-unique email option name used as a field in
-// the wp_options table.  This is used to temporarily store the user's email
+// the WP options table.  This is used to temporarily store the user's email
 // address.
 function AC_GenerateTempEmailOptionName( $userID )
 {
@@ -994,14 +1001,14 @@ function AC_OnDeleteUser( $userID )
 	return $result;
 }
 
-function AC_OnAboutToUpdateUser( $userID )
+// 	This argument is an object, not an ID.  Thanks for catching this bug, Sarah!
+function AC_OnAboutToUpdateUser( $user )
 {
-	$user_info = get_userdata( $userID );
 	$onUpdateSubscriber = get_option( WP88_MC_UPDATE );
 	if ( "1" == $onUpdateSubscriber )
 	{
-		$updateEmail = $user_info->user_email;
-		$optionName = AC_GenerateTempEmailOptionName( $user_info->ID );
+		$updateEmail = $user->user_email;
+		$optionName = AC_GenerateTempEmailOptionName( $user->ID );
 		update_option( $optionName, $updateEmail );
 	}
 }
@@ -1013,7 +1020,11 @@ function AC_OnUpdateUser( $userID, $writeDBMessages=TRUE )
 	if ( "1" === $onUpdateSubscriber )
 	{
 		$result = AC_ManageMailUser( MMU_UPDATE, $user_info, $writeDBMessages );
-		update_option( AC_GenerateTempEmailOptionName( $user_info->ID ), "" );
+		
+		// If the user's email has been temporarily stored, then clear it.
+		$optionName = AC_GenerateTempEmailOptionName( $user_info->ID );
+		if ( FALSE !== get_option( $optionName ) )
+			delete_option( $optionName );
 
 		// 232 is the MailChimp error code for: "user doesn't exist".  This
 		// error can occur when a new user signs up but there's a required
@@ -1025,7 +1036,12 @@ function AC_OnUpdateUser( $userID, $writeDBMessages=TRUE )
 		//
 		// This can also happen when synchronizing users with MailChimp who
 		// aren't subscribers to the MailChimp mailing list yet.
-		if ( 232 === $result )
+		//
+		// 215 is the "List_NotSubscribed" error message which can happen if 
+		// the user is in the system but not subscribed to that list.  So, do
+		// an add for that too.
+		//
+		if ( 232 === $result || 215 === $result )
 		{
 			$onAddSubscriber = get_option( WP88_MC_ADD );
 			if ( "1" === $onAddSubscriber )

@@ -5,8 +5,8 @@ Plugin URI: http://www.wandererllc.com/company/plugins/autochimp/
 Donate link: https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=HPCPB3GY5LUQW&lc=US
 Tags: MailChimp, Mail, Chimp, email, campaign, mailing list, BuddyPress, Register, Plus, Redux, Profile Fields, XProfile, merge, admin, create, automatically, subscribe, unsubscribe, sync, synchronize
 Requires at least: 2.8
-Tested up to: 3.12
-Stable tag: 1.11
+Tested up to: 3.2.1
+Stable tag: 1.13
 
 Keep website users and MailChimp mailing lists in sync and create campaigns from posts.
 
@@ -32,7 +32,7 @@ To use, save your MailChimp API Key on the options page then start adding your n
 
 5) The subject of your campaign is your blog post title.  The "From" email address and name are taken from your MailChimp configuration.  To change that, you'll need to log into your MailChimp account.  The "To" field is the "*|FNAME|*" merge code.
 
-6) AutoChimp creates several rows in the wp_options table of your WordPress database to store your options.  AutoChimp also stores email addresses in the database whenever the user views their profile information.  See item #2 for why.  These wp_options fields are not deleted when you uninstall AutoChimp.  If you have many users, you might consider deleting these rows.  You can do so in an application ike PHPMyAdmin using the following SQL query exactly as listed (the ending semi-colon may be optional):  DELETE FROM wp_options WHERE option_name LIKE 'wp88_mc_tempemail%';
+6) AutoChimp creates several rows in the wp_options table of your WordPress database to store your options.  AutoChimp also stores email addresses in temporary options rows in the database whenever the user views their profile information.  See item #2 for why.  These wp_options fields are usually deleted when the update finishes.  However, if something slips through the cracks, you can delete them in an application ike PHPMyAdmin using the following SQL query exactly as listed (the ending semi-colon may be optional):  DELETE FROM wp_options WHERE option_name LIKE 'wp88_mc_tempemail%';
 
 == Frequently Asked Questions ==
 
@@ -57,6 +57,15 @@ Just go to <http://www.wandererllc.com/company/plugins/autochimp/> and follow th
 AutoChimp is not a visual plugin.  It does all it's work behind the scenes keeping your blog users in sync with your mailing list.  If you are looking for a registration widget for MailChimp, search for "MailChimp List Subscribe Form" on the WordPress plugin site.
 
 == Changelog ==
+
+= 1.13 =
+
+* Fixed bug - Not assuming that WP database table prefix is "wp_".
+
+= 1.12 =
+
+* Fixed bug - updating a subscriber by email inadverdently created a new subscriber in MailChimp
+* Fixed bug - 'Sync Users' reactivates a user in the system instead of failing.
 
 = 1.11 = 
 
@@ -112,6 +121,14 @@ AutoChimp is not a visual plugin.  It does all it's work behind the scenes keepi
 
 == Upgrade Notice ==
 
+= 1.13 =
+
+Recommended for all.  Please upgrade.
+
+= 1.12 =
+
+Recommended for all.  Please upgrade.
+
 = 1.11 =
 
 Recommended if you use Register Plus or Register Plus Redux.
@@ -148,7 +165,7 @@ This version simply tightens down the 0.8 UI.
 
 This version adds the ability to create campaigns from blog posts.
 
-== Acknowledgements ==
+== Acknowledgments ==
 
 There are many people who have suggested features for AutoChimp.  Special consideration needs to be made to the following people who had an active role in contributing by providing a detailed design, monetary sponsorship, or offering to test and provide useful feedback:
 
@@ -156,6 +173,8 @@ There are many people who have suggested features for AutoChimp.  Special consid
 2) Peter Michael at [FlowDrops](http://www.flowdrops.com/) for some quality testing.
 3) [Latinos a Morir](http://www.latinosamorir.com/) for supporting the BuddyPress Synchronization feature.
 4) Bryan Hoffman at [Dwell DFW Apartments](http://apartments.dwelldfw.com/dallas/) for supporting synchronizing all WordPress user fields.
+5) Sarah Anderson for quality testing.
+6) Morgan at [Satellite Jones](http://satellitejones.com/) for catching the "wp_" bug.
 
 == License ==
 
