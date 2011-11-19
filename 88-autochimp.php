@@ -350,7 +350,8 @@ function AC_AutoChimpOptions()
 			// Each XProfile field will have a select box selection assigned to it.
 			// Save this selection.
 			global $wpdb;
-			$fields = $wpdb->get_results( "SELECT name,type FROM wp_bp_xprofile_fields WHERE type != 'option'", ARRAY_A );
+			$xprofile_table_name = $wpdb->prefix . 'bp_xprofile_fields';
+			$fields = $wpdb->get_results( "SELECT name,type FROM $xprofile_table_name WHERE type != 'option'", ARRAY_A );
 
 			foreach( $fields as $field )
 			{
@@ -831,9 +832,14 @@ function AC_FetchMappedXProfileData( $userID )
 
 	// Need to query data in the BuddyPress extended profile table
 	global $wpdb;
-
+	
+	// Generate table names
+	$option_table = $wpdb->prefix . 'options';
+	$xprofile_data_table = $wpdb->prefix . 'bp_xprofile_data';
+	$xprofile_fields_table = $wpdb->prefix . 'bp_xprofile_fields';
+	
 	// Now, see which XProfile fields the user wants to sync.
-	$sql = "SELECT option_name,option_value FROM wp_options WHERE option_name LIKE '" .
+	$sql = "SELECT option_name,option_value FROM $option_table WHERE option_name LIKE '" .
 			WP88_BP_XPROFILE_FIELD_MAPPING .
 			"%' AND option_value != '" .
 			WP88_IGNORE_FIELD_TEXT . "'";
@@ -847,7 +853,7 @@ function AC_FetchMappedXProfileData( $userID )
 
 		// Big JOIN to get the user's value for the field in question
 		// Best to offload this on SQL than PHP.
-		$sql = "SELECT name,value,type FROM wp_bp_xprofile_data JOIN wp_bp_xprofile_fields ON wp_bp_xprofile_fields.id = wp_bp_xprofile_data.field_id WHERE user_id = $userID AND name = '$optionName' LIMIT 1";
+		$sql = "SELECT name,value,type FROM $xprofile_data_table JOIN $xprofile_fields_table ON $xprofile_fields_table.id = $xprofile_data_table.field_id WHERE user_id = $userID AND name = '$optionName' LIMIT 1";
 		$results = $wpdb->get_results( $sql, ARRAY_A );
 
 		// Populate the data array
@@ -962,7 +968,7 @@ function AC_DecodeUserOptionName( $decodePrefix, $optionName )
 }
 
 // This function creates a user-unique email option name used as a field in
-// the wp_options table.  This is used to temporarily store the user's email
+// the WP options table.  This is used to temporarily store the user's email
 // address.
 function AC_GenerateTempEmailOptionName( $userID )
 {

@@ -58,6 +58,10 @@ AutoChimp is not a visual plugin.  It does all it's work behind the scenes keepi
 
 == Changelog ==
 
+= 1.13 =
+
+* Fixed bug - Not assuming that WP database table prefix is "wp_".
+
 = 1.12 =
 
 * Fixed bug - updating a subscriber by email inadverdently created a new subscriber in MailChimp
@@ -117,6 +121,10 @@ AutoChimp is not a visual plugin.  It does all it's work behind the scenes keepi
 
 == Upgrade Notice ==
 
+= 1.13 =
+
+Recommended for all.  Please upgrade.
+
 = 1.12 =
 
 Recommended for all.  Please upgrade.
@@ -157,7 +165,7 @@ This version simply tightens down the 0.8 UI.
 
 This version adds the ability to create campaigns from blog posts.
 
-== Acknowledgements ==
+== Acknowledgments ==
 
 There are many people who have suggested features for AutoChimp.  Special consideration needs to be made to the following people who had an active role in contributing by providing a detailed design, monetary sponsorship, or offering to test and provide useful feedback:
 
@@ -166,6 +174,7 @@ There are many people who have suggested features for AutoChimp.  Special consid
 3) [Latinos a Morir](http://www.latinosamorir.com/) for supporting the BuddyPress Synchronization feature.
 4) Bryan Hoffman at [Dwell DFW Apartments](http://apartments.dwelldfw.com/dallas/) for supporting synchronizing all WordPress user fields.
 5) Sarah Anderson for quality testing.
+6) Morgan at [Satellite Jones](http://satellitejones.com/) for catching the "wp_" bug.
 
 == License ==
 

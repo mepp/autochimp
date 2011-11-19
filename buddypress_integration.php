@@ -37,7 +37,8 @@ function AC_ShowBuddyPressUI( $api, $list )
 	print '> Automatically Sync BuddyPress Profile Fields with MailChimp.</p>';
 	print '<p>Use the following table to assign your BuddyPress Profile Fields to your MailChimp fields.  <strong>Tip:</strong> You can use the "Static Text" field at the bottom to assign the same value to each new user which will distinguish users from your site from users from other locations.</p>';
 
-	$fields = $wpdb->get_results( "SELECT name,type FROM wp_bp_xprofile_fields WHERE type != 'option'", ARRAY_A );
+	$xprofile_table_name = $wpdb->prefix . 'bp_xprofile_fields';
+	$fields = $wpdb->get_results( "SELECT name,type FROM $xprofile_table_name WHERE type != 'option'", ARRAY_A );
 	if ( $fields )
 	{
 		// Get the mailing list's Merge Variables
