@@ -40,21 +40,13 @@ To use, save your MailChimp API Key on the options page then start adding your n
 
 That's because you are likely running a version of WordPress before 3.0.  Please upgrade to the latest version.  3.x is a big step up from 2.x!
 
-= Why am I getting the message, "Unable to retrieve your lists with this key"? =
+= Where can I find the complete FAQ? =
 
-You've likely typed the wrong information into the API Key box.  Don't type in your username; you need to paste in your MailChimp API Key, which you can find by logging into your MailChimp account and clicking on "My Account" in the upper-left and choosing "API Key and Info". 
-
-= Why do I get error message 250 when trying to update my MailChimp mailing list? =
-
-Check to see if you are requiring any fields in MailChimp.  If you do not send that data over from your WordPress site, then MailChimp will reject the update.  For example, if you require first and last names, then you should use another plugin like Register Plus Redux to require users to enter first and last name. Otherwise, AutoChimp will fail to sync with your mailing list because there's simply no first and last name data for your required fields. Be sure to check the "Patch Register Plus Redux" checkbox in the AutoChimp settings after you activate Register Plus Redux.
+You can find the complete FAQ [here](http://www.faqme.com/autochimp).
 
 = How do I make suggestions or report bugs for this plugin? =
 
 Just go to <http://www.wandererllc.com/company/plugins/autochimp/> and follow the instructions.
-
-= How do I add a signup box using AutoChimp? = 
-
-AutoChimp is not a visual plugin.  It does all it's work behind the scenes keeping your blog users in sync with your mailing list.  If you are looking for a registration widget for MailChimp, search for "MailChimp List Subscribe Form" on the WordPress plugin site.
 
 == Changelog ==
 
