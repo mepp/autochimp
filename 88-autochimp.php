@@ -624,19 +624,27 @@ function AC_CreateCampaignFromPost( $postID, $api )
 					$postContent = '';
 					if ( '1' === $excerptOnly )
 					{
-						$postContent = apply_filters( 'the_excerpt', $post->post_content );
+						if ( 0 == strlen( $post->post_excerpt ) )
+						{
+							// Handmade function which mimics wp_trim_excerpt() (that function won't operate
+							// on a non-empty string)
+							$postContent = AC_TrimExcerpt( $post->post_content );
+						}
+						else
+						{
+							$postContent = apply_filters( 'the_excerpt', $post->post_excerpt );
+							// Add on a "Read the post" link here
+							$permalink = get_permalink( $postID );
+							$postContent .= "<p>Read the post <a href=\"$permalink\">here</a>.</p>";
+							// See http://codex.wordpress.org/Function_Reference/the_content, which
+							// suggests adding this code:
+							$postContent = str_replace( ']]>', ']]&gt;', $postContent );
+						}
 					}
 					else
 					{
 						$postContent = apply_filters( 'the_content', $post->post_content );
 					}
-					
-					// Add on a "Read the post" link here
-					$permalink = get_permalink( $postID );
-					$postContent .= "<p>Read the post <a href=\"$permalink\">here</a>.</p>";
-					// See http://codex.wordpress.org/Function_Reference/the_content, which
-					// suggests adding this code:
-					$postContent = str_replace( ']]>', ']]&gt;', $postContent );
 
 					$content = array();
 					$content['html'] = $postContent;
@@ -1038,6 +1046,16 @@ function AC_OnUpdateUser( $userID, $old_user_data, $writeDBMessages = TRUE )
 		}
 	}
 	return $result;
+}
+
+function AC_TrimExcerpt( $text )
+{
+		$text = strip_shortcodes( $text );
+		$text = apply_filters('the_content', $text);
+		$text = str_replace(']]>', ']]&gt;', $text);
+		$excerpt_length = apply_filters('excerpt_length', 55);
+		$excerpt_more = apply_filters('excerpt_more', ' ' . '[...]');
+		return wp_trim_words( $text, $excerpt_length, $excerpt_more );
 }
 
 ?>

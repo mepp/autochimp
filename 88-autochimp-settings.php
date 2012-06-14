@@ -251,7 +251,7 @@ if ( !empty( $apiKey ) )
 	print '> Create campaigns from posts. The campaign will be created for each of the mailing lists you selected above.</p>';
 ?>
 	<p><fieldset style="margin-left: 20px;"><input type=CHECKBOX value="on_excerpt_only" name="on_excerpt_only"
-	<?php if ( '1' === $excerptOnly )echo 'checked';?>></input> Only show up to the post's 'more' tag in the campaign (AutoChimp will include a link back to the main article).</fieldset></p>
+	<?php if ( '1' === $excerptOnly )echo 'checked';?>></input> Only use an excerpt of the post (AutoChimp will include a link back to the post). <em>If you wrote an excerpt, that excerpt will be used.  Otherwise, the first 50 words of the post will be used.</em></fieldset></p>
 	<p>
 	Choose a category to create campaigns from: 
 <?php
