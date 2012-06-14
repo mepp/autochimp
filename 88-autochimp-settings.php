@@ -11,14 +11,14 @@ require_once 'inc/MCAPI.class.php';
 require_once 'ui_helpers.php';
 wp_nonce_field('mailchimpz-nonce');
 
-$pluginFolder = get_bloginfo('wpurl') . '/wp-content/plugins/' . dirname( plugin_basename( __FILE__ ) ) . '/';
+$pluginFolder = get_bloginfo('wpurl') . '/wp-content/plugins/autochimp/';
 ?>
 
 <div style="float:right;width:220px;margin-left:10px;border: 1px solid #ddd;background: #fdffee; padding: 10px 0 10px 10px;">
  	<h2 style="margin: 0 0 5px 0 !important;">Information</h2>
  	<ul id="dbx-content" style="text-decoration:none;">
     	<li><img src="<?php echo $pluginFolder;?>help.png"><a style="text-decoration:none;" href="http://www.wandererllc.com/company/plugins/autochimp" target="_blank"> Support and Help</a></li>
-		<li><a style="text-decoration:none;" href="https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=HPCPB3GY5LUQW&lc=US" target="_blank"><img src="<?php echo $pluginFolder;?>paypal.gif"></a></li>
+		<li><a style="text-decoration:none;" href="http://www.wandererllc.com/company/plugins/autochimp/contributelink/" target="_blank"><img src="http://www.wandererllc.com/company/plugins/autochimp/contributeimage/"></a></li>
     	<li><table border="0">
     		<tr>
     			<td><a href="http://member.wishlistproducts.com/wlp.php?af=1080050" target="_blank"><img src="http://www.wishlistproducts.com/affiliatetools/images/WLM_120X60.gif" border="0"></a></td>
@@ -216,6 +216,7 @@ if ( !empty( $apiKey ) )
 
 	// Load the options from the DB
 	$campaignFromPost = get_option( WP88_MC_CAMPAIGN_FROM_POST );
+	$excerptOnly = get_option( WP88_MC_CAMPAIGN_EXCERPT_ONLY );
 	$campaignCategory = get_option( WP88_MC_CAMPAIGN_CATEGORY );
 	$createOnce = get_option( WP88_MC_CREATE_CAMPAIGN_ONCE );
 	$sendNow = get_option( WP88_MC_SEND_NOW );
@@ -248,10 +249,12 @@ if ( !empty( $apiKey ) )
 	if ( '0' === $campaignFromPost || empty( $campaignFromPost ) ){} else
 		print 'checked';
 	print '> Create campaigns from posts. The campaign will be created for each of the mailing lists you selected above.</p>';
-
-	print '<p>';
-	print 'Choose a category to create campaigns from: ';
-
+?>
+	<p><fieldset style="margin-left: 20px;"><input type=CHECKBOX value="on_excerpt_only" name="on_excerpt_only"
+	<?php if ( '1' === $excerptOnly )echo 'checked';?>></input> Only use an excerpt of the post (AutoChimp will include a link back to the post). <em>If you wrote an excerpt, that excerpt will be used.  Otherwise, the first 50 words of the post will be used.</em></fieldset></p>
+	<p>
+	Choose a category to create campaigns from: 
+<?php
 	// Generate a category combo box
 
 	// Fetch this site's categories

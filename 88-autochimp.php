@@ -4,7 +4,7 @@ Plugin Name: AutoChimp
 Plugin URI: http://www.wandererllc.com/company/plugins/autochimp/
 Description: Keeps MailChimp mailing lists in sync with your WordPress site.  It also leverages BuddyPress and allows you to synchronize all of your profile fields.  Gives users the ability to create MailChimp mail campaigns from blog posts.
 Author: Wanderer LLC Dev Team
-Version: 1.13
+Version: 1.14
 */
 
 if ( !class_exists( 'MCAPI_13' ) )
@@ -18,8 +18,8 @@ define( "WP88_MC_ADD", "wp88_mc_add" );
 define( "WP88_MC_DELETE", "wp88_mc_delete" );
 define( "WP88_MC_UPDATE", "wp88_mc_update" );
 define( 'WP88_MC_BYPASS_OPT_IN', 'wp88_mc_bypass_opt_in' );
-define( "WP88_MC_TEMPEMAIL", "wp88_mc_tempemail" );
 define( "WP88_MC_CAMPAIGN_FROM_POST", "wp88_mc_campaign_from_post" );
+define( "WP88_MC_CAMPAIGN_EXCERPT_ONLY", "wp88_mc_campaign_excerpt_only" );
 define( "WP88_MC_CAMPAIGN_CATEGORY", "wp88_mc_campaign_category" );
 define( "WP88_MC_CREATE_CAMPAIGN_ONCE", "wp88_mc_create_campaign_once" );
 define( "WP88_MC_SEND_NOW", "wp88_mc_send_now" );
@@ -61,9 +61,7 @@ $wpUserDataArray = array( 'Username', 'Nickname', 'Website', 'Bio' , /*'AIM', 'Y
 add_action('admin_menu', 'AC_OnPluginMenu');				// Sets up the menu and admin page
 add_action('user_register','AC_OnRegisterUser');			// Called when a user registers on the site
 add_action('delete_user','AC_OnDeleteUser');				//   "      "  "  "   unregisters "  "  "
-add_action('show_user_profile','AC_OnAboutToUpdateUser');	// Little trickier for update...need to save email in order to track them down later
-add_action('edit_user_profile', 'AC_OnAboutToUpdateUser');	// This is called if the admin updates a user's info
-add_action('profile_update','AC_OnUpdateUser' );			// Uses the saved email to update the user.
+add_action('profile_update','AC_OnUpdateUser',10,2 );	// Updates the user using a second arg - $old_user_data.
 add_action('publish_post','AC_OnPublishPost' );				// Called when an author publishes a post.
 add_action('xmlrpc_publish_post', 'AC_OnPublishPost' );		// Same as above, but for XMLRPC
 add_action('publish_phone', 'AC_OnPublishPost' );			// Same as above, but for email.  No idea why it's called "phone".
@@ -92,7 +90,7 @@ function AC_OnBuddyPressUserUpdate()
 	// Get the current user
 	$user = wp_get_current_user();
 	// Pass their ID to the function that does the work.
-	AC_OnUpdateUser( $user->ID );
+	AC_OnUpdateUser( $user->ID, $user, TRUE );
 }
 
 //
@@ -164,8 +162,6 @@ function wp_set_password( $password, $user_id )
 	// START Detect Register Plus
 	//
 
-	// Clear out any cached email
-	delete_option( AC_GenerateTempEmailOptionName( $user_id ) );
 	// Write some basic info to the DB about the user being added
 	$user_info = get_userdata( $user_id );
 	update_option( WP88_MC_LAST_CAMPAIGN_ERROR, "Updating user within Register Plus Redux patch.  User name is:  $user_info->first_name $user_info->last_name" );
@@ -308,7 +304,12 @@ function AC_AutoChimpOptions()
 			update_option( WP88_MC_CAMPAIGN_FROM_POST, '1' );
 		else
 			update_option( WP88_MC_CAMPAIGN_FROM_POST, '0' );
-
+			
+		if ( isset( $_POST['on_excerpt_only'] ) )
+			update_option( WP88_MC_CAMPAIGN_EXCERPT_ONLY, '1' );
+		else
+			update_option( WP88_MC_CAMPAIGN_EXCERPT_ONLY, '0' );
+		
 		if ( isset( $_POST['on_send_now'] ) )
 			update_option( WP88_MC_SEND_NOW, '1' );
 		else
@@ -379,7 +380,7 @@ function AC_AutoChimpOptions()
 		// Iterate over the array and retrieve that users' basic information.
 		foreach ( $users as $user )
 		{
-			$result = AC_OnUpdateUser( $user->ID, FALSE );
+			$result = AC_OnUpdateUser( $user->ID, $user, FALSE );
 			if ( 0 === $result )
 				$numSuccess++;
 			else
@@ -403,7 +404,7 @@ function AC_AutoChimpOptions()
 //
 //	List of exceptions and error codes: http://www.mailchimp.com/api/1.3/exceptions.field.php
 //
-function AC_ManageMailUser( $mode, $user_info, $writeDBMessages )
+function AC_ManageMailUser( $mode, $user_info, $old_user_data, $writeDBMessages )
 {
 	$apiKey = get_option( WP88_MC_APIKEY );
 	$api = new MCAPI_13( $apiKey );
@@ -445,7 +446,7 @@ function AC_ManageMailUser( $mode, $user_info, $writeDBMessages )
 
 					// Grab extra data if the user wants to Sync Buddy Press
 					$syncBuddyPress = get_option( WP88_MC_SYNC_BUDDYPRESS );
-					if ( "1" === $syncBuddyPress )
+					if ( '1' === $syncBuddyPress )
 					{
 						// Hunt down Buddy Press user data.
 						$data = AC_FetchMappedXProfileData( $user_info->ID );
@@ -487,8 +488,15 @@ function AC_ManageMailUser( $mode, $user_info, $writeDBMessages )
 						case MMU_DELETE:
 						{
 							update_option( WP88_MC_LAST_MAIL_LIST_ERROR, $lastMessage );
-							// By default this sends a goodbye email and fires off a notification to the list owner
+							// By default it removes an email address from a specified list but 
+							// does not entirely delete them (they could be subscribed to other 
+							// lists). It also sends a "you've been removed" email to the address 
+							// and alerts the admin email address. I've chosen to delete permanently
+							// and skip those emails. AutoChimp may want to change that later. 
+							// Probably should be added to the options for the plugin.  All those 
+							// bools in listUnsubscribe() are optional.
 							$retval = $api->listUnsubscribe( $list_id, $user_info->user_email );
+//							$retval = $api->listUnsubscribe( $list_id, $user_info->user_email,'true', 'false', 'false' );
 							if ( $api->errorCode )
 							{
 								$errorCode = $api->errorCode;
@@ -508,17 +516,7 @@ function AC_ManageMailUser( $mode, $user_info, $writeDBMessages )
 						}
 						case MMU_UPDATE:
 						{
-							// Get the old email - this feels a little dangerous...'cause users have to go
-							// through the profile panel.  If they don't and email is updated, data can
-							// get out of sync.  See the readme.txt for more.
-							$updateEmail = get_option( AC_GenerateTempEmailOptionName( $user_info->ID ) );
-
-							// If this email is empty, then it means that some method other than viewing
-							// the admin panel has invoked the update - another plugin like "Register
-							// Plus", for instance.  In that case, there is no danger in the email getting
-							// out of sync so AutoChimp can use the original email.
-							if ( strlen( $updateEmail ) == 0 )
-								$updateEmail = $user_info->user_email;
+							$updateEmail = $old_user_data->user_email;
 
 							// Potential update to the email address (more likely than name!)
 							$merge_vars['EMAIL'] = $user_info->user_email;
@@ -621,11 +619,33 @@ function AC_CreateCampaignFromPost( $postID, $api )
 					$options['tracking'] = array('opens' =>	true, 'html_clicks' => true, 'text_clicks' => false );
 					$options['authenticate'] = true;
 
-					$postContent = apply_filters( 'the_content', $post->post_content );
-					// Potentially an expensive call here to append text
-					$permalink = get_permalink( $postID );
-					$postContent .= "<p>Read the full story <a href=\"$permalink\">here</a>.</p>";
-					$postContent = str_replace( ']]>', ']]&gt;', $postContent );
+					// Get the excerpt option; if on, then show the excerpt
+					$excerptOnly = get_option( WP88_MC_CAMPAIGN_EXCERPT_ONLY );
+					$postContent = '';
+					if ( '1' === $excerptOnly )
+					{
+						if ( 0 == strlen( $post->post_excerpt ) )
+						{
+							// Handmade function which mimics wp_trim_excerpt() (that function won't operate
+							// on a non-empty string)
+							$postContent = AC_TrimExcerpt( $post->post_content );
+						}
+						else
+						{
+							$postContent = apply_filters( 'the_excerpt', $post->post_excerpt );
+							// Add on a "Read the post" link here
+							$permalink = get_permalink( $postID );
+							$postContent .= "<p>Read the post <a href=\"$permalink\">here</a>.</p>";
+							// See http://codex.wordpress.org/Function_Reference/the_content, which
+							// suggests adding this code:
+							$postContent = str_replace( ']]>', ']]&gt;', $postContent );
+						}
+					}
+					else
+					{
+						$postContent = apply_filters( 'the_content', $post->post_content );
+					}
+
 					$content = array();
 					$content['html'] = $postContent;
 					$content['text'] = strip_tags( $postContent );
@@ -644,7 +664,7 @@ function AC_CreateCampaignFromPost( $postID, $api )
 						update_option( WP88_MC_LAST_CAMPAIGN_ERROR, "Your latest campaign created is titled '$post->post_title' with ID: $result" );
 
 						// Mark this post as having a campaign created from it.
-						add_post_meta( $postID, WP88_MC_CAMPAIGN_CREATED, "1" );
+						add_post_meta( $postID, WP88_MC_CAMPAIGN_CREATED, '1' );
 					}
 
 					// Done
@@ -659,7 +679,7 @@ function AC_OnPublishPost( $postID )
 {
 	// Does the user want to create campaigns from posts
 	$campaignFromPost = get_option( WP88_MC_CAMPAIGN_FROM_POST );
-	if ( "1" == $campaignFromPost )
+	if ( '1' == $campaignFromPost )
 	{
 		// Get the info on this post
 		$post = get_post( $postID );
@@ -687,7 +707,7 @@ function AC_OnPublishPost( $postID )
 
 				// Send it, if necessary (if user wants it), and the $id is
 				// sufficiently long (just picking longer than 3 for fun).
-				if ( "1" == $sendNow && ( strlen( $id ) > 3 ) )
+				if ( '1' == $sendNow && ( strlen( $id ) > 3 ) )
 				{
 					$api->campaignSendNow( $id );
 				}
@@ -967,14 +987,6 @@ function AC_DecodeUserOptionName( $decodePrefix, $optionName )
 	return $decoded;
 }
 
-// This function creates a user-unique email option name used as a field in
-// the WP options table.  This is used to temporarily store the user's email
-// address.
-function AC_GenerateTempEmailOptionName( $userID )
-{
-	return WP88_MC_TEMPEMAIL . $userID;
-}
-
 //
 //	WordPress Action handlers
 //
@@ -983,7 +995,7 @@ function AC_OnRegisterUser( $userID )
 {
 	$user_info = get_userdata( $userID );
 	$onAddSubscriber = get_option( WP88_MC_ADD );
-	if ( "1" == $onAddSubscriber )
+	if ( '1' == $onAddSubscriber )
 	{
 		$result = AC_ManageMailUser( MMU_ADD, $user_info, TRUE );
 	}
@@ -994,37 +1006,20 @@ function AC_OnDeleteUser( $userID )
 {
 	$user_info = get_userdata( $userID );
 	$onDeleteSubscriber = get_option( WP88_MC_DELETE );
-	if ( "1" == $onDeleteSubscriber )
+	if ( '1' == $onDeleteSubscriber )
 	{
 		$result = AC_ManageMailUser( MMU_DELETE, $user_info, TRUE );
 	}
 	return $result;
 }
 
-// 	This argument is an object, not an ID.  Thanks for catching this bug, Sarah!
-function AC_OnAboutToUpdateUser( $user )
-{
-	$onUpdateSubscriber = get_option( WP88_MC_UPDATE );
-	if ( "1" == $onUpdateSubscriber )
-	{
-		$updateEmail = $user->user_email;
-		$optionName = AC_GenerateTempEmailOptionName( $user->ID );
-		update_option( $optionName, $updateEmail );
-	}
-}
-
-function AC_OnUpdateUser( $userID, $writeDBMessages=TRUE )
+function AC_OnUpdateUser( $userID, $old_user_data, $writeDBMessages = TRUE )
 {
 	$user_info = get_userdata( $userID );
 	$onUpdateSubscriber = get_option( WP88_MC_UPDATE );
-	if ( "1" === $onUpdateSubscriber )
+	if ( '1' === $onUpdateSubscriber )
 	{
-		$result = AC_ManageMailUser( MMU_UPDATE, $user_info, $writeDBMessages );
-		
-		// If the user's email has been temporarily stored, then clear it.
-		$optionName = AC_GenerateTempEmailOptionName( $user_info->ID );
-		if ( FALSE !== get_option( $optionName ) )
-			delete_option( $optionName );
+		$result = AC_ManageMailUser( MMU_UPDATE, $user_info, $old_user_data, $writeDBMessages );
 
 		// 232 is the MailChimp error code for: "user doesn't exist".  This
 		// error can occur when a new user signs up but there's a required
@@ -1044,13 +1039,23 @@ function AC_OnUpdateUser( $userID, $writeDBMessages=TRUE )
 		if ( 232 === $result || 215 === $result )
 		{
 			$onAddSubscriber = get_option( WP88_MC_ADD );
-			if ( "1" === $onAddSubscriber )
+			if ( '1' === $onAddSubscriber )
 			{
-				$result = AC_ManageMailUser( MMU_ADD, $user_info, $writeDBMessages );
+				$result = AC_ManageMailUser( MMU_ADD, $user_info, $old_user_data, $writeDBMessages );
 			}
 		}
 	}
 	return $result;
+}
+
+function AC_TrimExcerpt( $text )
+{
+		$text = strip_shortcodes( $text );
+		$text = apply_filters('the_content', $text);
+		$text = str_replace(']]>', ']]&gt;', $text);
+		$excerpt_length = apply_filters('excerpt_length', 55);
+		$excerpt_more = apply_filters('excerpt_more', ' ' . '[...]');
+		return wp_trim_words( $text, $excerpt_length, $excerpt_more );
 }
 
 ?>
