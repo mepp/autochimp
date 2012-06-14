@@ -167,6 +167,7 @@ There are many people who have suggested features for AutoChimp.  Special consid
 4) Bryan Hoffman at [Dwell DFW Apartments](http://apartments.dwelldfw.com/dallas/) for supporting synchronizing all WordPress user fields.
 5) Sarah Anderson for quality testing.
 6) Morgan at [Satellite Jones](http://satellitejones.com/) for catching the "wp_" bug.
+7) Jamie at [WunderDojo](http://www.wunderdojo.com) for a much better solution to the 'temporary email' problem when a user or admin changes the email address for an account.
 
 == License ==
 
