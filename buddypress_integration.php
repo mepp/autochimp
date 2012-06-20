@@ -29,7 +29,7 @@ function AC_ShowBuddyPressUI( $api, $list )
 	print '<fieldset style="margin-left: 20px;">';
 
 	// Create a hidden field just to signal that the user can save their preferences
-	// even if the sync button
+	// even if the sync button isn't checked
 	print '<input type="hidden" name="buddypress_running" />';
 	print '<p><input type=CHECKBOX value="on_sync_buddypress" name="on_sync_buddypress" ';
 	if ( '1' === $syncBuddyPress )
@@ -44,7 +44,7 @@ function AC_ShowBuddyPressUI( $api, $list )
 		// Get the mailing list's Merge Variables
 		$mcFields = AC_FetchMailChimpMergeVars( $api, $list );
 		if ( empty( $mcFields ) )
-			print "<p><em><strong>Problem: </strong>AutoChimp could not retrieve your MailChimp Merge Variables. Try saving your selected mailing list again.</em></p>";
+			print "<p><em><strong>Problem: </strong>AutoChimp could not retrieve your MailChimp Merge Variables. Make sure you have a selected mailing list.</em></p>";
 
 		foreach ( $fields as $field )
 		{

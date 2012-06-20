@@ -9,6 +9,7 @@
 <?php
 require_once 'inc/MCAPI.class.php';
 require_once 'ui_helpers.php';
+require_once 'cimy_integration.php';
 wp_nonce_field('mailchimpz-nonce');
 
 $pluginFolder = get_bloginfo('wpurl') . '/wp-content/plugins/autochimp/';
@@ -162,7 +163,7 @@ if ( !empty( $apiKey ) )
 		$list = substr_replace( $list, '', 0, strlen( WP88_SEARCHABLE_PREFIX ) );
 		$mergeVars = AC_FetchMailChimpMergeVars( $api, $list );
 		if ( empty( $mergeVars ) )
-			print "<p><em><strong>Problem: </strong>AutoChimp could not retrieve your MailChimp Merge Variables. Try saving your selected mailing list again.</em></p>";
+			print "<p><em><strong>Problem: </strong>AutoChimp could not retrieve your MailChimp Merge Variables. Make sure you have a selected mailing list.</em></p>";
 
 		global $wpUserDataArray;
 		foreach( $wpUserDataArray as $userField )
@@ -342,6 +343,11 @@ if ( !empty( $apiKey ) )
 		$list = substr_replace( $list, '', 0, strlen( WP88_SEARCHABLE_PREFIX ) );
 		// Special function just for BuddyPress
 		AC_ShowBuddyPressUI( $api, $list );
+	}
+
+	if ( function_exists( 'get_cimyFields' ) )
+	{
+		AC_ShowCimyUI( $api );
 	}
 ?>
 

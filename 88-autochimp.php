@@ -29,6 +29,8 @@ define( "WP88_MC_CAMPAIGN_CREATED", "wp88_mc_campaign" );
 define( 'WP88_MC_FIX_REGPLUS', 'wp88_mc_fix_regplus' );
 define( 'WP88_MC_FIX_REGPLUSREDUX', 'wp88_mc_fix_regplusredux' );
 define( 'WP88_MC_SYNC_BUDDYPRESS', 'wp88_mc_sync_buddypress' );
+define( 'WP88_MC_SYNC_CIMY', 'wp88_mc_sync_cimy' );
+
 // NOTE: The following two static defines shouldn't have anything to do with
 // BuddyPress, but they do; they were introduced when the BuddyPress sync feature
 // was written.  But, remember, these are always used regardless of additional
@@ -339,6 +341,11 @@ function AC_AutoChimpOptions()
 			update_option( WP88_MC_SYNC_BUDDYPRESS, '1' );
 		else
 			update_option( WP88_MC_SYNC_BUDDYPRESS, '0' );
+
+		if ( isset( $_POST['on_sync_cimy'] ) )
+			update_option( WP88_MC_SYNC_CIMY, '1' );
+		else
+			update_option( WP88_MC_SYNC_CIMY, '0' );
 
 		// This hidden field allows the user to save their mappings even when the
 		// sync button isn't checked
