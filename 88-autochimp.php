@@ -4,7 +4,7 @@ Plugin Name: AutoChimp
 Plugin URI: http://www.wandererllc.com/company/plugins/autochimp/
 Description: Keeps MailChimp mailing lists in sync with your WordPress site.  It also leverages BuddyPress and allows you to synchronize all of your profile fields.  Gives users the ability to create MailChimp mail campaigns from blog posts.
 Author: Wanderer LLC Dev Team
-Version: 1.14
+Version: 1.15
 */
 
 if ( !class_exists( 'MCAPI_13' ) )
@@ -166,7 +166,7 @@ function wp_set_password( $password, $user_id )
 	$user_info = get_userdata( $user_id );
 	update_option( WP88_MC_LAST_CAMPAIGN_ERROR, "Updating user within Register Plus Redux patch.  User name is:  $user_info->first_name $user_info->last_name" );
 	// Do the real work
-	AC_ManageMailUser( MMU_UPDATE, $user_info, TRUE );
+	AC_ManageMailUser( MMU_UPDATE, $user_info, $user_info, TRUE );
 
 	//
 	// END Detect
@@ -635,7 +635,7 @@ function AC_CreateCampaignFromPost( $postID, $api )
 							$postContent = apply_filters( 'the_excerpt', $post->post_excerpt );
 							// Add on a "Read the post" link here
 							$permalink = get_permalink( $postID );
-							$postContent .= "<p>Read the post <a href=\"$permalink\">here</a>.</p>";
+							$postContent .= '<p>Read the post <a href="' . $permalink . '">here</a>.</p>';
 							// See http://codex.wordpress.org/Function_Reference/the_content, which
 							// suggests adding this code:
 							$postContent = str_replace( ']]>', ']]&gt;', $postContent );
@@ -997,7 +997,7 @@ function AC_OnRegisterUser( $userID )
 	$onAddSubscriber = get_option( WP88_MC_ADD );
 	if ( '1' == $onAddSubscriber )
 	{
-		$result = AC_ManageMailUser( MMU_ADD, $user_info, TRUE );
+		$result = AC_ManageMailUser( MMU_ADD, $user_info, NULL, TRUE );
 	}
 	return $result;
 }
@@ -1008,7 +1008,7 @@ function AC_OnDeleteUser( $userID )
 	$onDeleteSubscriber = get_option( WP88_MC_DELETE );
 	if ( '1' == $onDeleteSubscriber )
 	{
-		$result = AC_ManageMailUser( MMU_DELETE, $user_info, TRUE );
+		$result = AC_ManageMailUser( MMU_DELETE, $user_info, NULL, TRUE );
 	}
 	return $result;
 }
