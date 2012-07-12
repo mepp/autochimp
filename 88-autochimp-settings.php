@@ -9,7 +9,6 @@
 <?php
 require_once 'inc/MCAPI.class.php';
 require_once 'ui_helpers.php';
-require_once 'cimy_integration.php';
 wp_nonce_field('mailchimpz-nonce');
 
 $pluginFolder = get_bloginfo('wpurl') . '/wp-content/plugins/autochimp/';
@@ -343,11 +342,6 @@ if ( !empty( $apiKey ) )
 		$list = substr_replace( $list, '', 0, strlen( WP88_SEARCHABLE_PREFIX ) );
 		// Special function just for BuddyPress
 		AC_ShowBuddyPressUI( $api, $list );
-	}
-
-	if ( function_exists( 'get_cimyFields' ) )
-	{
-		AC_ShowCimyUI( $api );
 	}
 ?>
 

@@ -4,7 +4,7 @@ Plugin Name: AutoChimp
 Plugin URI: http://www.wandererllc.com/company/plugins/autochimp/
 Description: Keeps MailChimp mailing lists in sync with your WordPress site.  It also leverages BuddyPress and allows you to synchronize all of your profile fields.  Gives users the ability to create MailChimp mail campaigns from blog posts.
 Author: Wanderer LLC Dev Team
-Version: 1.14
+Version: 1.15
 */
 
 if ( !class_exists( 'MCAPI_13' ) )
@@ -29,8 +29,6 @@ define( "WP88_MC_CAMPAIGN_CREATED", "wp88_mc_campaign" );
 define( 'WP88_MC_FIX_REGPLUS', 'wp88_mc_fix_regplus' );
 define( 'WP88_MC_FIX_REGPLUSREDUX', 'wp88_mc_fix_regplusredux' );
 define( 'WP88_MC_SYNC_BUDDYPRESS', 'wp88_mc_sync_buddypress' );
-define( 'WP88_MC_SYNC_CIMY', 'wp88_mc_sync_cimy' );
-
 // NOTE: The following two static defines shouldn't have anything to do with
 // BuddyPress, but they do; they were introduced when the BuddyPress sync feature
 // was written.  But, remember, these are always used regardless of additional
@@ -168,7 +166,7 @@ function wp_set_password( $password, $user_id )
 	$user_info = get_userdata( $user_id );
 	update_option( WP88_MC_LAST_CAMPAIGN_ERROR, "Updating user within Register Plus Redux patch.  User name is:  $user_info->first_name $user_info->last_name" );
 	// Do the real work
-	AC_ManageMailUser( MMU_UPDATE, $user_info, TRUE );
+	AC_ManageMailUser( MMU_UPDATE, $user_info, $user_info, TRUE );
 
 	//
 	// END Detect
@@ -341,11 +339,6 @@ function AC_AutoChimpOptions()
 			update_option( WP88_MC_SYNC_BUDDYPRESS, '1' );
 		else
 			update_option( WP88_MC_SYNC_BUDDYPRESS, '0' );
-
-		if ( isset( $_POST['on_sync_cimy'] ) )
-			update_option( WP88_MC_SYNC_CIMY, '1' );
-		else
-			update_option( WP88_MC_SYNC_CIMY, '0' );
 
 		// This hidden field allows the user to save their mappings even when the
 		// sync button isn't checked
@@ -642,7 +635,7 @@ function AC_CreateCampaignFromPost( $postID, $api )
 							$postContent = apply_filters( 'the_excerpt', $post->post_excerpt );
 							// Add on a "Read the post" link here
 							$permalink = get_permalink( $postID );
-							$postContent .= "<p>Read the post <a href=\"$permalink\">here</a>.</p>";
+							$postContent .= '<p>Read the post <a href="' . $permalink . '">here</a>.</p>';
 							// See http://codex.wordpress.org/Function_Reference/the_content, which
 							// suggests adding this code:
 							$postContent = str_replace( ']]>', ']]&gt;', $postContent );
@@ -1004,7 +997,7 @@ function AC_OnRegisterUser( $userID )
 	$onAddSubscriber = get_option( WP88_MC_ADD );
 	if ( '1' == $onAddSubscriber )
 	{
-		$result = AC_ManageMailUser( MMU_ADD, $user_info, TRUE );
+		$result = AC_ManageMailUser( MMU_ADD, $user_info, NULL, TRUE );
 	}
 	return $result;
 }
@@ -1015,7 +1008,7 @@ function AC_OnDeleteUser( $userID )
 	$onDeleteSubscriber = get_option( WP88_MC_DELETE );
 	if ( '1' == $onDeleteSubscriber )
 	{
-		$result = AC_ManageMailUser( MMU_DELETE, $user_info, TRUE );
+		$result = AC_ManageMailUser( MMU_DELETE, $user_info, NULL, TRUE );
 	}
 	return $result;
 }
