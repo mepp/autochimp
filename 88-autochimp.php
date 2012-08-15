@@ -4,7 +4,7 @@ Plugin Name: AutoChimp
 Plugin URI: http://www.wandererllc.com/company/plugins/autochimp/
 Description: Keeps MailChimp mailing lists in sync with your WordPress site.  Now supports Register Plus, Register Plus Redux, BuddyPress, and Cimy User Extra fields and allows you to synchronize all of your profile fields with MailChimp.  Gives users the ability to create MailChimp mail campaigns from blog posts with the flexibility of sending different categories to different lists and interest groups.  You can use your user-defined templates as well.
 Author: Wanderer LLC Dev Team
-Version: 2.0
+Version: 2.01
 */
 
 if ( !class_exists( 'MCAPI_13' ) )
@@ -98,43 +98,12 @@ add_action('xmlrpc_publish_post', 'AC_OnPublishPost' );		// Same as above, but f
 add_action('publish_phone', 'AC_OnPublishPost' );			// Same as above, but for email.  No idea why it's called "phone".
 add_action('bp_init', 'AC_OnBuddyPressInstalled');			// Only load the component if BuddyPress is loaded and initialized.
 add_action('xprofile_updated_profile', 'AC_OnBuddyPressUserUpdate', 101 ); // Used to sync users with MailChimp
-
 add_action('bp_core_signup_user', 'AC_OnBuddyPressUserUpdate', 101 ); 
-
-add_action('wp_print_scripts', 'AC_OnLoadAutoChimpScripts');// Get AutoChimp javascripts set up
 add_action('wp_ajax_query_sync_users', 'AC_OnQuerySyncUsers');
 add_action('wp_ajax_run_sync_users', 'AC_OnRunSyncUsers');
 add_action('admin_notices', 'AC_OnAdminNotice' );
 add_action('admin_init', 'AC_OnAdminInit' );
 register_activation_hook( WP_PLUGIN_DIR . '/autochimp/88-autochimp.php', 'AC_OnActivateAutoChimp' );
-
-//
-//	Init function for AutoChimp.  Does the following:
-//	1) Loads jQuery.
-//
-function AC_OnLoadAutoChimpScripts() 
-{
-	if ( is_admin() ) 
-	{
-		// jQuery UI stuff - files for the progress bar and dependencies PLUS style for them.
-		wp_enqueue_script('jquery');
-		wp_enqueue_script('jquery-ui-core');
-		wp_enqueue_script('jquery-ui-widget');
-		wp_enqueue_script('jquery-ui-progressbar');
-        wp_register_style('jquery-style', 'http://ajax.googleapis.com/ajax/libs/jqueryui/1.8.1/themes/smoothness/jquery-ui.css', true);
-        wp_enqueue_style('jquery-style');
-		
-		// Custom AutoChimp scripts
-		$pluginFolder = get_bloginfo('wpurl') . '/wp-content/plugins/autochimp/';
-//		wp_enqueue_script('ac_scripts', $pluginFolder.'js/autochimp.js', array('jquery'));
-
-		// embed the javascript file that makes the AJAX request
-		wp_enqueue_script( 'autochimp-ajax-request', $pluginFolder.'js/autochimp.js', array( 'jquery' ) );
-		 
-		// declare the URL to the file that handles the AJAX request (wp-admin/admin-ajax.php)
-		wp_localize_script( 'autochimp-ajax-request', 'AutoChimpAjax', array( 'ajaxurl' => admin_url( 'admin-ajax.php' ) ) );
-	}
-}
 
 //
 //	Ajax
@@ -196,9 +165,6 @@ function AC_OnQuerySyncUsers()
 {
 	$percent = get_option( WP88_MC_MANUAL_SYNC_PROGRESS, 0 );
 	$status = get_option( WP88_MC_MANUAL_SYNC_STATUS, 'Running sync...' );
-//	update_option( "toilet", $percent . '#' . $status);
-//	header('Response: HTTP/1.1 200 OK');
-//	header( "Content-Type: application/html" );
 	echo $percent . '#' . $status;
 	exit; // This is required by WordPress to return the proper result
 }
@@ -333,7 +299,32 @@ add_filter( 'plugin_row_meta', 'AC_AddAutoChimpPluginLinks', 10, 2 ); // Expand 
 //
 function AC_OnPluginMenu()
 {
-	add_submenu_page('options-general.php', 'AutoChimp Options', 'AutoChimp', 'add_users', basename(__FILE__), 'AC_AutoChimpOptions' );
+	$page = add_submenu_page('options-general.php',	'AutoChimp Options', 'AutoChimp', 'add_users', basename(__FILE__), 'AC_AutoChimpOptions' );
+	// When the plugin menu is clicked on, call AC_OnLoadAutoChimpScripts()
+	add_action( 'admin_print_styles-' . $page, 'AC_OnLoadAutoChimpScripts' );
+}
+
+//
+//	Load function for AutoChimp scripts.  Does the following:
+//	1) Loads jQuery.
+//	2) Loads WordPress Ajax functionality.
+//	3) Loads AutoChimp custom scripts.
+//
+function AC_OnLoadAutoChimpScripts() 
+{
+	// jQuery UI stuff - files for the progress bar and dependencies PLUS style for them.
+	wp_enqueue_script('jquery');
+	wp_enqueue_script('jquery-ui-core');
+	wp_enqueue_script('jquery-ui-widget');
+	wp_enqueue_script('jquery-ui-progressbar');
+    wp_register_style('jquery-style', 'http://ajax.googleapis.com/ajax/libs/jqueryui/1.8.1/themes/smoothness/jquery-ui.css', true);
+    wp_enqueue_style('jquery-style');
+
+	// Load the javascript file that makes the AJAX request
+	wp_enqueue_script( 'autochimp-ajax-request' );
+		 
+	// declare the URL to the file that handles the AJAX request (wp-admin/admin-ajax.php)
+	wp_localize_script( 'autochimp-ajax-request', 'AutoChimpAjax', array( 'ajaxurl' => admin_url( 'admin-ajax.php' ) ) );
 }
 
 function AC_AddAutoChimpPluginLinks($links, $file)
@@ -344,6 +335,25 @@ function AC_AddAutoChimpPluginLinks($links, $file)
 		$links[] = '<a href="https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=HPCPB3GY5LUQW&lc=US">' . __('Donate', 'autochimp') . '</a>';
 	}
 	return $links;
+}
+
+function AC_OnAdminInit() 
+{
+	global $current_user;
+	$user_id = $current_user->ID;
+	// If user clicks to ignore the notice, add that to their user meta so that
+	// the notice doesn't come up anymore.
+	if ( isset($_GET['ac_20_nag_ignore']) && '0' == $_GET['ac_20_nag_ignore'] ) 
+	{
+		add_user_meta( $user_id, 'ac_20_ignore_notice', 'true', true );
+	}
+	
+	// Register the AutoChimp JS scripts - they'll be loaded later when the
+	// AutoChimp admin menu is clicked on.  Ensures that these scripts are only
+	// loaded when needed (flow is a little goofy - search for
+	// "wp_enqueue_script( 'autochimp-ajax-request'" for the next step).
+	$pluginFolder = get_bloginfo('wpurl') . '/wp-content/plugins/autochimp/';
+	wp_register_script( 'autochimp-ajax-request', $pluginFolder.'js/autochimp.js', array( 'jquery' ) );
 }
 
 //
@@ -1033,6 +1043,9 @@ function AC_EncodeUserOptionName( $encodePrefix, $optionName )
 	// Not using underscores or dashes since those are commonly used in place
 	// of spaces.  If an option name has "#" in it, then this scheme breaks down.
 	$encoded = str_replace( ' ', '#', $encoded );
+	
+	// Periods are also problematic, as reported on 8/7/12 by Katherine Boroski.
+	$encoded = str_replace( '.', '*', $encoded );
 
 	return $encoded;
 }
@@ -1042,8 +1055,9 @@ function AC_DecodeUserOptionName( $decodePrefix, $optionName )
 	// Strip out the searchable tag
 	$decoded = substr_replace( $optionName, '', 0, strlen( $decodePrefix ) );
 
-	// Replace hash marks with spaces
+	// Replace hash marks with spaces, left brackets with periods
 	$decoded = str_replace( '#', ' ', $decoded );
+	$decoded = str_replace( '*', '.', $decoded );
 
 	return $decoded;
 }
@@ -1203,17 +1217,6 @@ function AC_OnAdminNotice()
 			print( $apiSetMessage );
 			echo "</p></div>";
 		}
-	}
-}
-
-function AC_OnAdminInit() 
-{
-	global $current_user;
-	$user_id = $current_user->ID;
-	// If user clicks to ignore the notice, add that to their user meta 
-	if ( isset($_GET['ac_20_nag_ignore']) && '0' == $_GET['ac_20_nag_ignore'] ) 
-	{
-		add_user_meta( $user_id, 'ac_20_ignore_notice', 'true', true );
 	}
 }
 

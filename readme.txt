@@ -6,7 +6,7 @@ Donate link: https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_i
 Tags: MailChimp, Mail, Chimp, email, campaign, mailing list, interest, group, template, BuddyPress, Register, Plus, Redux, Profile Fields, XProfile, Cimy, merge, admin, create, automatically, subscribe, unsubscribe, sync, synchronize
 Requires at least: 2.8
 Tested up to: 3.4.1
-Stable tag: 1.5
+Stable tag: 2.01
 
 Keep website users and MailChimp mailing lists in sync and create campaigns from posts.
 
@@ -26,17 +26,12 @@ To use, save your MailChimp API Key on the options page then start adding your n
 
 == Special Notes ==
 
-1) MailChimp, like all other major email campaign managers, sends newly subscribed members a confirmation email. So, you must wait until the new subscriber receives, accepts, and confirms the new subscription before you see them appear in your mailing list.  AutoChimp will trigger the confirmation email right away.  However, this can all be bypassed by checking the "Bypass double opt-in" checkbox.
-
-2) Sometimes, plugin output may not render properly in your campaigns generated from posts.  This is usually because the plugin doesn't have access to information it needs until it is displaying its output on the screen for an end user.  The best suggestion in this case is to learn which of your plugins are problematic (most are fine) and adapt accordingly.  We'll look for ways to improve this in the future too.
-
-3) Your campaign formatting may appear differently than your post formatting.  This is because your post uses formatting files that belong to your WordPress theme that your campaign doesn't have access to.  The best thing you can do is to use the HTML tab in the "Post Edit" page to add specific HTML instructions.  MailChimp campaigns speak HTML very well.
-
-4) If you want more control over the visual settings of your campaigns, consider creating a user template (or copying one from the MailChimp gallery) and then selecting that template in the Campaign options.  One very important key:  Your main content section must be called "main".  This is where AutoChimp will substitute content. 
-
-5) The subject of your campaign is your blog post title.  The "From" email address and name are taken from your MailChimp configuration.  To change that, you'll need to log into your MailChimp account.  The "To" field is the "*|FNAME|*" merge code.
-
-6) AutoChimp creates several rows in the wp_options table of your WordPress database to store your options.
+1. MailChimp, like all other major email campaign managers, sends newly subscribed members a confirmation email. So, you must wait until the new subscriber receives, accepts, and confirms the new subscription before you see them appear in your mailing list.  AutoChimp will trigger the confirmation email right away.  However, this can all be bypassed by checking the "Bypass double opt-in" checkbox.
+1. Sometimes, plugin output may not render properly in your campaigns generated from posts.  This is usually because the plugin doesn't have access to information it needs until it is displaying its output on the screen for an end user.  The best suggestion in this case is to learn which of your plugins are problematic (most are fine) and adapt accordingly.  We'll look for ways to improve this in the future too.
+1. Your campaign formatting may appear differently than your post formatting.  This is because your post uses formatting files that belong to your WordPress theme that your campaign doesn't have access to.  The best thing you can do is to use the HTML tab in the "Post Edit" page to add specific HTML instructions.  MailChimp campaigns speak HTML very well.
+1. If you want more control over the visual settings of your campaigns, consider creating a user template (or copying one from the MailChimp gallery) and then selecting that template in the Campaign options.  One very important key:  Your main content section must be called "main".  This is where AutoChimp will substitute content. 
+1. The subject of your campaign is your blog post title.  The "From" email address and name are taken from your MailChimp configuration.  To change that, you'll need to log into your MailChimp account.  The "To" field is the "*|FNAME|*" merge code.
+1. AutoChimp creates several rows in the wp_options table of your WordPress database to store your options.
 
 == Frequently Asked Questions ==
 
@@ -50,10 +45,17 @@ Just go to <http://www.wandererllc.com/company/plugins/autochimp/> and follow th
 
 == Changelog ==
 
+= 2.01 =
+
+* Small UI updates
+* Fixed issue with '.' in Category names
+* Loading scripts only when AutoChimp admin menus are active
+* 2.0 acknowledgements added
+
 = 2.0 =
 
 * Major upgrade of the UI.  Options are now organized by tabs.
-* Manual sync will now give you real time updates and progress.  No more click the button and watch the page spin and spin.
+* Manual sync will now give you real time updates and progress.  No more click the button and watch the page spin and spin with no progress feedback.
 * Create campaigns from multiple categories of posts and send them to various lists and interest groups.
 * Choose MailChimp user templates for your campaigns.
 * Create excerpts of campaigns.
@@ -135,6 +137,10 @@ Just go to <http://www.wandererllc.com/company/plugins/autochimp/> and follow th
 
 == Upgrade Notice ==
 
+= 2.01 =
+
+Bug fixes.  Please upgrade.
+
 = 2.0 =
 
 BIG changes and fixes recommended for everyone.  Please upgrade pronto.
@@ -191,13 +197,19 @@ This version adds the ability to create campaigns from blog posts.
 
 There are many people who have suggested features for AutoChimp.  Special consideration needs to be made to the following people who had an active role in contributing by providing a detailed design, monetary sponsorship, or offering to test and provide useful feedback:
 
-1) Anton Alksnin at [Forex Alert](http://www.forex-alert.net "Forex Alert") for supporting the "blog post to campaign" feature.
-2) Peter Michael at [FlowDrops](http://www.flowdrops.com/) for some quality testing.
-3) [Latinos a Morir](http://www.latinosamorir.com/) for supporting the BuddyPress Synchronization feature.
-4) Bryan Hoffman at [Dwell DFW Apartments](http://apartments.dwelldfw.com/dallas/) for supporting synchronizing all WordPress user fields.
-5) Sarah Anderson for quality testing.
-6) Morgan at [Satellite Jones](http://satellitejones.com/) for catching the "wp_" bug.
-7) Jamie at [WunderDojo](http://www.wunderdojo.com) for a much better solution to the 'temporary email' problem when a user or admin changes the email address for an account.
+1. Anton Alksnin at [Forex Alert](http://www.forex-alert.net "Forex Alert") for supporting the "blog post to campaign" feature.
+1. Peter Michael at [FlowDrops](http://www.flowdrops.com/) for some quality testing.
+1. [Latinos a Morir](http://www.latinosamorir.com/) for supporting the BuddyPress Synchronization feature.
+1. Bryan Hoffman at [Dwell DFW Apartments](http://apartments.dwelldfw.com/dallas/) for supporting synchronizing all WordPress user fields.
+1. Sarah Anderson for quality testing.
+1. Morgan at [Satellite Jones](http://satellitejones.com/) for catching the "wp_" bug.
+1. Jamie at [WunderDojo](http://www.wunderdojo.com) for a much better solution to the 'temporary email' problem when a user or admin changes the email address for an account.
+1. Tristan at [Grasshopper Herder](http://grasshopperherder.com/) for sponsorship of AutoChimp 2.0.
+1. The folks at [MailChimp](http://www.mailchimp.com) for sponsorship of AutoChimp 2.0.
+1. [Web Tonic](http://www.webtonic.co.nz/) for sponsorship of AutoChimp 2.0.
+1. [Allen Hancock](http://www.kayakmississippi.com/), sponsor of the Phatwater Kayak Challenge 42 miles on the Mighty Mississippi.
+1. Several anonymous contributions to the AutoChimp 2.0 project.
+1. Katherine Boroski, [BKB Design Group](http://www.bkbdesigngroup.com), for reporting the '.' in Category names bug.
 
 == License ==
 

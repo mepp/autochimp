@@ -284,7 +284,7 @@ if ( $active_tab == 'mailing_lists' )
 	<h3 class='hndle'><span>Manual Sync</span></h3>
 	<div class="inside">
 
-	<p>You can also perform a <em>manual</em> sync with your existing user base.  This is recommended only once to bring existing users in sync.  After you've synchronized your users, and you use AutoChimp to keep your users in sync, <em>you should not need to do this again</em>.  <strong>Note: </strong>Depending on how many users you have, this could take a while.  Please be patient.</p>
+	<p>You can also perform a <em>manual</em> sync with your existing user base.  This is recommended only once to bring existing users in sync.  After you've synchronized your users, and you use AutoChimp to keep your users in sync, <em>you should not need to do this again</em>.  <strong>Note: </strong>Depending on how many users you have, this could take a while.  Please be patient.  <strong>Also,</strong> you need to have the 'When a user updates his information' option checked above othewise your users will not sync.</p>
 	<div id="manual_sync_status"></div>
 	<div id="manual_sync_progressbar"></div>
 	<?php
