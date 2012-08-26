@@ -4,7 +4,7 @@ Plugin Name: AutoChimp
 Plugin URI: http://www.wandererllc.com/company/plugins/autochimp/
 Description: Keeps MailChimp mailing lists in sync with your WordPress site.  Now supports Register Plus, Register Plus Redux, BuddyPress, and Cimy User Extra fields and allows you to synchronize all of your profile fields with MailChimp.  Gives users the ability to create MailChimp mail campaigns from blog posts with the flexibility of sending different categories to different lists and interest groups.  You can use your user-defined templates as well.
 Author: Wanderer LLC Dev Team
-Version: 2.01
+Version: 2.02
 */
 
 if ( !class_exists( 'MCAPI_13' ) )
@@ -1046,6 +1046,9 @@ function AC_EncodeUserOptionName( $encodePrefix, $optionName )
 	
 	// Periods are also problematic, as reported on 8/7/12 by Katherine Boroski.
 	$encoded = str_replace( '.', '*', $encoded );
+	
+	// "&" symbols are problematic, as reported on 8/23/12 by Enrique.
+	$encoded = str_replace( '&', '_', $encoded );
 
 	return $encoded;
 }
@@ -1055,9 +1058,10 @@ function AC_DecodeUserOptionName( $decodePrefix, $optionName )
 	// Strip out the searchable tag
 	$decoded = substr_replace( $optionName, '', 0, strlen( $decodePrefix ) );
 
-	// Replace hash marks with spaces, left brackets with periods
+	// Replace hash marks with spaces, asterisks with periods, etc.
 	$decoded = str_replace( '#', ' ', $decoded );
 	$decoded = str_replace( '*', '.', $decoded );
+	$decoded = str_replace( '_', '&', $decoded );
 
 	return $decoded;
 }

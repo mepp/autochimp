@@ -270,7 +270,7 @@ if ( $active_tab == 'mailing_lists' )
 		}
 		else
 		{
-			print '<p><em>Unable to retrieve your lists with this key!</em>  Did you paste it in correctly?  If so, make sure you\'re connected to the internet and not working offline.</p>';
+			print '<p><em>Unable to retrieve your lists with this key!</em>  Did you paste it in correctly?  Visit <a href="?page=88-autochimp.php&tab=api_key">the API Key tab</a> and try again, just in case.  If you know it is correct, make sure you\'re connected to the internet and not working offline.</p>';
 		}
 	}
 	?>
@@ -352,7 +352,7 @@ if ( $active_tab == 'campaigns' )
 		}
 		else 
 		{
-			print '<p><em>Unable to retrieve your lists with this key!</em>  Did you paste it in correctly?  If so, make sure you\'re connected to the internet and not working offline.</p>';
+			print '<p><em>Unable to retrieve your lists with this key!</em>  Did you paste it in correctly?  Visit <a href="?page=88-autochimp.php&tab=api_key">the API Key tab</a> and try again, just in case.  If you know it is correct, make sure you\'re connected to the internet and not working offline.</p>';
 		}
 
 		// Now get the templates		
