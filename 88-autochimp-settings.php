@@ -7,8 +7,6 @@
 
 <?php
 require_once 'inc/MCAPI.class.php';
-require_once 'ui_helpers.php';
-require_once 'cimy_integration.php';
 require_once 'viper_integration.php';
 wp_nonce_field('mailchimpz-nonce');
 
@@ -224,7 +222,7 @@ if ( $active_tab == 'mailing_lists' )
 			// been moved to the main UI.  It's still represented by a DB value that makes
 			// it look like it belongs to BuddyPress, so heads up.
 			$selectBox = AC_GenerateSelectBox( WP88_MC_STATIC_FIELD, WP88_IGNORE_FIELD_TEXT, $mergeVars );
-			$output .= '<tr class="alternate"><td width="65%">Static Text:<input type="text" name="static_select" value="' . $staticText . '"size="18" /></td><td width="30%">' . $selectBox . '</td></tr>';
+			$output .= '<tr class="alternate"><td width="65%">Static Text: <input type="text" name="static_select" value="' . $staticText . '"size="18" /></td><td width="30%">' . $selectBox . '</td></tr>';
 
 			$tableCode = AC_GenerateFieldMappingCode( 'WordPress', $output );
 			print $tableCode;
@@ -232,35 +230,10 @@ if ( $active_tab == 'mailing_lists' )
 			// END:		Generate a table for WordPress Mappings
 			//
 
-			//
-			// Start:	Generate a table for BuddyPress Mappings
-			//
-			$syncBuddyPress = get_option( WP88_MC_SYNC_BUDDYPRESS );
-			// If the user wants to sync BuddyPress AND the plugin is activated, then show
-			// The UI which displays the mappings here.
-			if ( '1' === $syncBuddyPress && function_exists( 'AC_ShowBuddyPressSettings' ) )
-			{
-				$uiOutput = AC_GenerateBuddyPressMappingsUI( $tableWidth, $mergeVars );
-				print $uiOutput;
-			}
-			//
-			// END:		Generate a table for BuddyPress Mappings
-			//
-
-			//
-			// Start:	Generate a table for Cimy Mappings
-			//
-			$syncCimy = get_option( WP88_MC_SYNC_CIMY );
-			// If the user wants to sync Cimy User Extra Fields AND the plugin is activated,
-			// then show the UI which displays the mappings here.
-			if ( '1' === $syncCimy && function_exists( 'get_cimyFields' ) )
-			{
-				$uiOutput = AC_GenerateCimyMappingsUI( $tableWidth, $mergeVars );
-				print $uiOutput;
-			}
-			//
-			// END:		Generate a table for Cimy Mappings
-			//
+			// Show UI for any active AutoChimp plugins
+			$syncPlugins = new ACSyncPlugins;
+			$out = $syncPlugins->GenerateMappingsUI( $tableWidth, $mergeVars );
+			print $out;
 			
 			// Show the user the last message
 			$lastMessage = get_option( WP88_MC_LAST_MAIL_LIST_ERROR );
@@ -489,16 +462,9 @@ if ( $active_tab == 'plugins' )
 			print '<p><em>News:</em> Sorry to the folks who were hoping that Register Plus Redux version 3.7.0 and up would fix this.  This patch is still required when running Register Plus Redux.  More info can be found <a href="http://radiok.info/blog/conflicts-begone/" target="_blank">here</a>.</p>';
 			print '</fieldset>';
 		}
-	
-		if ( function_exists( 'AC_ShowBuddyPressSettings' ) )
-		{
-			AC_ShowBuddyPressSettings();
-		}
-	
-		if ( function_exists( 'get_cimyFields' ) )
-		{
-			AC_ShowCimySettings();
-		}
+
+		$syncPlugins = new ACSyncPlugins;
+		$syncPlugins->ShowSettings();
 		
 		if ( class_exists( 'VipersVideoQuicktags' ) )
 		{

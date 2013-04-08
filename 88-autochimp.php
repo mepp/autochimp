@@ -7,10 +7,17 @@ Author: Wanderer LLC Dev Team
 Version: 2.02
 */
 
+//
+//	When making changes to AutoChimp, keep in mind that MailChimp best practices for 
+//	developers and integrators:  http://apidocs.mailchimp.com/api/faq/#faq5
+//
+
 if ( !class_exists( 'MCAPI_13' ) )
 {
 	require_once 'inc/MCAPI.class.php';
 }
+require_once 'ui_helpers.php';
+require_once 'autochimp-plugins.php';		
 
 define( "WP88_MC_APIKEY", "wp88_mc_apikey" );
 
@@ -39,8 +46,6 @@ define( "WP88_MC_CAMPAIGN_CREATED", "wp88_mc_campaign" ); // Flags a post that i
 // Plugin integration
 define( 'WP88_MC_FIX_REGPLUS', 'wp88_mc_fix_regplus' );
 define( 'WP88_MC_FIX_REGPLUSREDUX', 'wp88_mc_fix_regplusredux' );
-define( 'WP88_MC_SYNC_BUDDYPRESS', 'wp88_mc_sync_buddypress' );
-define( 'WP88_MC_SYNC_CIMY', 'wp88_mc_sync_cimy' );
 define( 'WP88_MC_INTEGRATE_VIPER', 'wp88_mc_integrate_viper' );
 define( 'WP88_MC_VIDEO_SHOW_TITLE', 'wp88_mc_video_show_title' );
 define( 'WP88_MC_VIDEO_SHOW_BORDER', 'wp88_mc_video_show_border' );
@@ -49,9 +54,9 @@ define( 'WP88_MC_VIDEO_SHOW_RATINGS', 'wp88_mc_video_show_ratings' );
 define( 'WP88_MC_VIDEO_SHOW_NUM_VIEWS', 'wp88_mc_video_show_num_views' );
 
 // NOTE: The following two static defines shouldn't have anything to do with
-// BuddyPress, but they do; they were introduced when the BuddyPress sync feature
-// was written.  But, remember, these are always used regardless of additional
-// plugins that are used.  It's since been moved away from BuddyPress and
+// BuddyPress, but they do: they were introduced when the BuddyPress sync feature
+// was written.  But, remember, these are always used even on additional
+// plugins that are introduced.  It's since been moved away from BuddyPress and
 // made part of the standard WordPress mappings.
 define( 'WP88_MC_STATIC_TEXT', 'wp88_mc_bp_static_text' );
 define( 'WP88_MC_STATIC_FIELD', 'wp88_mc_bp_static_field' );
@@ -62,8 +67,6 @@ define( 'MMU_UPDATE', 3 );
 
 define( 'WP88_SEARCHABLE_PREFIX', 'wp88_mc' );
 define( 'WP88_WORDPRESS_FIELD_MAPPING', 'wp88_mc_wp_f_' );
-define( 'WP88_BP_XPROFILE_FIELD_MAPPING', 'wp88_mc_bp_xpf_' );
-define( 'WP88_CIMY_FIELD_MAPPING', 'wp88_mc_cimy_uef_' );
 define( 'WP88_CATEGORY_LIST_MAPPING', 'wp88_mc_category_list_' );
 define( 'WP88_PLUGIN_FIRST_ACTIVATION', 'wp88_mc_first_activation' );
 define( 'WP88_CATEGORY_GROUP_SUFFIX', '_group' );
@@ -74,6 +77,24 @@ define( 'WP88_NO_TEMPLATE', 'None' );
 define( 'WP88_ANY_GROUP', 'Any' );
 define( 'WP88_GROUPINGS_TEXT', 'GROUPINGS' ); // This value is required by MailChimp
 define( 'WP88_FIELD_DELIMITER', '+++' );
+
+//
+// Autoload for plugin scripts.  This function is part of the simple platform that
+// allows third party developers to add support for other plugins without having to
+// wait on an AutoChimp release.
+//
+// The class name should also match the name for the file that houses the class. 
+// Names are case sensitive!
+//
+function __autoload( $class )
+{
+	// All plugin scripts are required to be placed in the 'plugins' subfolder and 
+	// follow the proper naming convention.  See Help for more.
+	if ( 0 === strpos( $class, 'Sync') )
+	{
+		require_once( 'plugins/' . $class . '.php' );
+	}
+}
 
 // Global variables - If you change this, be sure to see AC_FetchMappedWordPressData()
 // which has static comparisons to the values in this array.  FIX LATER.
@@ -96,9 +117,6 @@ add_action('profile_update','AC_OnUpdateUser',501,2 );		// Updates the user usin
 add_action('publish_post','AC_OnPublishPost' );				// Called when an author publishes a post.
 add_action('xmlrpc_publish_post', 'AC_OnPublishPost' );		// Same as above, but for XMLRPC
 add_action('publish_phone', 'AC_OnPublishPost' );			// Same as above, but for email.  No idea why it's called "phone".
-add_action('bp_init', 'AC_OnBuddyPressInstalled');			// Only load the component if BuddyPress is loaded and initialized.
-add_action('xprofile_updated_profile', 'AC_OnBuddyPressUserUpdate', 101 ); // Used to sync users with MailChimp
-add_action('bp_core_signup_user', 'AC_OnBuddyPressUserUpdate', 101 ); 
 add_action('wp_ajax_query_sync_users', 'AC_OnQuerySyncUsers');
 add_action('wp_ajax_run_sync_users', 'AC_OnRunSyncUsers');
 add_action('admin_notices', 'AC_OnAdminNotice' );
@@ -172,37 +190,6 @@ function AC_OnQuerySyncUsers()
 //
 //	End Ajax
 //
-
-//
-//	AC_OnBuddyPressInstalled
-//
-//	Called when BuddyPress is installed and active
-//
-function AC_OnBuddyPressInstalled()
-{
-	require_once('buddypress_integration.php');
-}
-
-//
-//	AC_OnBuddyPressUserUpdate
-//
-//	Called when a BP user updates his profile.  This is used to update
-//	MailChimp Merge Variables.
-//
-function AC_OnBuddyPressUserUpdate( $user_id = 0 )
-{
-	if ( 0 == $user_id )
-	{
-		// Get the current user
-		$user = wp_get_current_user();
-	}
-	else
-	{
-		$user = get_userdata( $user_id );
-	}
-	// Pass their ID to the function that does the work.
-	AC_OnUpdateUser( $user->ID, $user, TRUE );
-}
 
 //
 //	START Register Plus AND Register Plus Redux Workaround
@@ -440,24 +427,13 @@ function AC_AutoChimpOptions()
 		update_option( WP88_MC_STATIC_TEXT, $staticText );
 		update_option( WP88_MC_STATIC_FIELD, $_POST[ WP88_MC_STATIC_FIELD ] );
 
-		// Step 4:
+		// Step 4:  Save the plugin mappings.  Uses the _POST hash.
 		// This hidden field allows the user to save their mappings even when the
 		// sync button isn't checked
-		if ( isset( $_POST['buddypress_running'] ) )
-		{
-			// Save the mappings of BuddyPress XProfile fields to MailChimp Merge Vars.
-			// Uses the $_POST array.
-			AC_SaveBuddyPressMappings();
-		}
-		
-		// Step 5:
-		// Another hidden field for Cimy.
-		if ( isset( $_POST['cimy_running'] ) )
-		{
-			require_once 'cimy_integration.php';
-			// Save Cimy settings - uses the $_POST array.
-			AC_SaveCimyMappings();
-		}
+		//if ( isset( $_POST['buddypress_running'] ) )
+		//if ( isset( $_POST['cimy_running'] ) )
+		$syncPlugins = new ACSyncPlugins;
+		$syncPlugins->SaveMappings();
 
 		// Tell the user
 		print '<div id="message" class="updated fade"><p>Successfully saved your AutoChimp mailing list options.</p></div>';
@@ -479,17 +455,20 @@ function AC_AutoChimpOptions()
 
 	if ( isset( $_POST['save_plugin_options'] ) )
 	{
+		// These are hardcoded as part of AutoChimp
 		AC_SetBooleanOption( 'on_fix_regplus', WP88_MC_FIX_REGPLUS );
 		AC_SetBooleanOption( 'on_fix_regplusredux', WP88_MC_FIX_REGPLUSREDUX );
-		AC_SetBooleanOption( 'on_sync_buddypress', WP88_MC_SYNC_BUDDYPRESS );
-		AC_SetBooleanOption( 'on_sync_cimy', WP88_MC_SYNC_CIMY );
+		// Viper's video tags
 		AC_SetBooleanOption( 'on_integrate_viper', WP88_MC_INTEGRATE_VIPER );
-
 		AC_SetBooleanOption( 'on_show_title', WP88_MC_VIDEO_SHOW_TITLE );
 		AC_SetBooleanOption( 'on_show_border', WP88_MC_VIDEO_SHOW_BORDER );
 		AC_SetBooleanOption( 'on_trim_border', WP88_MC_VIDEO_TRIM_BORDER );
 		AC_SetBooleanOption( 'on_show_ratings', WP88_MC_VIDEO_SHOW_RATINGS );
 		AC_SetBooleanOption( 'on_show_num_views', WP88_MC_VIDEO_SHOW_NUM_VIEWS );
+		
+		// Plugins for AutoChimp are handled here.
+		$plugins = new ACSyncPlugins;
+		$plugins->SaveOptions();
 
 		// Tell the user
 		print '<div id="message" class="updated fade"><p>Successfully saved your AutoChimp plugin options.</p></div>';
@@ -502,7 +481,10 @@ function AC_AutoChimpOptions()
 
 //
 //	Syncs a single user of this site with the AutoChimp options that the site owner
-//	has selected in the admin panel.
+//	has selected in the admin panel.  For more information on batch updating, which,
+//	as of AutoChimp 2.0, is not supported, go here:
+//
+//	http://apidocs.mailchimp.com/api/how-to/sync-you-to-mailchimp.php
 //
 //	The third argument, $old_user_data, is for the profile_update action, which calls
 //	AC_OnUpdateUser.  If $mode is MMU_UPDATE, then ensure that this data is a copy
@@ -550,27 +532,9 @@ function AC_ManageMailUser( $mode, $user_info, $old_user_data, $writeDBMessages 
 					// Add that info into the merge array.
 					AC_AddUserFieldsToMergeArray( $merge_vars, $data );
 
-					// Grab extra mappings if the user wants to sync Buddy Press
-					$syncBuddyPress = get_option( WP88_MC_SYNC_BUDDYPRESS );
-					if ( '1' === $syncBuddyPress )
-					{
-						// Hunt down Buddy Press user data.
-						$data = AC_FetchMappedXProfileData( $user_info->ID );
-						// Add BuddyPress's data into the merge array
-						AC_AddUserFieldsToMergeArray( $merge_vars, $data );
-					}
-					
-					// Grab extra Cimy mappings?
-					$syncCimy = get_option( WP88_MC_SYNC_CIMY );
-					if ( '1' === $syncCimy )
-					{
-						// Pull in the Cimy file
-						require_once "cimy_integration.php";
-						// Get the Cimy data
-						$data = AC_FetchMappedCimyData( $user_info->ID );
-						// Add the Cimy data into the merge array
-						AC_AddUserFieldsToMergeArray( $merge_vars, $data );
-					}
+					// Gather the additional data from AutoChimp plugins
+					$syncPlugins = new ACSyncPlugins;
+					$syncPlugins->SyncData( $merge_vars, $user_info->ID );			
 
 					// This one gets static data...add it as well to the array.
 					$data = AC_FetchStaticData();
@@ -1034,38 +998,6 @@ function AC_AddUserFieldsToMergeArray( &$mergeVariables, $data )
 	}
 }
 
-function AC_EncodeUserOptionName( $encodePrefix, $optionName )
-{
-	// Tack on the prefix to the option name
-	$encoded = $encodePrefix . $optionName;
-
-	// Make sure the option name has no spaces; replace them with hash tags.
-	// Not using underscores or dashes since those are commonly used in place
-	// of spaces.  If an option name has "#" in it, then this scheme breaks down.
-	$encoded = str_replace( ' ', '#', $encoded );
-	
-	// Periods are also problematic, as reported on 8/7/12 by Katherine Boroski.
-	$encoded = str_replace( '.', '*', $encoded );
-	
-	// "&" symbols are problematic, as reported on 8/23/12 by Enrique.
-	$encoded = str_replace( '&', '_', $encoded );
-
-	return $encoded;
-}
-
-function AC_DecodeUserOptionName( $decodePrefix, $optionName )
-{
-	// Strip out the searchable tag
-	$decoded = substr_replace( $optionName, '', 0, strlen( $decodePrefix ) );
-
-	// Replace hash marks with spaces, asterisks with periods, etc.
-	$decoded = str_replace( '#', ' ', $decoded );
-	$decoded = str_replace( '*', '.', $decoded );
-	$decoded = str_replace( '_', '&', $decoded );
-
-	return $decoded;
-}
-
 //
 //	This function uses the global $_POST variable, so only call it at the appropriate times.
 //	Consider refactoring this function to make it not dependent on $_POST.
@@ -1269,5 +1201,4 @@ function AC_SetBooleanOption( $postVar, $optionName )
 	else
 		update_option( $optionName, '0' );
 }
-
 ?>
