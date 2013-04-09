@@ -152,7 +152,6 @@ function AC_ShowSupportInfo( $uiWidth )
 				<br />
 				Leave a <a style="text-decoration:none;" href="http://wordpress.org/extend/plugins/autochimp/" target="_blank">good rating</a>.
 			</td>
-			<td><a style="text-decoration:none;" href="http://www.wandererllc.com/company/plugins/autochimp/contributelink/" target="_blank"><img src="http://www.wandererllc.com/company/plugins/autochimp/contributeimage/"></a></td>
 			<td><a href="http://member.wishlistproducts.com/wlp.php?af=1080050" target="_blank"><img src="http://www.wishlistproducts.com/affiliatetools/images/WLM_120X60.gif" border="0"></a></td>
 			<td><a href="http://themeforest.net?ref=Wanderer" target="_blank"><img src="http://envato.s3.amazonaws.com/referrer_adverts/tf_125x125_v5.gif" border=0 alt="ThemeForest - Premium WordPress Themes" width=125 height=125></a></td>
 		</tr>
