@@ -46,12 +46,6 @@ define( "WP88_MC_CAMPAIGN_CREATED", "wp88_mc_campaign" ); // Flags a post that i
 // Plugin integration
 define( 'WP88_MC_FIX_REGPLUS', 'wp88_mc_fix_regplus' );
 define( 'WP88_MC_FIX_REGPLUSREDUX', 'wp88_mc_fix_regplusredux' );
-define( 'WP88_MC_INTEGRATE_VIPER', 'wp88_mc_integrate_viper' );
-define( 'WP88_MC_VIDEO_SHOW_TITLE', 'wp88_mc_video_show_title' );
-define( 'WP88_MC_VIDEO_SHOW_BORDER', 'wp88_mc_video_show_border' );
-define( 'WP88_MC_VIDEO_TRIM_BORDER', 'wp88_mc_video_trim_border' );
-define( 'WP88_MC_VIDEO_SHOW_RATINGS', 'wp88_mc_video_show_ratings' );
-define( 'WP88_MC_VIDEO_SHOW_NUM_VIEWS', 'wp88_mc_video_show_num_views' );
 
 // NOTE: The following two static defines shouldn't have anything to do with
 // BuddyPress, but they do: they were introduced when the BuddyPress sync feature
@@ -90,7 +84,7 @@ function __autoload( $class )
 {
 	// All plugin scripts are required to be placed in the 'plugins' subfolder and 
 	// follow the proper naming convention.  See Help for more.
-	if ( 0 === strpos( $class, 'Sync') )
+	if ( 0 === strpos( $class, 'Sync') ||  0 === strpos( $class, 'Publish') ||  0 === strpos( $class, 'Content') )
 	{
 		require_once( 'plugins/' . $class . '.php' );
 	}
@@ -121,7 +115,7 @@ add_action('wp_ajax_query_sync_users', 'AC_OnQuerySyncUsers');
 add_action('wp_ajax_run_sync_users', 'AC_OnRunSyncUsers');
 add_action('admin_notices', 'AC_OnAdminNotice' );
 add_action('admin_init', 'AC_OnAdminInit' );
-register_activation_hook( WP_PLUGIN_DIR . '/autochimp/88-autochimp.php', 'AC_OnActivateAutoChimp' );
+register_activation_hook( WP_PLUGIN_DIR . '/autochimp/autochimp.php', 'AC_OnActivateAutoChimp' );
 
 //
 //	Ajax
@@ -289,6 +283,12 @@ function AC_OnPluginMenu()
 	$page = add_submenu_page('options-general.php',	'AutoChimp Options', 'AutoChimp', 'add_users', basename(__FILE__), 'AC_AutoChimpOptions' );
 	// When the plugin menu is clicked on, call AC_OnLoadAutoChimpScripts()
 	add_action( 'admin_print_styles-' . $page, 'AC_OnLoadAutoChimpScripts' );
+
+	// Register custom hooks needed for 3rd party plugin support.  Do this here as 
+	// opposed to the global namespace so that plugins have a change to acknowledge
+	// themselves as 'installed'.
+	$plugins = new ACPlugins;
+	$plugins->RegisterHooks();
 }
 
 //
@@ -458,17 +458,16 @@ function AC_AutoChimpOptions()
 		// These are hardcoded as part of AutoChimp
 		AC_SetBooleanOption( 'on_fix_regplus', WP88_MC_FIX_REGPLUS );
 		AC_SetBooleanOption( 'on_fix_regplusredux', WP88_MC_FIX_REGPLUSREDUX );
-		// Viper's video tags
-		AC_SetBooleanOption( 'on_integrate_viper', WP88_MC_INTEGRATE_VIPER );
-		AC_SetBooleanOption( 'on_show_title', WP88_MC_VIDEO_SHOW_TITLE );
-		AC_SetBooleanOption( 'on_show_border', WP88_MC_VIDEO_SHOW_BORDER );
-		AC_SetBooleanOption( 'on_trim_border', WP88_MC_VIDEO_TRIM_BORDER );
-		AC_SetBooleanOption( 'on_show_ratings', WP88_MC_VIDEO_SHOW_RATINGS );
-		AC_SetBooleanOption( 'on_show_num_views', WP88_MC_VIDEO_SHOW_NUM_VIEWS );
 		
 		// Plugins for AutoChimp are handled here.
 		$plugins = new ACSyncPlugins;
-		$plugins->SaveOptions();
+		$plugins->SaveSettings();
+		
+		$plugins = new ACContentPlugins;
+		$plugins->SaveSettings();
+		
+		$plugins = new ACPublishPlugins;
+		$plugins->SaveSettings();
 
 		// Tell the user
 		print '<div id="message" class="updated fade"><p>Successfully saved your AutoChimp plugin options.</p></div>';
@@ -476,7 +475,7 @@ function AC_AutoChimpOptions()
 
 	// The file that will handle uploads is this one (see the "if" above)
 	$action_url = $_SERVER['REQUEST_URI'];
-	require_once '88-autochimp-settings.php';
+	require_once 'autochimp-settings.php';
 }
 
 //
@@ -724,23 +723,13 @@ function AC_CreateCampaignFromPost( $api, $postID, $listID, $interestGroupName, 
 	}
 	else
 	{
-		// Check if video shortcode needs to be converted first
-		if ( '1' === get_option( WP88_MC_INTEGRATE_VIPER ) )
-		{
-			require_once( "viper_integration.php" );
-			// Convert the Viper codes
-			$vipered = AC_ConvertViperShortcode( $post->post_content );
-			// Now run the content through the_content engine.
-			$postContent = apply_filters( 'the_content', $vipered );
-			// Need to special case this for text
-			$textPostContent = apply_filters( 'the_content', $post->post_content );
-			$content['text'] = strip_tags( $textPostContent );
-		}
-		else 
-		{
-			$postContent = apply_filters( 'the_content', $post->post_content );
-			$content['text'] = strip_tags( $postContent );
-		}
+		// Run the full text through the content plugins
+		$contentPlugins = new ACContentPlugins;
+		$postContent = $contentPlugins->ConvertShortcode( $post->post_content );
+		
+		// Text version isn't run through the content plugins
+		$textPostContent = apply_filters( 'the_content', $post->post_content );
+		$content['text'] = strip_tags( $textPostContent );
 	}
 
 	// Set the content variables
@@ -1146,7 +1135,7 @@ function AC_OnAdminNotice()
 	    	$apiSet = get_option( WP88_MC_APIKEY, '0' );
 			if ( '0' == $apiSet )
 			{
-				$apiSetMessage = '<p>The first thing to do is set your MailChimp API key.  You can find your key on the MailChimp website under <em>Account</em> - <em>API Keys & Authorized Apps</em>.  Click <a target="_blank" href="options-general.php?page=88-autochimp.php">here</a> to set your API key now. | <a href="' . $currentPage . '">Dismiss</a></p>';
+				$apiSetMessage = '<p>The first thing to do is set your MailChimp API key.  You can find your key on the MailChimp website under <em>Account</em> - <em>API Keys & Authorized Apps</em>.  Click <a target="_blank" href="options-general.php?page=autochimp.php">here</a> to set your API key now. | <a href="' . $currentPage . '">Dismiss</a></p>';
 			}
 			echo '<div class="updated"><p>';
 			printf(__('Welcome to AutoChimp 2.0.  Be sure to review <em>all</em> of your settings to ensure they are correct.  For more detail, please visit the <a href="http://www.wandererllc.com/company/plugins/autochimp/"">AutoChimp homepage</a>. | <a href="%1$s">Dismiss</a>'), $currentPage );
@@ -1192,13 +1181,5 @@ function AC_AssembleGroupsArray( $mcGroupsArray )
 		$groupArray[] = $group['name'];
 	}
 	return $groupArray;
-}
-
-function AC_SetBooleanOption( $postVar, $optionName )
-{
-	if ( isset( $_POST[$postVar] ) )
-		update_option( $optionName, '1' );
-	else
-		update_option( $optionName, '0' );
 }
 ?>

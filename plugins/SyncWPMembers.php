@@ -1,9 +1,9 @@
 <?php
-define( 'AUTOCHIMP_SYNC_WPMEMBERS', 'AUTOCHIMP_SYNC_WPMEMBERS' );
+define( 'AUTOCHIMP_SYNC_WPMEMBERS', 'wp88_mc_sync_wpmembers' );
 define( 'WP_MEMBERS_FIELDS', 'wpmembers_fields');
 define( 'WP_MEMBERS_FIELD_DB_MAPPING', 'wp88_mc_wpmembers_' );
 
-class SyncWPMembers
+class SyncWPMembers extends ACPlugin
 {
 	public function SyncWPMembers()
 	{
@@ -14,7 +14,7 @@ class SyncWPMembers
 		return function_exists( 'wpmem' );
 	}
 	
-	public static function GetSyncPlugin()
+	public static function GetUsePlugin()
 	{
 		return get_option( AUTOCHIMP_SYNC_WPMEMBERS );
 	}
@@ -35,16 +35,16 @@ class SyncWPMembers
 	public function ShowSettings()
 	{
 		// Get settings
-		$sync = SyncWPMembers::GetSyncPlugin();
+		$sync = SyncWPMembers::GetUsePlugin();
 		$varName = SyncWPMembers::GetSyncVarName();
 	
 		// Start outputting UI
-		print '<p><strong>You are using <a target="_blank" href="http://wordpress.org/extend/plugins/wp-members/">WP-Members</a></strong>. With AutoChimp, you can automatically synchronize your WP-Members user Profile Fields with your selected MailChimp mailing list as users join your site and update their profile.  Please ensure that only one list is selected.</p>';
+		print '<p><strong>You are using <a target="_blank" href="http://wordpress.org/extend/plugins/wp-members/">WP-Members</a></strong>. With AutoChimp, you can automatically synchronize your WP-Members user profile fields with your selected MailChimp mailing list as users join your site and update their profile.  Please ensure that only one list is selected.</p>';
 		print '<fieldset style="margin-left: 20px;">';
 		print "<p><input type=CHECKBOX value=\"$varName\" name=\"$varName\" ";
 		if ( '1' === $sync )
 			print 'checked';
-		print '> Automatically Sync WP-Members Profile Fields with MailChimp.</p>';
+		print '> Automatically sync WP-Members profile fields with MailChimp.</p>';
 		print '</fieldset>';
 	}
 	

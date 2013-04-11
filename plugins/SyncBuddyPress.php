@@ -2,7 +2,7 @@
 define( 'WP88_MC_SYNC_BUDDYPRESS', 'wp88_mc_sync_buddypress' );
 define( 'WP88_BP_XPROFILE_FIELD_MAPPING', 'wp88_mc_bp_xpf_' );
 
-class SyncBuddyPress
+class SyncBuddyPress extends ACPlugin
 {
 	public function SyncBuddyPress()
 	{
@@ -16,7 +16,7 @@ class SyncBuddyPress
 		return class_exists( 'BuddyPress' );
 	}
 	
-	public static function GetSyncPlugin()
+	public static function GetUsePlugin()
 	{
 		return get_option( WP88_MC_SYNC_BUDDYPRESS );
 	}
@@ -39,16 +39,16 @@ class SyncBuddyPress
 	public function ShowSettings()
 	{
 		// Get settings
-		$sync = SyncBuddyPress::GetSyncPlugin();
+		$sync = SyncBuddyPress::GetUsePlugin();
 		$varName = SyncBuddyPress::GetSyncVarName();
 	
 		// Start outputting UI
-		print '<p><strong>You are using <a target="_blank" href="http://wordpress.org/extend/plugins/buddypress/">BuddyPress</a></strong>. With AutoChimp, you can automatically synchronize your BuddyPress user Profile Fields with your selected MailChimp mailing list as users join your site and update their profile.  Please ensure that only one list is selected.</p>';
+		print '<p><strong>You are using <a target="_blank" href="http://wordpress.org/extend/plugins/buddypress/">BuddyPress</a></strong>. With AutoChimp, you can automatically synchronize your BuddyPress user profile fields with your selected MailChimp mailing list as users join your site and update their profile.  Please ensure that only one list is selected.</p>';
 		print '<fieldset style="margin-left: 20px;">';
 		print "<p><input type=CHECKBOX value=\"$varName\" name=\"$varName\" ";
 		if ( '1' === $sync )
 			print 'checked';
-		print '> Automatically Sync BuddyPress Profile Fields with MailChimp.</p>';
+		print '> Automatically sync BuddyPress profile fields with MailChimp.</p>';
 		print '</fieldset>';
 	}
 	

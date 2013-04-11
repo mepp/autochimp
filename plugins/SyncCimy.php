@@ -3,7 +3,7 @@
 define( 'WP88_MC_SYNC_CIMY', 'wp88_mc_sync_cimy' );
 define( 'WP88_CIMY_FIELD_MAPPING', 'wp88_mc_cimy_uef_' );
 
-class SyncCimy
+class SyncCimy extends ACPlugin
 {
 	public function SyncCimy()
 	{
@@ -14,7 +14,7 @@ class SyncCimy
 		return function_exists( 'get_cimyFields' );
 	}
 	
-	public static function GetSyncPlugin()
+	public static function GetUsePlugin()
 	{
 		return get_option( WP88_MC_SYNC_CIMY );
 	}
@@ -33,9 +33,9 @@ class SyncCimy
 	public function ShowSettings()
 	{
 		// Get settings
-		$syncCimy = get_option( WP88_MC_SYNC_CIMY );
-		$staticText = get_option( WP88_MC_STATIC_TEXT );
+		$syncCimy = SyncCimy::GetUsePlugin();
 		$varName = SyncCimy::GetSyncVarName();
+		$staticText = get_option( WP88_MC_STATIC_TEXT );
 	
 		// Start outputting UI
 		print '<p><strong>You are using <a target="_blank" href="http://wordpress.org/extend/plugins/cimy-user-extra-fields/">Cimy User Extra Fields</a></strong>. With AutoChimp, you can automatically synchronize your Cimy User Fields with your selected MailChimp mailing list as users join your site and update their profile.  Please ensure that only one list is selected.</p>';
@@ -47,7 +47,7 @@ class SyncCimy
 		print "<p><input type=CHECKBOX value=\"$varName\" name=\"$varName\" ";
 		if ( '1' === $syncCimy )
 			print 'checked';
-		print '> Automatically Sync Cimy User Extra Fields with MailChimp.</p>';
+		print '> Automatically sync Cimy User Extra Fields with MailChimp.</p>';
 		
 		print '</fieldset>';
 	}

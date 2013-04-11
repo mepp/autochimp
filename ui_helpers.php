@@ -130,6 +130,20 @@ function AC_DecodeUserOptionName( $decodePrefix, $optionName )
 	return $decoded;
 }
 
+//
+//	Sets options for all kinds of AutoChimp variables.  Uses the _POST hash, so
+//	this function is typically used when forms are submitted.
+//
+//	$postVar - the name of the HTML option (stored in the _POST hash)
+//	$optionName - the name of the option in the database
+//
+function AC_SetBooleanOption( $postVar, $optionName )
+{
+	if ( isset( $_POST[$postVar] ) )
+		update_option( $optionName, '1' );
+	else
+		update_option( $optionName, '0' );
+}
 
 //
 // This function is not needed by third-party developers of plugins that add support

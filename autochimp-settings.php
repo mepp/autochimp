@@ -7,7 +7,6 @@
 
 <?php
 require_once 'inc/MCAPI.class.php';
-require_once 'viper_integration.php';
 wp_nonce_field('mailchimpz-nonce');
 
 // Set the master UI width here
@@ -33,10 +32,10 @@ if( isset( $_GET[ 'tab' ] ) )
 
 <h2 class="nav-tab-wrapper">
 	AutoChimp
-	<a href="?page=88-autochimp.php&tab=mailing_lists" class="nav-tab<?php echo $active_tab == 'mailing_lists' ? ' nav-tab-active' : ''; ?>">Mailing Lists</a>
-	<a href="?page=88-autochimp.php&tab=campaigns" class="nav-tab<?php echo $active_tab == 'campaigns' ? ' nav-tab-active' : ''; ?>">Campaigns</a>
-	<a href="?page=88-autochimp.php&tab=plugins" class="nav-tab<?php echo $active_tab == 'plugins' ? ' nav-tab-active' : ''; ?>">Plugins</a>
-	<a href="?page=88-autochimp.php&tab=api_key" class="nav-tab<?php echo $active_tab == 'api_key' ? ' nav-tab-active' : ''; ?>">API Key</a>
+	<a href="?page=autochimp.php&tab=mailing_lists" class="nav-tab<?php echo $active_tab == 'mailing_lists' ? ' nav-tab-active' : ''; ?>">Mailing Lists</a>
+	<a href="?page=autochimp.php&tab=campaigns" class="nav-tab<?php echo $active_tab == 'campaigns' ? ' nav-tab-active' : ''; ?>">Campaigns</a>
+	<a href="?page=autochimp.php&tab=plugins" class="nav-tab<?php echo $active_tab == 'plugins' ? ' nav-tab-active' : ''; ?>">Plugins</a>
+	<a href="?page=autochimp.php&tab=api_key" class="nav-tab<?php echo $active_tab == 'api_key' ? ' nav-tab-active' : ''; ?>">API Key</a>
 </h2>
 
 <?php
@@ -243,7 +242,7 @@ if ( $active_tab == 'mailing_lists' )
 		}
 		else
 		{
-			print '<p><em>Unable to retrieve your lists with this key!</em>  Did you paste it in correctly?  Visit <a href="?page=88-autochimp.php&tab=api_key">the API Key tab</a> and try again, just in case.  If you know it is correct, make sure you\'re connected to the internet and not working offline.</p>';
+			print '<p><em>Unable to retrieve your lists with this key!</em>  Did you paste it in correctly?  Visit <a href="?page=autochimp.php&tab=api_key">the API Key tab</a> and try again, just in case.  If you know it is correct, make sure you\'re connected to the internet and not working offline.</p>';
 		}
 	}
 	?>
@@ -325,7 +324,7 @@ if ( $active_tab == 'campaigns' )
 		}
 		else 
 		{
-			print '<p><em>Unable to retrieve your lists with this key!</em>  Did you paste it in correctly?  Visit <a href="?page=88-autochimp.php&tab=api_key">the API Key tab</a> and try again, just in case.  If you know it is correct, make sure you\'re connected to the internet and not working offline.</p>';
+			print '<p><em>Unable to retrieve your lists with this key!</em>  Did you paste it in correctly?  Visit <a href="?page=autochimp.php&tab=api_key">the API Key tab</a> and try again, just in case.  If you know it is correct, make sure you\'re connected to the internet and not working offline.</p>';
 		}
 
 		// Now get the templates		
@@ -437,7 +436,7 @@ if ( $active_tab == 'plugins' )
 	<div class="inside">
 	
 	<?php
-		print '<p>AutoChimp provides integration and bux fixes for other plugins. If you are using any of these plugins, they will be listed here:</p>';
+		print '<p>AutoChimp provides integration and bux fixes for other plugins. If you are using any supported plugins, they will be listed here:</p>';
 	
 		if ( class_exists( 'RegisterPlusPlugin' ) )
 		{
@@ -466,10 +465,11 @@ if ( $active_tab == 'plugins' )
 		$syncPlugins = new ACSyncPlugins;
 		$syncPlugins->ShowSettings();
 		
-		if ( class_exists( 'VipersVideoQuicktags' ) )
-		{
-			AC_ShowViperSettings();
-		}
+		$publishPlugins = new ACPublishPlugins;
+		$publishPlugins->ShowSettings();
+		
+		$contentPlugins = new ACContentPlugins;
+		$contentPlugins->ShowSettings();
 	?>
 	
 	<div class="submit"><input type="submit" name="save_plugin_options" class="button-primary" value="Save Options" /></div>
