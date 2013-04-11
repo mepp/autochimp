@@ -16,8 +16,8 @@ if ( !class_exists( 'MCAPI_13' ) )
 {
 	require_once 'inc/MCAPI.class.php';
 }
-require_once 'ui_helpers.php';
-require_once 'autochimp-plugins.php';		
+require_once 'autochimp-helpers.php';	// General helper functions
+require_once 'autochimp-plugins.php';	// Plugin class framework
 
 define( "WP88_MC_APIKEY", "wp88_mc_apikey" );
 
