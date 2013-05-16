@@ -3,7 +3,7 @@
 define( 'WP88_MC_SYNC_CIMY', 'wp88_mc_sync_cimy' );
 define( 'WP88_CIMY_FIELD_MAPPING', 'wp88_mc_cimy_uef_' );
 
-class SyncCimy extends ACPlugin
+class SyncCimy extends ACSyncPlugin
 {
 	public function SyncCimy()
 	{

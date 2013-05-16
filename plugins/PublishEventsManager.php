@@ -36,9 +36,8 @@ class PublishEventsManager extends ACPlugin
 			$optionName = AC_EncodeUserOptionName( AUTOCHIMP_DB_EVENTS_MANAGER_POST_TYPE_PREFIX, $postType );
 			if ( '1' === get_option( $optionName, '0' ) )
 			{
-				$method = 'PublishEventsManager::OnPublish' . ucfirst( $postType );
-				//print "<p>Registering PublishEventsManager post type '$postType' running on $method().</p>";
-				add_action( "publish_$postType", $method );
+				AC_Log( "Registering PublishEventsManager post type '$postType'." );
+				add_action( "publish_$postType", 'PublishEventsManager::OnPublishEventsManagerPostType' );
 			}
 		}
 	}
@@ -71,7 +70,7 @@ class PublishEventsManager extends ACPlugin
 			print "<p><input type=CHECKBOX value=\"$varName\" name=\"$varName\" ";
 			if ( '1' === $publish )
 				print 'checked';
-			print '> ' . ucfirst( $postType ) . '</p>';
+			print '> ' . ucwords( $postType ) . '</p>';
 		}
 		print '</fieldset>';
 
@@ -98,24 +97,15 @@ class PublishEventsManager extends ACPlugin
 	}
 	
 	//
-	//	Action hooks for the supported posts types
+	//	Action hook for the supported posts types
 	//
-	public static function OnPublishEvents( $postID )
+	public static function OnPublishEventsManagerPostType( $postID )
 	{
-
-	}
-
-	public static function OnPublishLocations( $postID )
-	{
-
-	}
-
-	public static function OnPublishBookings( $postID )
-	{
-
+		AC_Log( "An custom post type from Events Manager was published with ID $postID. Forwarding to AC_OnPublishPost()." );
+		AC_OnPublishPost( $postID );
 	}
 
 	// Array of custom post types that Events Manager supports
-	protected $m_PostTypes = array( 'events', 'locations', 'bookings' );
+	protected $m_PostTypes = array( EM_POST_TYPE_EVENT, EM_POST_TYPE_LOCATION, 'event-recurring' );
 }
 ?>

@@ -1,27 +1,124 @@
 <?php
 
+//
+// ACPlugin - base class for all AutoChimp plugin classes.  You will not derive
+// directly from this class, but from one of the subclasses below.  However, you
+// will implement some of the functions in this class.
+//
 class ACPlugin
 {
+	// 
+	// Usually, detecting if a plugin exists is as easy as detecting the presence
+	// of a class or function belonging to the plugin.
+	//
 	public static function GetInstalled()
 	{
 		return FALSE;
 	}
 	
+	//
+	// Returns true if the user wants to use this plugin integration.
+	//
 	public static function GetUsePlugin()
 	{
 		return FALSE;
 	}
 
+	//
+	// Function for registering hooks.  If you don't need any, then just don't 
+	// implement your own version.
+	//
 	public function RegisterHooks()
 	{}
 	
+	//
+	// Function for displaying the UI for XXX integration.  This UI will appear
+	// on the "Plugins" tab.
+	//
 	public function ShowSettings()
 	{}
 	
+	//
+	// Function called when saving settings.  You can access _POST variables here
+	// and write them to the database.
+	//
 	public function SaveSettings()
 	{}
 }
 
+//
+// ACSyncPlugin - All Sync plugins must derive from this class
+//
+class ACSyncPlugin extends ACPlugin
+{
+	//
+	// Returns the name of the HTML sync variable.  Make sure it's unique.
+	//
+	public static function GetSyncVarName()
+	{}
+	
+	//
+	// Returns the name of the option in the options table that holds whether the
+	// user wants to sync this plugin.  Must be unique.
+	//
+	public static function GetSyncDBVarName()
+	{}
+	
+	public function SaveSettings()
+	{
+		AC_SetBooleanOption( GetSyncVarName(), GetSyncDBVarName() );
+	}
+	
+	//
+	// This function displays a table of plugin field names to select boxes of
+	// MailChimp fields. 
+	//	
+	public function GenerateMappingsUI( $tableWidth, $mergeVars )
+	{}
+	
+	//
+	// This function saves the user's choices of mappings to the database.  It
+	// uses the global $_POST variable to read the mappings.
+	//
+	public function SaveMappings()
+	{}
+	
+	//
+	// This is the most challenging function.  It looks up data for the user ID
+	// passed in, collects the data that the plugin has set, and formats an array
+	// to be sent to sync MailChimp.
+	//
+	public function FetchMappedData( $userID )
+	{}
+}
+
+//
+// ACPublishPlugin - All Publish plugins must derive from this class
+//
+class ACPublishPlugin extends ACPlugin
+{
+	public static function GetPublishVarName()
+	{}
+	
+	public static function GetPostTypeVarPrefix()
+	{}
+}
+
+//
+// ACContentPlugin - All Content plugins must derive from this class
+//
+class ACContentPlugin extends ACPlugin
+{
+	public function ConvertShortcode( $content )
+	{
+		return $content;
+	}
+}
+
+//
+// This class is used only by AutoChimp.  Third party plugins for AutoChimp do not
+// need this class.
+//
 class ACPlugins
 {
 	public function ShowSettings()
@@ -94,7 +191,7 @@ class ACPlugins
 
 	protected function GetType()
 	{
-		// This causes all
+		// This is the same as asking for all plugins
 		return '';
 	}
 }
@@ -112,7 +209,7 @@ class ACSyncPlugins extends ACPlugins
 			if ( $plugin::GetInstalled() )
 			{
 				$sync = new $plugin;
-				AC_SetBooleanOption( $sync->GetSyncVarName(), $sync->GetSyncDBVarName() );
+				$sync->SaveSettings();
 			}
 		}
 	}

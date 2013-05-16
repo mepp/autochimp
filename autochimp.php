@@ -2,7 +2,7 @@
 /*
 Plugin Name: AutoChimp
 Plugin URI: http://www.wandererllc.com/company/plugins/autochimp/
-Description: Keeps MailChimp mailing lists in sync with your WordPress site.  Now supports Register Plus, Register Plus Redux, BuddyPress, and Cimy User Extra fields and allows you to synchronize all of your profile fields with MailChimp.  Gives users the ability to create MailChimp mail campaigns from blog posts with the flexibility of sending different categories to different lists and interest groups.  You can use your user-defined templates as well.
+Description: Keep MailChimp mailing lists in sync with your WordPress site.  AutoChimp supports many WordPress plugin profile extenders like WP-Members, Wishlist, BuddyPress, and Cimy User Extra fields. MailChimp also gives users the ability to create MailChimp mail campaigns from blog posts with the flexibility of sending different categories to different lists and interest groups.  You can use your user-defined templates as well.
 Author: Wanderer LLC Dev Team
 Version: 2.02
 */
@@ -115,6 +115,7 @@ add_action('wp_ajax_query_sync_users', 'AC_OnQuerySyncUsers');
 add_action('wp_ajax_run_sync_users', 'AC_OnRunSyncUsers');
 add_action('admin_notices', 'AC_OnAdminNotice' );
 add_action('admin_init', 'AC_OnAdminInit' );
+add_action('plugins_loaded', 'AC_OnMUPluginsLoaded');
 register_activation_hook( WP_PLUGIN_DIR . '/autochimp/autochimp.php', 'AC_OnActivateAutoChimp' );
 
 //
@@ -284,10 +285,18 @@ function AC_OnPluginMenu()
 	// When the plugin menu is clicked on, call AC_OnLoadAutoChimpScripts()
 	add_action( 'admin_print_styles-' . $page, 'AC_OnLoadAutoChimpScripts' );
 
-	// Register custom hooks needed for 3rd party plugin support.  Do this here as 
-	// opposed to the global namespace so that plugins have a change to acknowledge
-	// themselves as 'installed'.
-	$plugins = new ACPlugins;
+	// Register custom hooks needed for 3rd party plugin publishing support.  Do 
+	// this here as opposed to the global pace so that plugins have a change to
+	// acknowledge themselves as 'installed'.
+	$plugins = new ACPublishPlugins;
+	$plugins->RegisterHooks();
+}
+
+function AC_OnMUPluginsLoaded()
+{
+	// The sync plugins need to be placed early in the page load.  Other plugins, like
+	// the publish plugins can be loaded later (see ACPublishPlugins below).
+	$plugins = new ACSyncPlugins;
 	$plugins->RegisterHooks();
 }
 

@@ -2,7 +2,7 @@
 define( 'WP88_MC_SYNC_BUDDYPRESS', 'wp88_mc_sync_buddypress' );
 define( 'WP88_BP_XPROFILE_FIELD_MAPPING', 'wp88_mc_bp_xpf_' );
 
-class SyncBuddyPress extends ACPlugin
+class SyncBuddyPress extends ACSyncPlugin
 {
 	public function SyncBuddyPress()
 	{

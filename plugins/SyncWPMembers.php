@@ -3,7 +3,7 @@ define( 'AUTOCHIMP_SYNC_WPMEMBERS', 'wp88_mc_sync_wpmembers' );
 define( 'WP_MEMBERS_FIELDS', 'wpmembers_fields');
 define( 'WP_MEMBERS_FIELD_DB_MAPPING', 'wp88_mc_wpmembers_' );
 
-class SyncWPMembers extends ACPlugin
+class SyncWPMembers extends ACSyncPlugin
 {
 	public function SyncWPMembers()
 	{

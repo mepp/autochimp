@@ -2,7 +2,7 @@
 define( 'AUTOCHIMP_WISHLIST_MEMBER_DB_SYNC', 'wp88_mc_sync_wishlistmember' );
 define( 'AUTOCHIMP_WISHLIST_MEMBER_DB_FIELD_MAPPING', 'wp88_mc_wishlistmember_' ); // DB field prefix for mappings
 
-class SyncWishlistMember extends ACPlugin
+class SyncWishlistMember extends ACSyncPlugin
 {
 	public function SyncWishlistMember()
 	{
@@ -10,13 +10,20 @@ class SyncWishlistMember extends ACPlugin
 
 	public static function GetInstalled()
 	{
-		$path = WP_PLUGIN_DIR . '/wishlist-member';
-		return is_dir( $path );
+		return class_exists('WishListMemberCore');
 	}
 	
 	public static function GetUsePlugin()
 	{
 		return get_option( AUTOCHIMP_WISHLIST_MEMBER_DB_SYNC );
+	}
+
+	public function RegisterHooks()
+	{
+		// This is no longer necessary since registering on Wishlist also triggers
+		// the standard user_register action.
+		//AC_Log( 'Registering wishlistmember_after_registration for Wishlist.' );
+		//add_action( 'wishlistmember_after_registration', 'SyncWishlistMember::OnRegistrationComplete' );
 	}
 	
 	public static function GetSyncVarName()

@@ -146,6 +146,24 @@ function AC_SetBooleanOption( $postVar, $optionName )
 }
 
 //
+//	Logger for AutoChimp.  Enable WP_DEBUG in wp-config.php to get messages.
+//
+function AC_Log( $message )
+{
+	if ( TRUE === WP_DEBUG )
+	{
+        if ( is_array( $message ) || is_object( $message ) )
+        {
+            error_log( "AutoChimp: " . print_r( $message, true ) );
+        }
+        else
+        {
+            error_log( "AutoChimp: $message" );
+        }
+    }
+}
+
+//
 // This function is not needed by third-party developers of plugins that add support
 // for other third party WordPress plugins (like BuddyPress, Wishlist, etc.).  This
 // function just shows some support info and affiliate ads to help support the plugin.
