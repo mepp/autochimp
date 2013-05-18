@@ -148,6 +148,7 @@ class SyncBuddyPress extends ACSyncPlugin
 				// Now convert a checkbox type to a string
 				if ( 0 === strcmp( $results[0]['type'],"checkbox" ) )
 				{
+					// Here's the magic function to serialize/unserialize
 					$checkboxData = unserialize( $value );
 					$value = "";
 					foreach( $checkboxData as $item )

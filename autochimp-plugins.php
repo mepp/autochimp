@@ -64,6 +64,11 @@ class ACSyncPlugin extends ACPlugin
 	public static function GetSyncDBVarName()
 	{}
 	
+	//
+	// By implementing GetSyncVarName() and GetSyncDBVarName() AND you have standard
+	// simple settings, you get saving for free.  Only implement if you have special
+	// settings, but strive hard not to.
+	//
 	public function SaveSettings()
 	{
 		AC_SetBooleanOption( GetSyncVarName(), GetSyncDBVarName() );
@@ -250,6 +255,7 @@ class ACSyncPlugins extends ACPlugins
 			if ( $plugin::GetInstalled() && $plugin::GetUsePlugin() )
 			{
 				$sync = new $plugin;
+				AC_Log( "About to sync data for the $plugin plugin." );
 				$data = $sync->FetchMappedData( $userID );
 				AC_AddUserFieldsToMergeArray( $merge_vars, $data );
 			}

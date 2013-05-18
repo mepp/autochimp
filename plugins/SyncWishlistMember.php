@@ -10,20 +10,13 @@ class SyncWishlistMember extends ACSyncPlugin
 
 	public static function GetInstalled()
 	{
+		// Wishlist is normally encrypted.  I suppose that this class will need to be renamed.
 		return class_exists('WishListMemberCore');
 	}
 	
 	public static function GetUsePlugin()
 	{
 		return get_option( AUTOCHIMP_WISHLIST_MEMBER_DB_SYNC );
-	}
-
-	public function RegisterHooks()
-	{
-		// This is no longer necessary since registering on Wishlist also triggers
-		// the standard user_register action.
-		//AC_Log( 'Registering wishlistmember_after_registration for Wishlist.' );
-		//add_action( 'wishlistmember_after_registration', 'SyncWishlistMember::OnRegistrationComplete' );
 	}
 	
 	public static function GetSyncVarName()
@@ -55,9 +48,44 @@ class SyncWishlistMember extends ACSyncPlugin
 		print '</fieldset>';
 	}
 	
+	//
+	// Generates the UI that allows the user to map form fields to MailChimp fields.
+	//
 	public function GenerateMappingsUI( $tableWidth, $mergeVars )
 	{
-		$finalText = '';
+		// Need to query data in the BuddyPress extended profile table
+		global $wpdb;
+	
+		$wishlist_table_name = $wpdb->prefix . 'wlm_options';
+		$sql = "SELECT option_name,option_value FROM $wishlist_table_name WHERE `option_name` LIKE 'CUSTOMREGFORM-%' ORDER BY `option_name` ASC";
+		$fields = $wpdb->get_results( $sql, ARRAY_A );
+		// Create a hidden field just to signal that the user can save their preferences
+		$finalText = '<br />'.PHP_EOL.'<input type="hidden" name="wishlist_running" />'.PHP_EOL;
+		if ( $fields )
+		{
+			foreach ( $fields as $field )
+			{
+				$data = unserialize( $field['option_value'] );
+				$formFields = explode( ',', $data['fields'] );
+				$rowCode = '';
+				foreach ( $formFields as $formField )
+				{
+					// Skip firstname and lastname.  Those are handled automatically.
+					// Having them here will just confuse people and will certainly 
+					// mess things up if the user has multiple forms.
+					if ( $this->FilterUnusedFields( $formField ) )
+						continue;
+
+					// Generate a select box for this particular field
+					$fieldNameTag = AC_EncodeUserOptionName( AUTOCHIMP_WISHLIST_MEMBER_DB_FIELD_MAPPING, $formField );
+					$selectBox = AC_GenerateSelectBox( $fieldNameTag, WP88_IGNORE_FIELD_TEXT, $mergeVars );
+					$rowCode .= '<tr class="alternate">' . PHP_EOL . '<td width="65%">' . $formField . '</td>' . PHP_EOL . '<td width="35%">' . $selectBox . '</td>' . PHP_EOL . '</tr>' . PHP_EOL;
+				}
+				$formName = $data['form_name'];
+				$finalText .= AC_GenerateFieldMappingCode( "Wishlist Form '$formName'", $rowCode );
+				$finalText .= '<br />';
+			}
+		}
 		return $finalText;
 	}
 	
@@ -66,36 +94,87 @@ class SyncWishlistMember extends ACSyncPlugin
 	//
 	public function SaveMappings()
 	{
-		// Select the fields from the options table (unserialized by WordPress)
-		$fields = get_option( WP_MEMBERS_FIELDS );
-		foreach( $fields as $field )
-		{
-			// Check that there's a string.  Sometimes WP-Members will have 
-			// obnoxious empty arrays.
-			if ( 0 == strlen( $field[2] ) )
-				continue;
+		// Need to query data in the BuddyPress extended profile table
+		global $wpdb;
+		$wishlist_table_name = $wpdb->prefix . 'wlm_options';
+		$sql = "SELECT option_name,option_value FROM $wishlist_table_name WHERE `option_name` LIKE 'CUSTOMREGFORM-%' ORDER BY `option_name` ASC";
+		$fields = $wpdb->get_results( $sql, ARRAY_A );
+		if ( !$fields )
+			return;
 
-			// Encode the name of the field
-			$selectName = AC_EncodeUserOptionName( WP_MEMBERS_FIELD_DB_MAPPING, $field[2] );
-	
-			// Now dereference the selection
-			$selection = $_POST[ $selectName ];
-	
-			// Save the selection
-			update_option( $selectName, $selection );
+		foreach ( $fields as $field )
+		{
+			$data = unserialize( $field['option_value'] );
+			$formFields = explode( ',', $data['fields'] );
+			foreach ( $formFields as $formField )
+			{
+				if ( $this->FilterUnusedFields( $formField ) )
+					continue;
+
+				// Encode the name of the field
+				$selectName = AC_EncodeUserOptionName( AUTOCHIMP_WISHLIST_MEMBER_DB_FIELD_MAPPING, $formField );
+		
+				// Now dereference the selection
+				$selection = $_POST[ $selectName ];
+						
+				// Save the selection
+				update_option( $selectName, $selection );
+			}
 		}
 	}
 	
 	//
 	//	Looks up the user's Wishlist Member data and returns an array formatted for 
-	//	MailChimp of fields mapped to data for the user.  The WP-Members plugin 
-	//	saves user data in the wp_usermeta table, which makes things easy.
+	//	MailChimp of fields mapped to data for the user.  The Wishlist plugin 
+	//	serializes this data into a single field which makes the SQL easy.
 	//
 	public function FetchMappedData( $userID )
 	{
 		// User data array
 		$dataArray = array();
+		// Need to query data in the Wordpress options table
+		global $wpdb;
+		
+		// Generate table names
+		$optionTable = $wpdb->prefix . 'options';
+		
+		// Now, see which custom fields the user wants to sync.
+		$sql = "SELECT option_name,option_value FROM $optionTable WHERE option_name LIKE '" .
+				AUTOCHIMP_WISHLIST_MEMBER_DB_FIELD_MAPPING .
+				"%' AND option_value != '" .
+				WP88_IGNORE_FIELD_TEXT . "'";
+		$fieldNames = $wpdb->get_results( $sql, ARRAY_A );
+
+		// Get the stored data and unserialize it
+		$optionTable = $wpdb->prefix . 'wlm_user_options';
+		$sql = "SELECT option_value FROM $optionTable WHERE user_id=$userID AND option_name='wpm_useraddress'";
+		$unserialized = $wpdb->get_var( $sql );
+		$data = unserialize( $unserialized );
+		
+		// And finally, get the user data for each field name.
+		foreach( $fieldNames as $field )
+		{
+			if ( $this->FilterUnusedFields( $field['option_name'] ) )
+				continue;
+
+			$optionName = AC_DecodeUserOptionName( AUTOCHIMP_WISHLIST_MEMBER_DB_FIELD_MAPPING, $field['option_name'] );
+			$value = $data[$optionName];
+			$dataArray[] = array( 	"name" => $optionName,
+									"tag" => $field['option_value'],
+									"value" => $value );
+		}
+		AC_Log( $dataArray );
 		return $dataArray;
+	}
+	
+	//
+	// Helper function to filter out duplicate fields in Wishlist.
+	//
+	protected function FilterUnusedFields( $fieldName )
+	{
+		if ( 0 === strcmp( $fieldName, 'firstname' ) || 0 ===strcmp( $fieldName, 'lastname' ) )
+			return TRUE;
+		return FALSE;
 	}
 }
 ?>

@@ -1,6 +1,6 @@
 <?php
 define( 'AUTOCHIMP_SYNC_WPMEMBERS', 'wp88_mc_sync_wpmembers' );
-define( 'WP_MEMBERS_FIELDS', 'wpmembers_fields');
+define( 'WP_MEMBERS_FIELDS', 'wpmembers_fields'); // This name is from the WP-Members plugin.  Don't change it!
 define( 'WP_MEMBERS_FIELD_DB_MAPPING', 'wp88_mc_wpmembers_' );
 
 class SyncWPMembers extends ACSyncPlugin
@@ -114,13 +114,13 @@ class SyncWPMembers extends ACSyncPlugin
 	{
 		// User data array
 		$dataArray = array();
-		// Need to query data in the BuddyPress extended profile table
+		// Need to query data in the WordPress options table
 		global $wpdb;
 		
 		// Generate table names
 		$optionTable = $wpdb->prefix . 'options';
 		
-		// Now, see which XProfile fields the user wants to sync.
+		// Now, see which WP-Members fields the user wants to sync.
 		$sql = "SELECT option_name,option_value FROM $optionTable WHERE option_name LIKE '" .
 				WP_MEMBERS_FIELD_DB_MAPPING .
 				"%' AND option_value != '" .

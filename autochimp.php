@@ -556,23 +556,21 @@ function AC_ManageMailUser( $mode, $user_info, $old_user_data, $writeDBMessages 
 							// Check to see if the site wishes to bypass the double opt-in feature
 							$doubleOptIn = ( 0 === strcmp( '1', get_option( WP88_MC_BYPASS_OPT_IN ) ) ) ? false : true;
 							$retval = $api->listSubscribe( $list_id, $user_info->user_email, $merge_vars, 'html', $doubleOptIn );
+							$errorString = '';
 							if ( $api->errorCode )
 							{
 								$errorCode = $api->errorCode;
-
-								if ( FALSE != $writeDBMessages )
-								{
-									// Set latest activity - displayed in the admin panel
-									$errorString = "Problem adding $user_info->first_name $user_info->last_name ('$user_info->user_email') to list $list_id.  Error Code: $errorCode, Message: $api->errorMessage, Data: ";
-									$errorString .= print_r( $merge_vars, TRUE );
-									update_option( WP88_MC_LAST_MAIL_LIST_ERROR, $errorString );
-								}
+								// Set latest activity - displayed in the admin panel
+								$errorString = "Problem pushing $user_info->first_name $user_info->last_name ('$user_info->user_email') to list $list_id.  Error Code: $errorCode, Message: $api->errorMessage, Data: ";
+								$errorString .= print_r( $merge_vars, TRUE );
 							}
 							else
 							{
-								if ( FALSE != $writeDBMessages )
-									update_option( WP88_MC_LAST_MAIL_LIST_ERROR, "Added $user_info->first_name $user_info->last_name ('$user_info->user_email') to list $list_id." );
+								$errorString = "Pushed $user_info->first_name $user_info->last_name ('$user_info->user_email') to list $list_id.";
 							}
+							AC_Log( $errorString );
+							if ( FALSE != $writeDBMessages )
+								update_option( WP88_MC_LAST_MAIL_LIST_ERROR, $errorString );
 							break;
 						}
 						case MMU_DELETE:

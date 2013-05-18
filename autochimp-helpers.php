@@ -147,6 +147,11 @@ function AC_SetBooleanOption( $postVar, $optionName )
 
 //
 //	Logger for AutoChimp.  Enable WP_DEBUG in wp-config.php to get messages.
+//  Well, actually, the WP_DEBUG doesn't seem to work for me, but this does:
+//
+//		tail -f error.log | grep -i 'AutoChimp'
+//
+//	Run the above command on the Apache error log file.
 //
 function AC_Log( $message )
 {
