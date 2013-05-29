@@ -68,7 +68,7 @@ function switchInterestGroups( selectName, listID, groupHash )
 		selectBox.options.length = 0;
 		
 		// Add an "Any" option back in.
-		selectBox.options[0] = new Option('Any', 'Any');
+		selectBox.options[0] = new Option('Any');
 		
 		// Now go through the interest groups and add them.
 		groupList = groupHash[listID];

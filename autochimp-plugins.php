@@ -32,6 +32,16 @@ class ACPlugin
 	{}
 	
 	//
+	// Functions for registering and enqueuing JS scripts.  If you use one, use 
+	// both.  
+	//
+	public function RegisterScripts( $pluginFolder )
+	{}
+	
+	public function EnqueueScripts()
+	{}
+	
+	//
 	// Function for displaying the UI for XXX integration.  This UI will appear
 	// on the "Plugins" tab.
 	//
@@ -107,6 +117,23 @@ class ACPublishPlugin extends ACPlugin
 	
 	public static function GetPostTypeVarPrefix()
 	{}
+
+	//
+	// Returns the same thing as get_the_terms().  The calling function will check to
+	// see if any posts have been created with any of these terms.
+	//
+	public static function GetTerms( $postID )
+	{}
+	
+	public function GenerateMappingsUI( $lists, $groups, $templates, $javaScript )
+	{}
+	
+	//
+	// This function saves the user's choices of mappings to the database.  It
+	// uses the global $_POST variable to read the mappings.
+	//
+	public function SaveMappings()
+	{}
 }
 
 //
@@ -165,7 +192,33 @@ class ACPlugins
 		}
 	}
 	
-	protected function GetPluginClasses( $classType )
+	public function RegisterScripts( $pluginFolder )
+	{
+		$plugins = $this->GetPluginClasses( $this->GetType() );
+		foreach ( $plugins as $plugin )
+		{
+			if ( $plugin::GetInstalled() && $plugin::GetUsePlugin() )
+			{
+				$p = new $plugin;
+				$p->RegisterScripts( $pluginFolder );
+			}
+		}
+	}
+	
+	public function EnqueueScripts()
+	{
+		$plugins = $this->GetPluginClasses( $this->GetType() );
+		foreach ( $plugins as $plugin )
+		{
+			if ( $plugin::GetInstalled() && $plugin::GetUsePlugin() )
+			{
+				$p = new $plugin;
+				$p->EnqueueScripts();
+			}
+		}
+	}
+	
+	public function GetPluginClasses( $classType )
 	{
 		// array to build the list in
 		$classlist = array();
@@ -183,7 +236,8 @@ class ACPlugins
 				if ( 0 !== strlen( $classType ) )
 					$filter = ( 0 === strpos( $item, $classType ) );
 				
-				if ( $item[0] != '.' && $filter )
+				// Make sure the file is a PHP file as well passes the filter test
+				if ( $filter && 0 < strpos( $item, '.php') )
 				{
 					$class = basename( $item, '.php' );
 					array_push( $classlist, $class );
@@ -194,7 +248,7 @@ class ACPlugins
 		return $classlist;
 	}
 
-	protected function GetType()
+	public function GetType()
 	{
 		// This is the same as asking for all plugins
 		return '';
@@ -262,7 +316,7 @@ class ACSyncPlugins extends ACPlugins
 		}
 	}
 
-	protected function GetType()
+	public function GetType()
 	{
 		return 'Sync';
 	}
@@ -273,9 +327,35 @@ class ACSyncPlugins extends ACPlugins
 //
 class ACPublishPlugins extends ACPlugins
 {
-	protected function GetType()
+	public function GetType()
 	{
 		return 'Publish';
+	}
+	
+	public function GenerateMappingsUI( $lists, $groups, $templates, $javaScript )
+	{
+		$publishPlugins = $this->GetPluginClasses( $this->GetType() );
+		foreach ( $publishPlugins as $plugin )
+		{
+			if ( $plugin::GetInstalled() && $plugin::GetUsePlugin() )
+			{
+				$mapper = new $plugin;
+				$mapper->GenerateMappingsUI( $lists, $groups, $templates, $javaScript );
+			}
+		}
+	}
+	
+	public function SaveMappings()
+	{
+		$publishPlugins = $this->GetPluginClasses( $this->GetType() );
+		foreach ( $publishPlugins as $plugin )
+		{
+			if ( $plugin::GetInstalled() && $plugin::GetUsePlugin() )
+			{
+				$mapper = new $plugin;
+				$mapper->SaveMappings();
+			}
+		}
 	}
 }
 
@@ -289,9 +369,10 @@ class ACContentPlugins extends ACPlugins
 		$plugins = $this->GetPluginClasses( $this->GetType() );
 		foreach ( $plugins as $plugin )
 		{
-			if ( $plugin::GetInstalled() && $plugin::GetUpdateContent() )
+			if ( $plugin::GetInstalled() && $plugin::GetUsePlugin() )
 			{
-				$converted = $plugin->ConvertShortcode( $content );
+				$p = new $plugin;
+				$converted = $p->ConvertShortcode( $content );
 				// Now run the content through the_content engine.
 				$content = apply_filters( 'the_content', $converted );
 			}
@@ -299,7 +380,7 @@ class ACContentPlugins extends ACPlugins
 		return $content;				
 	}
 
-	protected function GetType()
+	public function GetType()
 	{
 		return 'Content';
 	}

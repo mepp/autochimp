@@ -65,10 +65,10 @@ define( 'WP88_CATEGORY_LIST_MAPPING', 'wp88_mc_category_list_' );
 define( 'WP88_PLUGIN_FIRST_ACTIVATION', 'wp88_mc_first_activation' );
 define( 'WP88_CATEGORY_GROUP_SUFFIX', '_group' );
 define( 'WP88_CATEGORY_TEMPLATE_SUFFIX', '_template' );
+define( 'WP88_CATEGORY_LIST_SUFFIX', '_list' );
 define( 'WP88_IGNORE_FIELD_TEXT', 'Ignore this field' );
-define( 'WP88_NO_MAILING_LIST', 'None' );
-define( 'WP88_NO_TEMPLATE', 'None' );
-define( 'WP88_ANY_GROUP', 'Any' );
+define( 'WP88_NONE', 'None' );
+define( 'WP88_ANY', 'Any' );
 define( 'WP88_GROUPINGS_TEXT', 'GROUPINGS' ); // This value is required by MailChimp
 define( 'WP88_FIELD_DELIMITER', '+++' );
 
@@ -86,7 +86,10 @@ function __autoload( $class )
 	// follow the proper naming convention.  See Help for more.
 	if ( 0 === strpos( $class, 'Sync') ||  0 === strpos( $class, 'Publish') ||  0 === strpos( $class, 'Content') )
 	{
-		require_once( 'plugins/' . $class . '.php' );
+		// Check that there's not a '.' already in the file (like for a .js file).
+		// Don't require those, obviously.
+		if ( FALSE === strpos( $class, '.') )
+			require_once( 'plugins/' . $class . '.php' );
 	}
 }
 
@@ -321,6 +324,10 @@ function AC_OnLoadAutoChimpScripts()
 		 
 	// declare the URL to the file that handles the AJAX request (wp-admin/admin-ajax.php)
 	wp_localize_script( 'autochimp-ajax-request', 'AutoChimpAjax', array( 'ajaxurl' => admin_url( 'admin-ajax.php' ) ) );
+
+	// Some AutoChimp plugins may use JS as well.
+	$plugins = new ACPlugins;
+	$plugins->EnqueueScripts();
 }
 
 function AC_AddAutoChimpPluginLinks($links, $file)
@@ -350,6 +357,10 @@ function AC_OnAdminInit()
 	// "wp_enqueue_script( 'autochimp-ajax-request'" for the next step).
 	$pluginFolder = get_bloginfo('wpurl') . '/wp-content/plugins/autochimp/';
 	wp_register_script( 'autochimp-ajax-request', $pluginFolder.'js/autochimp.js', array( 'jquery' ) );
+	
+	// Some AutoChimp plugins may use JS as well.  Load theme here.
+	$plugins = new ACPlugins;
+	$plugins->RegisterScripts( $pluginFolder );
 }
 
 //
@@ -452,7 +463,11 @@ function AC_AutoChimpOptions()
 	{
 		// Save off the mappings of categories to campaigns.
 		AC_SaveCampaignCategoryMappings();
-
+		
+		// Now save off the plugin mappings.
+		$publishPlugins = new ACPublishPlugins;
+		$publishPlugins->SaveMappings();
+		
 		// The rest is easy...
 		AC_SetBooleanOption( 'on_excerpt_only', WP88_MC_CAMPAIGN_EXCERPT_ONLY );
 		AC_SetBooleanOption( 'on_send_now', WP88_MC_SEND_NOW );
@@ -689,7 +704,7 @@ function AC_CreateCampaignFromPost( $api, $postID, $listID, $interestGroupName, 
 	$options['tracking'] = array('opens' =>	true, 'html_clicks' => true, 'text_clicks' => false );
 	$options['authenticate'] = true;
 	// See if a template should be used
-	if ( 0 != strcmp( $categoryTemplateID, WP88_NO_TEMPLATE ) )
+	if ( 0 != strcmp( $categoryTemplateID, WP88_NONE ) )
 	{
 		$options['template_id'] = $categoryTemplateID;
 		// 'main' is the name of the section that will be replaced.  This is a
@@ -744,7 +759,7 @@ function AC_CreateCampaignFromPost( $api, $postID, $listID, $interestGroupName, 
 
 	// Segmentation, if any (Interest groups)
 	$segment_opts = NULL;
-	if ( 0 != strcmp( $interestGroupName, WP88_ANY_GROUP ) )
+	if ( 0 != strcmp( $interestGroupName, WP88_ANY ) )
 	{
 		$group = $api->listInterestGroupings( $listID );
 		if ( NULL != $group )
@@ -782,7 +797,28 @@ function AC_OnPublishPost( $postID )
 	// Get the info on this post
 	$post = get_post( $postID );
 	$categories = get_the_category( $postID );	// Potentially several categories
+	
+	if ( empty( $categories ) )
+	{
+		// Now, search for custom categories (actually taxonomy terms) in the various
+		// Publish plugins.
+		$publishPlugins = new ACPublishPlugins;
+		$pluginCollection = $publishPlugins->GetPluginClasses( $publishPlugins->GetType() );
+		foreach ( $pluginCollection as $plugin )
+		{
+			if ( $plugin::GetInstalled() && $plugin::GetUsePlugin() )
+			{
+				$categories = $plugin::GetTerms( $postID );
+			}
+			// If a category was found, break out.
+			if ( !empty( $categories ) )
+				break;
+		}
+	}
 
+	AC_Log( "Creating a campaign for post ID $postID." );
+	AC_Log( $categories );
+	
 	// If it matches the user's category choice or is any category, then
 	// do the work.  This needs to be a loop because a post can belong to
 	// multiple categories.
@@ -794,7 +830,7 @@ function AC_OnPublishPost( $postID )
 		$categoryTemplateID = get_option( $categoryOptionName . WP88_CATEGORY_TEMPLATE_SUFFIX );
 
 		// If the mailing list is NOT "None" then create a campaign.		
-		if ( 0 != strcmp( $categoryMailingList, WP88_NO_MAILING_LIST ) )
+		if ( 0 != strcmp( $categoryMailingList, WP88_NONE ) )
 		{
 			// Create an instance of the MailChimp API
 			$apiKey = get_option( WP88_MC_APIKEY );
@@ -802,6 +838,8 @@ function AC_OnPublishPost( $postID )
 
 			// Do the work
 			$id = AC_CreateCampaignFromPost( $api, $postID, $categoryMailingList, $categoryGroupName, $categoryTemplateID );
+			$categoryName = $category->name;
+			AC_Log( "Created a campaign in category $categoryName." );
 
 			// Does the user want to send the campaigns right away?
 			$sendNow = get_option( WP88_MC_SEND_NOW );
@@ -813,8 +851,8 @@ function AC_OnPublishPost( $postID )
 				$api->campaignSendNow( $id );
 			}
 
-			// As soon as the first match is found, break out.
-			break;
+			// Not breaking anymore.  Now, if you assign multiple categories to 
+			// create campaigns, then each will be created.
 		}
 	}
 }
@@ -1150,43 +1188,5 @@ function AC_OnAdminNotice()
 			echo "</p></div>";
 		}
 	}
-}
-
-//
-//	Helpers
-//
-
-function AC_TrimExcerpt( $text )
-{
-	$text = strip_shortcodes( $text );
-	$text = apply_filters('the_content', $text);
-	$text = str_replace(']]>', ']]&gt;', $text);
-	$excerpt_length = apply_filters('excerpt_length', 55);
-	$excerpt_more = apply_filters('excerpt_more', ' ' . '[...]');
-	return wp_trim_words( $text, $excerpt_length, $excerpt_more );
-}
-
-//	(Note: AutoChimp 2.0 only supports the first level of interest groups.
-//	Hence, the [0].)
-function AC_AssembleGroupsHash( $mcGroupsArray )
-{
-	$groupHash = array();
-	foreach ( $mcGroupsArray[0]['groups'] as $group )
-	{
-		$groupHash[$group['name']] = $group['name'];
-	}
-	return $groupHash;
-}
-
-//	(Note: AutoChimp 2.0 only supports the first level of interest groups.
-//	Hence, the [0].)
-function AC_AssembleGroupsArray( $mcGroupsArray )
-{
-	$groupArray = array();
-	foreach ( $mcGroupsArray[0]['groups'] as $group )
-	{
-		$groupArray[] = $group['name'];
-	}
-	return $groupArray;
 }
 ?>

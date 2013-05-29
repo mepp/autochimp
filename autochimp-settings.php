@@ -302,7 +302,7 @@ if ( $active_tab == 'campaigns' )
 			// Need Javascript in order to switch out interest groups when a user changes
 			// the mailing list.  ie, A change in the first select box causes the second
 			// select box to change it's contents.
-			$javaScript = " onchange=\"intGroupHash={};";
+			$javaScript = " onchange=\"groupsHash={};";
 			// For each mailing list...
 			foreach ( $myLists['data'] as $list )
 			{
@@ -318,7 +318,7 @@ if ( $active_tab == 'campaigns' )
 					$groupHash[ $listID ] = AC_AssembleGroupsHash( $newGroup );
 					// Cache those values in javascript.
 					$groupCSVString = implode(',', AC_AssembleGroupsArray( $newGroup ));
-					$javaScript .= "intGroupHash['$listID']='$groupCSVString'.split(',');";
+					$javaScript .= "groupsHash['$listID']='$groupCSVString'.split(',');";
 				}
 			}
 		}
@@ -364,30 +364,36 @@ if ( $active_tab == 'campaigns' )
 		// Loop through each category and create a management row for it.
 		foreach($categories as $category)
 		{
+			// Probably better to use $category->slug, but this has already 
+			// shipped and is not critical.  All custom types should use taxonomy.
 			$categoryOptionName = AC_EncodeUserOptionName( WP88_CATEGORY_LIST_MAPPING , $category->name );
 			$categoryOptionGroupName = $categoryOptionName . WP88_CATEGORY_GROUP_SUFFIX;
 			$categoryOptionTemplateName = $categoryOptionName . WP88_CATEGORY_TEMPLATE_SUFFIX;
 
 			// Assemble the final Javascript
-			$finalJavaScript = $javaScript . "switchInterestGroups('$categoryOptionGroupName',this.value,intGroupHash);\"";
+			$finalJavaScript = $javaScript . "switchInterestGroups('$categoryOptionGroupName',this.value,groupsHash);\"";
 
 			// Assemble the first select box's HTML
 			print '<tr><td><em>' . $category->name . '</em> campaigns go to</td>' . PHP_EOL . '<td>';
-			$selectBox = AC_GenerateSelectBox( $categoryOptionName, WP88_NO_MAILING_LIST, $listHash, $finalJavaScript );
+			$selectBox = AC_GenerateSelectBox( $categoryOptionName, WP88_NONE, $listHash, NULL, $finalJavaScript );
 			print $selectBox . '</td>' . PHP_EOL;
 			
 			// Start assembling the second select box
 			print '<td>and group</td><td>';
 			$selectedlist = get_option( $categoryOptionName );
-			$selectBox = AC_GenerateSelectBox( $categoryOptionGroupName, WP88_ANY_GROUP, $groupHash[ $selectedlist ] );
+			$selectBox = AC_GenerateSelectBox( $categoryOptionGroupName, WP88_ANY, $groupHash[ $selectedlist ] );
 			print $selectBox . '</td>' . PHP_EOL;
 			print '<td>using</td><td>';
 			
-			$selectBox = AC_GenerateSelectBox( $categoryOptionTemplateName, WP88_NO_TEMPLATE, $templatesHash );
+			$selectBox = AC_GenerateSelectBox( $categoryOptionTemplateName, WP88_NONE, $templatesHash );
 			print $selectBox . '</td></tr>' . PHP_EOL;
 		}
 		
-		print '</table></fieldset></p>';		
+		print '</table></fieldset></p>';
+		
+		// Custom UI from third party publish plugins go here
+		$publishPlugins = new ACPublishPlugins;
+		$publishPlugins->GenerateMappingsUI( $listHash, $groupHash, $templatesHash, $javaScript );
 	
 		// Create a checkbox asking the user if they want to send campaigns right away
 		print '<p><input type=CHECKBOX value="on_send_now" name="on_send_now" ';

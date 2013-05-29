@@ -34,23 +34,24 @@ function AC_GenerateFieldMappingCode( $pluginName, $rowCode )
 //
 //	$selectBox - the name of the select box (so it can be identified later)
 //	$specialOption - A special option value.  Typically, "All" or "None"
-//	$options - A hash of options which maps option name to value.
+//	$options - A hash of options which maps option name to value.  Can be NULL.
 //	$javaScript - Optional JavaScript (leave this argument out if you don't need it)
 //	that's attached to the select box.  Most common usage, of course, is the onClick()
 //	function.
 //
-function AC_GenerateSelectBox( $selectName, $specialOption, $options, $javaScript='')
+function AC_GenerateSelectBox( $selectName, $specialOption, $options, $selectedVal = NULL, $javaScript = '')
 {
 	// See which field should be selected (if any)
-	$selectedVal = get_option( $selectName );
-
+	if ( NULL == $selectedVal )
+		$selectedVal = get_option( $selectName );
+	
 	// Create a select box from MailChimp merge values
 	$selectBox = '<select name="' . $selectName . '"' . $javaScript . '>' . PHP_EOL;
 
 	// Create the special option
 	$selectBox .= '<option>' . $specialOption . '</option>' . PHP_EOL;
 	
-	if ( !empty( $options ) )
+	if ( NULL != $options )
 	{
 		// Loop through each merge value; use the name as the select
 		// text and the tag as the value that gets selected.  The tag
@@ -143,6 +144,57 @@ function AC_SetBooleanOption( $postVar, $optionName )
 		update_option( $optionName, '1' );
 	else
 		update_option( $optionName, '0' );
+}
+
+//
+// Trimps the excerpt of a post.
+//
+function AC_TrimExcerpt( $text )
+{
+	$text = strip_shortcodes( $text );
+	$text = apply_filters('the_content', $text);
+	$text = str_replace(']]>', ']]&gt;', $text);
+	$excerpt_length = apply_filters('excerpt_length', 55);
+	$excerpt_more = apply_filters('excerpt_more', ' ' . '[...]');
+	return wp_trim_words( $text, $excerpt_length, $excerpt_more );
+}
+
+//	(Note: AutoChimp 2.0 only supports the first level of interest groups.
+//	Hence, the [0].)
+function AC_AssembleGroupsHash( $mcGroupsArray )
+{
+	$groupHash = array();
+	foreach ( $mcGroupsArray[0]['groups'] as $group )
+	{
+		$groupHash[$group['name']] = $group['name'];
+	}
+	return $groupHash;
+}
+
+//	(Note: AutoChimp 2.0 only supports the first level of interest groups.
+//	Hence, the [0].)
+function AC_AssembleGroupsArray( $mcGroupsArray )
+{
+	$groupArray = array();
+	foreach ( $mcGroupsArray[0]['groups'] as $group )
+	{
+		$groupArray[] = $group['name'];
+	}
+	return $groupArray;
+}
+
+//
+// This function assembles the results of get_terms into an array useful to AutoChimp
+// which is an associative array of names to slugs.
+//
+function AC_AssembleTermsArray( $terms )
+{
+	$formatted = array();
+	foreach( $terms as $term )
+	{
+		$formatted[$term->name] = $term->slug;
+	}
+	return $formatted;	
 }
 
 //
