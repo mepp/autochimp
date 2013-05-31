@@ -61,11 +61,19 @@ define( 'MMU_UPDATE', 3 );
 
 define( 'WP88_SEARCHABLE_PREFIX', 'wp88_mc' );
 define( 'WP88_WORDPRESS_FIELD_MAPPING', 'wp88_mc_wp_f_' );
-define( 'WP88_CATEGORY_LIST_MAPPING', 'wp88_mc_category_list_' );
+define( 'WP88_CATEGORY_LIST_MAPPING', 'wp88_mc_category_list_' );		// Unused as of 2.02
+define( 'WP88_CATEGORY_MAPPING_PREFIX', 'wp88_mc_catmap_' );			// Used instead of WP88_CATEGORY_LIST_MAPPING
 define( 'WP88_PLUGIN_FIRST_ACTIVATION', 'wp88_mc_first_activation' );
-define( 'WP88_CATEGORY_GROUP_SUFFIX', '_group' );
-define( 'WP88_CATEGORY_TEMPLATE_SUFFIX', '_template' );
-define( 'WP88_CATEGORY_LIST_SUFFIX', '_list' );
+define( 'WP88_CATEGORY_SUFFIX', '_category' );
+define( 'WP88_LIST_SUFFIX', '_list' );
+define( 'WP88_GROUP_SUFFIX', '_group' );
+define( 'WP88_TEMPLATE_SUFFIX', '_template' );
+// Control names for the mapping rows
+define( 'WP88_CATEGORY_CONTROL_PREFIX', 'wp88_categories_select_' );
+define( 'WP88_LIST_CONTROL_PREFIX', 'wp88_lists_select_' );
+define( 'WP88_GROUP_CONTROL_PREFIX', 'wp88_groups_select_' );
+define( 'WP88_TEMPLATE_CONTROL_PREFIX', 'wp88_templates_select_' );
+
 define( 'WP88_IGNORE_FIELD_TEXT', 'Ignore this field' );
 define( 'WP88_NONE', 'None' );
 define( 'WP88_ANY', 'Any' );
@@ -358,9 +366,9 @@ function AC_OnAdminInit()
 	$pluginFolder = get_bloginfo('wpurl') . '/wp-content/plugins/autochimp/';
 	wp_register_script( 'autochimp-ajax-request', $pluginFolder.'js/autochimp.js', array( 'jquery' ) );
 	
-	// Some AutoChimp plugins may use JS as well.  Load theme here.
-	$plugins = new ACPlugins;
-	$plugins->RegisterScripts( $pluginFolder );
+	// Some AutoChimp plugins may use JS as well.  Load them here.
+	//$plugins = new ACPlugins;
+	//$plugins->RegisterScripts( $pluginFolder );
 }
 
 //
@@ -826,8 +834,8 @@ function AC_OnPublishPost( $postID )
 	{
 		$categoryOptionName = AC_EncodeUserOptionName( WP88_CATEGORY_LIST_MAPPING , $category->name );
 		$categoryMailingList = get_option( $categoryOptionName );
-		$categoryGroupName = get_option( $categoryOptionName . WP88_CATEGORY_GROUP_SUFFIX );
-		$categoryTemplateID = get_option( $categoryOptionName . WP88_CATEGORY_TEMPLATE_SUFFIX );
+		$categoryGroupName = get_option( $categoryOptionName . WP88_GROUP_SUFFIX );
+		$categoryTemplateID = get_option( $categoryOptionName . WP88_TEMPLATE_SUFFIX );
 
 		// If the mailing list is NOT "None" then create a campaign.		
 		if ( 0 != strcmp( $categoryMailingList, WP88_NONE ) )
@@ -1038,32 +1046,67 @@ function AC_AddUserFieldsToMergeArray( &$mergeVariables, $data )
 //
 function AC_SaveCampaignCategoryMappings()
 {
-	// Fetch this site's categories
-	$category_args=array(	'orderby' => 'name',
-	  						'order' => 'ASC',
-	  						'hide_empty' => 0 );
-	$categories=get_categories( $category_args );
+	// Holds indexes of existing data saved.
+	$indexArray = array();
+	$indexCounter = 0;
+	
+	// Global DB object
+	global $wpdb;
 
-	foreach( $categories as $category )
+	// Build up an array of indexes.  A bit inefficient, but keeps the code much cleaner.
+	$options_table_name = $wpdb->prefix . 'options';
+	$sql = "SELECT option_name FROM $options_table_name WHERE option_name like '" . WP88_CATEGORY_MAPPING_PREFIX . "%' ORDER BY option_name DESC";
+	$fields = $wpdb->get_results( $sql );
+	foreach ( $fields as $field )
 	{
-		// Encode the name of the field
-		$selectName = AC_EncodeUserOptionName( WP88_CATEGORY_LIST_MAPPING , $category->name );
+		$fieldInfo = split( '_', $field->option_name );
+		// For this class, the index is at position 3
+		array_push( $indexArray, $fieldInfo[3] );
+	}
+	// Remove the duplicates
+	$indexArray = array_unique( $indexArray );
+	
+	// Set the count now.
+	$count = isset( $indexArray[$indexCounter] ) ? $indexArray[$indexCounter] : 0;
+	
+	AC_Log("Searching at count $count.");
 
-		// Now dereference the selection
-		$selection = $_POST[ $selectName ];
+	// Loop through the Events Manager category post variables until one is 
+	// not found.
+	while ( isset( $_POST[ WP88_CATEGORY_MAPPING_PREFIX . $count . WP88_CATEGORY_SUFFIX ]) )
+	{
+		// Encode the general name of the fields for this set
+		$selectName = AC_EncodeUserOptionName( WP88_CATEGORY_MAPPING_PREFIX, $count );
 
-		// Save the selection
-		update_option( $selectName, $selection );
+		// Save the category selection - note if one of these POST variables is here,
+		// then they are all expected to be here.
+		$categorySelectName = $selectName . WP88_CATEGORY_SUFFIX;
+		$categorySelection = $_POST[ $categorySelectName ];
+		update_option( $categorySelectName, $categorySelection );
+		AC_Log("Wrote data $categorySelection to $categorySelectName in DB");
+					
+		// Save off the mailing list.  Exact same principle.						
+		$listSelectName = $selectName . WP88_LIST_SUFFIX;
+		$listSelection = $_POST[ $listSelectName ];
+		update_option( $listSelectName, $listSelection );
+		AC_Log("Wrote data $listSelection to $listSelectName in DB");
 		
-		// Save off interest group selection now.  Exact same principle.
-		$groupSelectName = $selectName . WP88_CATEGORY_GROUP_SUFFIX;
+		// Save off interest group selection now. 
+		$groupSelectName = $selectName . WP88_GROUP_SUFFIX;
 		$groupSelection = $_POST[ $groupSelectName ];
 		update_option( $groupSelectName, $groupSelection );
+		AC_Log("Wrote data $groupSelection to $groupSelectName in DB");
 		
 		// Same thing for templates
-		$templateSelectName = $selectName . WP88_CATEGORY_TEMPLATE_SUFFIX;
+		$templateSelectName = $selectName . WP88_TEMPLATE_SUFFIX;
 		$templateSelection = $_POST[ $templateSelectName ];
 		update_option( $templateSelectName, $templateSelection );
+		AC_Log("Wrote data $templateSelection to $templateSelectName in DB");
+
+		$indexCounter++;
+		// Increment the counter either to the value of the next index or
+		// one beyond the last value.			
+		$count = isset( $indexArray[$indexCounter] ) ? $indexArray[$indexCounter] : $count + 1;
 	}
 }
 
@@ -1155,6 +1198,10 @@ function AC_OnActivateAutoChimp()
 		// Done.
 		update_option( WP88_PLUGIN_FIRST_ACTIVATION, '1' );
 	}
+	
+	// This is for versions after 2.02 where the campaigns mappings become more
+	// dynamic.  Need to migrate existing data to new naming scheme.
+	AC_UpdateCampaignCategoryMappings();
 }
 
 function AC_OnAdminNotice() 

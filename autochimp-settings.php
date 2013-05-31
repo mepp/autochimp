@@ -352,73 +352,99 @@ if ( $active_tab == 'campaigns' )
 	<div class="inside">
 
 	<p><strong>Choose how you'd like to create campaigns from your post categories.</strong> <em>If you use a 'user template', be sure that the template's content section is called 'main' so that your post's content can be substituted in the template.</em></p>
-	<p><fieldset style="margin-left: 20px;"><table>
+	<p><fieldset style="margin-left: 20px;">
+	<table id="wp_category_mappings_table">
 		<tr><th>Category</th><th>Mailing List</th><th></th><th>Interest Group</th><th></th><th>User Template</th></tr>
-	<?php
-		// Fetch this site's categories
-		$category_args=array(	'orderby' => 'name',
-		  						'order' => 'ASC',
-		  						'hide_empty' => 0 );
-		$categories=get_categories( $category_args );
+<?php
+	// Fetch this site's categories
+	$categories = get_categories( 'hide_empty=0&orderby=name' );
+	$categories = AC_AssembleTermsArray( $categories );
+	
+	// Building array that contains the mappings.  Each entry is a row in the UI.
+	$mappings = array();
 
-		// Loop through each category and create a management row for it.
-		foreach($categories as $category)
+	// Need to query data in the BuddyPress extended profile table
+	global $wpdb;
+
+	// Pull all of the mappings from the DB.  Each row will have three items.  The
+	// category is encoded in the option_name of each of the three along with an
+	// index.	
+	$options_table_name = $wpdb->prefix . 'options';
+	$sql = "SELECT option_name,option_value FROM $options_table_name WHERE option_name like '" . WP88_CATEGORY_MAPPING_PREFIX . "%' ORDER BY option_name";
+	$fields = $wpdb->get_results( $sql, ARRAY_A );
+	if ( $fields )
+	{
+		foreach ( $fields as $field )
 		{
-			// Probably better to use $category->slug, but this has already 
-			// shipped and is not critical.  All custom types should use taxonomy.
-			$categoryOptionName = AC_EncodeUserOptionName( WP88_CATEGORY_LIST_MAPPING , $category->name );
-			$categoryOptionGroupName = $categoryOptionName . WP88_CATEGORY_GROUP_SUFFIX;
-			$categoryOptionTemplateName = $categoryOptionName . WP88_CATEGORY_TEMPLATE_SUFFIX;
-
-			// Assemble the final Javascript
-			$finalJavaScript = $javaScript . "switchInterestGroups('$categoryOptionGroupName',this.value,groupsHash);\"";
-
-			// Assemble the first select box's HTML
-			print '<tr><td><em>' . $category->name . '</em> campaigns go to</td>' . PHP_EOL . '<td>';
-			$selectBox = AC_GenerateSelectBox( $categoryOptionName, WP88_NONE, $listHash, NULL, $finalJavaScript );
-			print $selectBox . '</td>' . PHP_EOL;
+			// Split the results into an array which contains info about this mapping
+			$info = split( '_', $field['option_name'] );
 			
-			// Start assembling the second select box
-			print '<td>and group</td><td>';
-			$selectedlist = get_option( $categoryOptionName );
-			$selectBox = AC_GenerateSelectBox( $categoryOptionGroupName, WP88_ANY, $groupHash[ $selectedlist ] );
-			print $selectBox . '</td>' . PHP_EOL;
-			print '<td>using</td><td>';
+			// Create a new array for each new index (at the 3rd element of the split
+			// string.  
+			if ( !isset( $mappings[$info[3]] ) )
+				$mappings[$info[3]] = array();
 			
-			$selectBox = AC_GenerateSelectBox( $categoryOptionTemplateName, WP88_NONE, $templatesHash );
-			print $selectBox . '</td></tr>' . PHP_EOL;
+			// Push this item into the array.
+			array_push( $mappings[$info[3]], $field['option_value'] );
 		}
-		
-		print '</table></fieldset></p>';
-		
-		// Custom UI from third party publish plugins go here
-		$publishPlugins = new ACPublishPlugins;
-		$publishPlugins->GenerateMappingsUI( $listHash, $groupHash, $templatesHash, $javaScript );
+	}
 	
-		// Create a checkbox asking the user if they want to send campaigns right away
-		print '<p><input type=CHECKBOX value="on_send_now" name="on_send_now" ';
-		if ( '0' === $sendNow || empty( $sendNow ) ){} else
-			print 'checked';
-		print '> Send campaign <em>as soon as</em> a post is published. Not checking this option will save a draft version of your new MailChimp campaign.</p>';
+	// Now loop through the constructed array and generate a new row for each
+	// mapping found.
+	foreach( $mappings as $index => $mapping )
+	{
+		$newRow = AC_GenerateCategoryMappingRow($index, WP88_CATEGORY_MAPPING_PREFIX,
+												$categories, $mapping[0], 			// In alphabetical order!! "category" is first.
+												$listHash, $mapping[2], $javaScript,// "list" is third
+												$groupHash, $mapping[1], 			// "group" is second
+												$templatesHash, $mapping[3] );		// "template" is fourth
+		print $newRow;
+	}
+	// Close out the table.	
+	print '</table>' . PHP_EOL;
+	
+	// Generate the javascript that lets users create new mapping rows.
+	$nrScript = AC_GenerateNewRowScript(count( $mappings ), "'" . WP88_CATEGORY_MAPPING_PREFIX . "'", "'#wp_category_mappings_table'",
+										$categories, WP88_ANY, 
+										$listHash, WP88_NONE, 
+										$groupHash, WP88_ANY, 
+										$templatesHash, WP88_NONE );
+	
+	// Add in the "new row" script.  Clicking on this executes the javascript to
+	// create a new row to map categories, lists, groups, and templates.
+	print '<p><a href="#" id="addNewCategoyMappingRow" onclick="' . $nrScript . '">Add new post category mapping</a></p>' . PHP_EOL;
+	print '</fieldset></p>';
 
-		// Create a checkbox asking if the user wants to generate only excerpts
-		print '<p><input type=CHECKBOX value="on_excerpt_only" name="on_excerpt_only"';
-		if ( '1' === $excerptOnly )echo 'checked';
-		print '></input> Only use an excerpt of the post (AutoChimp will include a link back to the post). <em>If you wrote an excerpt, that excerpt will be used.  Otherwise, the first 50 words of the post will be used.</em></p>';
-	
-		// Create a checkbox asking the user if they want to suppress additional campaigns when posts are updated
-		print '<p><input type=CHECKBOX value="on_create_once" name="on_create_once" ';
-		if ( '0' === $createOnce || empty( $createOnce ) ){} else
-			print 'checked';
-		print '> Create a campaign only once. Not checking this option will create an additional campaign each time you update your post. <em>Recommended <strong>ON</strong></em></p>';
-	
-		// Show the user the last message
-		$lastMessage = get_option( WP88_MC_LAST_CAMPAIGN_ERROR );
-		if ( empty( $lastMessage ) )
-			$lastMessage = 'No campaign activity yet.';
-	
-		print "<p><strong>Latest campaign activity:</strong>  <em>$lastMessage</em></p>";
-	?>
+	//	
+	// Custom UI from third party publish plugins go here
+	//
+	$publishPlugins = new ACPublishPlugins;
+	$publishPlugins->GenerateMappingsUI( $listHash, $groupHash, $templatesHash, $javaScript );
+
+	// Create a checkbox asking the user if they want to send campaigns right away
+	print '<p><input type=CHECKBOX value="on_send_now" name="on_send_now" ';
+	if ( '0' === $sendNow || empty( $sendNow ) ){} else
+		print 'checked';
+	print '> Send campaign <em>as soon as</em> a post is published. Not checking this option will save a draft version of your new MailChimp campaign.</p>';
+
+	// Create a checkbox asking if the user wants to generate only excerpts
+	print '<p><input type=CHECKBOX value="on_excerpt_only" name="on_excerpt_only"';
+	if ( '1' === $excerptOnly )echo 'checked';
+	print '></input> Only use an excerpt of the post (AutoChimp will include a link back to the post). <em>If you wrote an excerpt, that excerpt will be used.  Otherwise, the first 50 words of the post will be used.</em></p>';
+
+	// Create a checkbox asking the user if they want to suppress additional campaigns when posts are updated
+	print '<p><input type=CHECKBOX value="on_create_once" name="on_create_once" ';
+	if ( '0' === $createOnce || empty( $createOnce ) ){} else
+		print 'checked';
+	print '> Create a campaign only once. Not checking this option will create an additional campaign each time you update your post. <em>Recommended <strong>ON</strong></em></p>';
+
+	// Show the user the last message
+	$lastMessage = get_option( WP88_MC_LAST_CAMPAIGN_ERROR );
+	if ( empty( $lastMessage ) )
+		$lastMessage = 'No campaign activity yet.';
+
+	print "<p><strong>Latest campaign activity:</strong>  <em>$lastMessage</em></p>";
+?>
 	<div class="submit"><input type="submit" name="save_campaign_options" class="button-primary" value="Save Options" /></div>
 	
 	<div class="clear"></div>

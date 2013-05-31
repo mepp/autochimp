@@ -81,3 +81,52 @@ function switchInterestGroups( selectName, listID, groupHash )
 		}
 	});
 }
+
+function AddCategoryTableRow( numExistingRows, selectPrefix, appendToObject, categories, lists, listChangeOptions, groups, templates )
+{
+	jQuery(document).ready(function($)
+	{
+		if ( 'undefined' == typeof( AddCategoryTableRow.count ) )
+			AddCategoryTableRow.count = numExistingRows;
+		else
+			AddCategoryTableRow.count++;
+		$(appendToObject).append( $('<tr><td></td><td>campaigns go to</td><td></td><td>and group</td><td></td><td>using</td><td></td></tr>') );
+		CreateSelect( selectPrefix + AddCategoryTableRow.count + '_category', categories, $( appendToObject + ' tr:last td:eq(0)' ) );
+		CreateChangeSelect( selectPrefix + AddCategoryTableRow.count + '_list', lists, $( appendToObject + ' tr:last td:eq(2)' ), selectPrefix + AddCategoryTableRow.count + '_group', listChangeOptions );
+		CreateSelect( selectPrefix + AddCategoryTableRow.count + '_group', groups, $( appendToObject + ' tr:last td:eq(4)' ) );
+		CreateSelect( selectPrefix + AddCategoryTableRow.count + '_template', templates, $( appendToObject + ' tr:last td:eq(6)' ) );
+	});
+}
+
+function CreateSelect( name, optionsHash, appendObj )
+{
+	jQuery(document).ready(function($)
+	{
+		var select = $('<select name="' + name + '" />');
+		for( var val in optionsHash ) 
+		{
+			if ( null == val )
+				$('<option />', {text: val}).appendTo(select);
+			else
+				$('<option />', {value: optionsHash[val], text: val}).appendTo(select);
+		}
+		select.appendTo( appendObj );
+	});
+}
+
+function CreateChangeSelect( name, optionsHash, appendObj, changeTarget, changeOptions )
+{
+	jQuery(document).ready(function($)
+	{
+		var select = $('<select name="' + name + '" />');
+		select.change(function(){switchInterestGroups(changeTarget,this.value,changeOptions);});
+		for( var val in optionsHash ) 
+		{
+			if ( null == val )
+				$('<option />', {text: val}).appendTo(select);
+			else
+				$('<option />', {value: optionsHash[val], text: val}).appendTo(select);
+		}
+		select.appendTo( appendObj );
+	});
+}

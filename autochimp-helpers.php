@@ -78,6 +78,98 @@ function AC_GenerateSelectBox( $selectName, $specialOption, $options, $selectedV
 	return $selectBox;
 }
 
+	
+//
+//	Returns HTML row code for a new category/term assignment.
+//
+function AC_GenerateCategoryMappingRow( $index, $selectPrefix,
+										$categories, $selectedCat,
+										$lists, $selectedList, $javaScript,
+										$groups, $selectedGroup, 
+										$templates, $selectedTemplate )
+{
+	$out = '<tr><td>' . PHP_EOL;
+	
+	$selectBox = AC_GenerateSelectBox( $selectPrefix . $index . WP88_CATEGORY_SUFFIX, WP88_ANY, $categories, $selectedCat );
+	$out .= $selectBox . '</td>' . PHP_EOL . '<td>campaigns go to</td><td>';
+
+	// Assemble the final Javascript
+	$groupSelectName = $selectPrefix . $index . WP88_GROUP_SUFFIX;
+	$javaScript .= "switchInterestGroups('$groupSelectName',this.value,groupsHash);\"";
+	$selectBox = AC_GenerateSelectBox( $selectPrefix . $index . WP88_LIST_SUFFIX, WP88_NONE, $lists, $selectedList, $javaScript );
+	$out .= $selectBox . '</td>' . PHP_EOL . '<td>and group</td><td>';
+	
+	// Start assembling the group select box
+	$selectBox = AC_GenerateSelectBox( $groupSelectName, WP88_ANY, $groups[$selectedList], $selectedGroup );
+	$out .= $selectBox . '</td>' . PHP_EOL . '<td>using</td><td>';
+	
+	// Assemble the final select box - templates
+	$selectBox = AC_GenerateSelectBox( $selectPrefix . $index . WP88_TEMPLATE_SUFFIX, WP88_NONE, $templates, $selectedTemplate );
+	$out .= $selectBox . '</td></tr>' . PHP_EOL;
+	
+	return $out;
+}
+
+//
+//	This function generates javascript that, when called, will generate a new row
+//	that users can use to map categories to lists, etc.  This is very similar to 
+//	GenerateCategoryMappingRow() so if you make changes there, then watch for your
+//	changes here AND in the javascript file itself.
+//
+function AC_GenerateNewRowScript($numExistingRows, $objectPrefix, $appendTo,
+								 $categories, $specialCategory,
+								 $lists, $specialList,
+								 $groups, $specialGroup,
+								 $templates, $specialTemplate )
+{
+	// Set up the categories hash first
+	$nrScript = 'var categories={';
+	// Add the special category
+	$nrScript .= "'$specialCategory':null"; 
+	foreach ( $categories as $name => $slug ) 
+	{
+		$nrScript .= ",'$name':'$slug'";
+	}
+	$nrScript .= '};';
+
+	// Now set up the lists (almost the same thing)
+	$nrScript .= 'var lists={';
+	$nrScript .= "'$specialList':null"; 
+	foreach ( $lists as $list => $id ) 
+	{
+		$name = $list;
+		$id = $id;
+		$nrScript .= ",'$name':'$id'";
+	}
+	// As part of the lists, set up the change options which will affect the
+	// groups select box.  Close off the previous array too!
+	$nrScript .= "};listCO={};";
+	foreach( $groups as $listID => $lg )
+	{
+		$groupCSVString = implode(',', array_values( $lg ));
+		$nrScript .= "listCO['$listID']='$groupCSVString'.split(',');";
+	}
+
+	// Set up groups, which is very different.  It only starts with the special
+	// option, and other options are added later as the user selects lists.
+	$nrScript .= "var groups={'$specialGroup':null};";
+	
+	// Finally, set up the templates.  Straightforward.
+	$nrScript .= 'var templates={';
+	$nrScript .= "'$specialTemplate':null"; 
+	foreach ( $templates as $template => $id ) 
+	{
+		$name = $template;
+		$id = $id;
+		$nrScript .= ",'$name':'$id'";
+	}
+	$nrScript .= '};';
+			
+	$nrScript .= "AddCategoryTableRow($numExistingRows,$objectPrefix,$appendTo,categories,lists,listCO,groups,templates);";
+	return $nrScript;
+}
+
+
 //
 //	This helper function generates the name of a field mapping (from WordPress or a 
 //	supported plugin) to MailChimp for the database.  It generates this with a prefix
@@ -218,6 +310,62 @@ function AC_Log( $message )
             error_log( "AutoChimp: $message" );
         }
     }
+}
+
+//
+//	2.02 migration of data for category mappings for campaigns.  Using a more
+//	system now which requires the current data to follow the udpated naming
+//	convention.
+//
+function AC_UpdateCampaignCategoryMappings()
+{
+	// Need to query data in the BuddyPress extended profile table
+	global $wpdb;
+
+	// Get this site's categories	
+	$categories = get_categories( 'hide_empty=0&orderby=name' );
+
+	// Pull all of the mappings from the DB and update the option name.  There
+	// will be only one row for each category, so an index of 0 is safe.
+	$options_table_name = $wpdb->prefix . 'options';
+	$sql = "SELECT option_name,option_value FROM $options_table_name WHERE option_name LIKE '" . WP88_CATEGORY_LIST_MAPPING . "%' ORDER BY option_name";
+	$fields = $wpdb->get_results( $sql );
+	if ( $fields )
+	{
+		foreach ( $fields as $field )
+		{
+			$data = AC_DecodeUserOptionName( WP88_CATEGORY_LIST_MAPPING , $field->option_name );
+			$catInfo = split( '&', $data );
+
+			// Set a suffix.  Will be either "list", "group", or "template".  The
+			// original mapping didn't include "list".
+			$suffix = '_list';
+			if ( isset( $catInfo[1] ) )
+				$suffix = "_$catInfo[1]";
+			
+			// Inefficient, but done once.
+			foreach ( $categories as $category )
+			{
+				// Look for a match
+				if ( 0 === strcmp( $catInfo[0], $category->name ) )
+				{
+					// Generate the new name and save it.
+					$newName = AC_EncodeUserOptionName(WP88_CATEGORY_MAPPING_PREFIX, '0_' . $category->slug . $suffix );
+					update_option( $newName, $field->option_value );					
+					AC_Log( "Migrated $field->option_value from $field->option_name to $newName." );
+				}
+			}
+		}
+	}
+	
+	// Now delete the old rows.
+	$sql = "DELETE FROM $options_table_name WHERE option_name LIKE '" . WP88_CATEGORY_LIST_MAPPING . "%'";
+	AC_Log( "About to delete rows with this statement:  $sql" );
+	$numRows = $wpdb->query( $sql );
+	if ( 0 < $numRows )
+		AC_Log( "Deleted $numRows from the $options_table_name table." );
+	else
+		AC_Log( "No rows were found.  Nothing deleted." );
 }
 
 //
