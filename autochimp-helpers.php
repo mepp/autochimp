@@ -78,6 +78,86 @@ function AC_GenerateSelectBox( $selectName, $specialOption, $options, $selectedV
 	return $selectBox;
 }
 
+//
+//	Saves dynamically mappings from categories (or terms) to mailing lists, interest
+//	groups, and templates.  This function uses indexes from the names of the select
+//	boxes to gather data.  However, when saving, it condenses indexes sequentially.
+//
+//	Arguments:
+//		$mappingPrefix - this is the prefix used to save data to the DB (and to
+//		create select box names).  Using this, data is safely divided among WordPress
+//		categories and terms from other plugins.
+//
+//	This function uses the global $_POST variable, so only call it at the appropriate 
+//	times.	Consider refactoring this function to make it not dependent on $_POST.
+//
+function AC_SaveCampaignCategoryMappings( $mappingPrefix )
+{
+	// Holds indexes of existing data saved.
+	$indexArray = array();
+	$indexCounter = 0;
+	$condensedIndex = 0;
+	
+	// Global DB object
+	global $wpdb;
+
+	// Build up an array of indexes.  A bit inefficient, but keeps the code much cleaner.
+	$options_table_name = $wpdb->prefix . 'options';
+	$sql = "SELECT option_name FROM $options_table_name WHERE option_name like '" . $mappingPrefix . "%' ORDER BY option_name";
+	$fields = $wpdb->get_results( $sql );
+	// There are FOUR elements for each index, so skip these.
+	$everyFourth = 0;
+	foreach ( $fields as $field )
+	{
+		$mod = $everyFourth % 4;
+		if ( 0 === $mod )
+		{
+			$fieldInfo = split( '_', $field->option_name );
+			// For this class, the index is at position 3
+			$indexArray[] = $fieldInfo[3];			
+		}
+		$everyFourth++;
+	}
+	AC_Log($indexArray);
+	
+	// Set the count now.
+	$count = isset( $indexArray[$indexCounter] ) ? $indexArray[$indexCounter] : 0;
+
+	// Loop through the Events Manager category post variables until one is 
+	// not found.
+	while ( isset( $_POST[ $mappingPrefix . $count . WP88_CATEGORY_SUFFIX ]) )
+	{
+		// Encode the general name of the fields for this set
+		$selectName = AC_EncodeUserOptionName( $mappingPrefix, $count );
+		$dbName = AC_EncodeUserOptionName( $mappingPrefix, $condensedIndex );
+		AC_Log( "The select name is $selectName.  The dbName is $dbName." );
+
+		// Save the category selection - note if one of these POST variables is here,
+		// then they are all expected to be here.  Also note that the $dbName 
+		// variable will hold the condensed index whereas the select name could
+		// have indexes spread out.
+		$categorySelection = $_POST[ $selectName . WP88_CATEGORY_SUFFIX ];
+		update_option( $dbName . WP88_CATEGORY_SUFFIX, $categorySelection );
+
+		// Save off the mailing list.  Exact same principle.						
+		$listSelection = $_POST[ $selectName . WP88_LIST_SUFFIX ];
+		update_option( $dbName . WP88_LIST_SUFFIX, $listSelection );
+		
+		// Save off interest group selection now. 
+		$groupSelection = $_POST[ $selectName . WP88_GROUP_SUFFIX ];
+		update_option( $dbName . WP88_GROUP_SUFFIX, $groupSelection );
+		
+		// Same thing for templates
+		$templateSelection = $_POST[ $selectName . WP88_TEMPLATE_SUFFIX ];
+		update_option( $dbName . WP88_TEMPLATE_SUFFIX, $templateSelection );
+
+		$condensedIndex++;
+		$indexCounter++;
+		// Increment the counter either to the value of the next index or
+		// one beyond the last value.			
+		$count = isset( $indexArray[$indexCounter] ) ? $indexArray[$indexCounter] : $count + 1;
+	}
+}
 	
 //
 //	Returns HTML row code for a new category/term assignment.
@@ -105,7 +185,10 @@ function AC_GenerateCategoryMappingRow( $index, $selectPrefix,
 	
 	// Assemble the final select box - templates
 	$selectBox = AC_GenerateSelectBox( $selectPrefix . $index . WP88_TEMPLATE_SUFFIX, WP88_NONE, $templates, $selectedTemplate );
-	$out .= $selectBox . '</td></tr>' . PHP_EOL;
+	$out .= $selectBox . '</td>' . PHP_EOL;
+	
+	// Create the delete button
+	$out .= '<td><button type="submit" name="' . $selectPrefix . $index . WP88_DELETE_MAPPING_SUFFIX . '" value="' . $selectPrefix . $index . '" onClick="return confirm(\'Are you sure?\');">X</button></td></tr>';
 	
 	return $out;
 }
@@ -314,7 +397,7 @@ function AC_Log( $message )
 
 //
 //	2.02 migration of data for category mappings for campaigns.  Using a more
-//	system now which requires the current data to follow the udpated naming
+//	system now which requires the current data to follow the updated naming
 //	convention.
 //
 function AC_UpdateCampaignCategoryMappings()
@@ -324,6 +407,9 @@ function AC_UpdateCampaignCategoryMappings()
 
 	// Get this site's categories	
 	$categories = get_categories( 'hide_empty=0&orderby=name' );
+	
+	// Data counter
+	$counter = 0;
 
 	// Pull all of the mappings from the DB and update the option name.  There
 	// will be only one row for each category, so an index of 0 is safe.
@@ -343,18 +429,33 @@ function AC_UpdateCampaignCategoryMappings()
 			if ( isset( $catInfo[1] ) )
 				$suffix = "_$catInfo[1]";
 			
-			// Inefficient, but done once.
+			// Inefficient, but done once.  This is necessary because AutoChimp
+			// foolishly used to store the category name instead of slug in the
+			// option_name.  So, this code looks up the category by name and 
+			// finds the slug and writes that.
 			foreach ( $categories as $category )
 			{
-				// Look for a match
+				// Look for a match.
 				if ( 0 === strcmp( $catInfo[0], $category->name ) )
 				{
+					
 					// Generate the new name and save it.
-					$newName = AC_EncodeUserOptionName(WP88_CATEGORY_MAPPING_PREFIX, '0_' . $category->slug . $suffix );
-					update_option( $newName, $field->option_value );					
+					$newName = AC_EncodeUserOptionName( WP88_CATEGORY_MAPPING_PREFIX, $counter . $suffix );
+					update_option( $newName, $field->option_value );
 					AC_Log( "Migrated $field->option_value from $field->option_name to $newName." );
+					// Note that in 2.02 and earlier, there were three rows per
+					// mapping.  This needs to be translated into the new four
+					// rows per mapping.  So, when "_list" is encountered, just
+					// take the time to write out "_category" too.
+					if ( 0 === strcmp( $suffix, '_list' ) )
+					{
+						$newName = AC_EncodeUserOptionName( WP88_CATEGORY_MAPPING_PREFIX, $counter . '_category' );
+						update_option( $newName, $category->slug );
+						AC_Log( "Migrated $category->slug from $field->option_name to $newName." );
+					}					
 				}
 			}
+			$counter++;
 		}
 	}
 	

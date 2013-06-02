@@ -68,6 +68,7 @@ define( 'WP88_CATEGORY_SUFFIX', '_category' );
 define( 'WP88_LIST_SUFFIX', '_list' );
 define( 'WP88_GROUP_SUFFIX', '_group' );
 define( 'WP88_TEMPLATE_SUFFIX', '_template' );
+define( 'WP88_DELETE_MAPPING_SUFFIX', '_delete_mapping' );
 // Control names for the mapping rows
 define( 'WP88_CATEGORY_CONTROL_PREFIX', 'wp88_categories_select_' );
 define( 'WP88_LIST_CONTROL_PREFIX', 'wp88_lists_select_' );
@@ -470,7 +471,7 @@ function AC_AutoChimpOptions()
 	if ( isset( $_POST['save_campaign_options'] ) )
 	{
 		// Save off the mappings of categories to campaigns.
-		AC_SaveCampaignCategoryMappings();
+		AC_SaveCampaignCategoryMappings( WP88_CATEGORY_MAPPING_PREFIX );
 		
 		// Now save off the plugin mappings.
 		$publishPlugins = new ACPublishPlugins;
@@ -483,6 +484,27 @@ function AC_AutoChimpOptions()
 
 		// Tell the user
 		print '<div id="message" class="updated fade"><p>Successfully saved your AutoChimp campaign options.</p></div>';
+	}
+	
+	// Deleting campaign rows is a little more sophisticated.  Have to loop through 
+	// looking for rows that may have been deleted.  Only one may be deleted at a 
+	// time.
+	foreach( $_POST as $key => $value )
+	{
+		// If a match was found, then the row to delete is in $value and the
+		// first part of the $key will determine the name of the DB field.
+		// Following this naming convention, there's no need to forward the
+		// call to a plugin.  
+		if ( FALSE !== strpos( $key, WP88_DELETE_MAPPING_SUFFIX ) )
+		{
+			// The value will hold the beginning of the name of the DB option.
+			// Just tack on the suffix and delete.  Done.
+			delete_option( $value . WP88_CATEGORY_SUFFIX );
+			delete_option( $value . WP88_LIST_SUFFIX );
+			delete_option( $value . WP88_GROUP_SUFFIX );
+			delete_option( $value . WP88_TEMPLATE_SUFFIX );
+			break;
+		}
 	}
 
 	if ( isset( $_POST['save_plugin_options'] ) )
@@ -1037,76 +1059,6 @@ function AC_AddUserFieldsToMergeArray( &$mergeVariables, $data )
 	if ( !empty( $groupingsArray ) )
 	{
 		$mergeVariables[ WP88_GROUPINGS_TEXT ] = $groupingsArray;
-	}
-}
-
-//
-//	This function uses the global $_POST variable, so only call it at the appropriate times.
-//	Consider refactoring this function to make it not dependent on $_POST.
-//
-function AC_SaveCampaignCategoryMappings()
-{
-	// Holds indexes of existing data saved.
-	$indexArray = array();
-	$indexCounter = 0;
-	
-	// Global DB object
-	global $wpdb;
-
-	// Build up an array of indexes.  A bit inefficient, but keeps the code much cleaner.
-	$options_table_name = $wpdb->prefix . 'options';
-	$sql = "SELECT option_name FROM $options_table_name WHERE option_name like '" . WP88_CATEGORY_MAPPING_PREFIX . "%' ORDER BY option_name DESC";
-	$fields = $wpdb->get_results( $sql );
-	foreach ( $fields as $field )
-	{
-		$fieldInfo = split( '_', $field->option_name );
-		// For this class, the index is at position 3
-		array_push( $indexArray, $fieldInfo[3] );
-	}
-	// Remove the duplicates
-	$indexArray = array_unique( $indexArray );
-	
-	// Set the count now.
-	$count = isset( $indexArray[$indexCounter] ) ? $indexArray[$indexCounter] : 0;
-	
-	AC_Log("Searching at count $count.");
-
-	// Loop through the Events Manager category post variables until one is 
-	// not found.
-	while ( isset( $_POST[ WP88_CATEGORY_MAPPING_PREFIX . $count . WP88_CATEGORY_SUFFIX ]) )
-	{
-		// Encode the general name of the fields for this set
-		$selectName = AC_EncodeUserOptionName( WP88_CATEGORY_MAPPING_PREFIX, $count );
-
-		// Save the category selection - note if one of these POST variables is here,
-		// then they are all expected to be here.
-		$categorySelectName = $selectName . WP88_CATEGORY_SUFFIX;
-		$categorySelection = $_POST[ $categorySelectName ];
-		update_option( $categorySelectName, $categorySelection );
-		AC_Log("Wrote data $categorySelection to $categorySelectName in DB");
-					
-		// Save off the mailing list.  Exact same principle.						
-		$listSelectName = $selectName . WP88_LIST_SUFFIX;
-		$listSelection = $_POST[ $listSelectName ];
-		update_option( $listSelectName, $listSelection );
-		AC_Log("Wrote data $listSelection to $listSelectName in DB");
-		
-		// Save off interest group selection now. 
-		$groupSelectName = $selectName . WP88_GROUP_SUFFIX;
-		$groupSelection = $_POST[ $groupSelectName ];
-		update_option( $groupSelectName, $groupSelection );
-		AC_Log("Wrote data $groupSelection to $groupSelectName in DB");
-		
-		// Same thing for templates
-		$templateSelectName = $selectName . WP88_TEMPLATE_SUFFIX;
-		$templateSelection = $_POST[ $templateSelectName ];
-		update_option( $templateSelectName, $templateSelection );
-		AC_Log("Wrote data $templateSelection to $templateSelectName in DB");
-
-		$indexCounter++;
-		// Increment the counter either to the value of the next index or
-		// one beyond the last value.			
-		$count = isset( $indexArray[$indexCounter] ) ? $indexArray[$indexCounter] : $count + 1;
 	}
 }
 

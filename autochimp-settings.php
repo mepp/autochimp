@@ -352,9 +352,9 @@ if ( $active_tab == 'campaigns' )
 	<div class="inside">
 
 	<p><strong>Choose how you'd like to create campaigns from your post categories.</strong> <em>If you use a 'user template', be sure that the template's content section is called 'main' so that your post's content can be substituted in the template.</em></p>
-	<p><fieldset style="margin-left: 20px;">
+	<p>
 	<table id="wp_category_mappings_table">
-		<tr><th>Category</th><th>Mailing List</th><th></th><th>Interest Group</th><th></th><th>User Template</th></tr>
+		<tr><th>Category</th><th>Mailing List</th><th></th><th>Interest Group</th><th></th><th>User Template</th><th></th></tr>
 <?php
 	// Fetch this site's categories
 	$categories = get_categories( 'hide_empty=0&orderby=name' );
@@ -390,7 +390,8 @@ if ( $active_tab == 'campaigns' )
 	}
 	
 	// Now loop through the constructed array and generate a new row for each
-	// mapping found.
+	// mapping found.  Save off the highest mapping.
+	$highestMapping = 0;
 	foreach( $mappings as $index => $mapping )
 	{
 		$newRow = AC_GenerateCategoryMappingRow($index, WP88_CATEGORY_MAPPING_PREFIX,
@@ -398,13 +399,15 @@ if ( $active_tab == 'campaigns' )
 												$listHash, $mapping[2], $javaScript,// "list" is third
 												$groupHash, $mapping[1], 			// "group" is second
 												$templatesHash, $mapping[3] );		// "template" is fourth
+		if ( $index > $highestMapping )
+			$highestMapping = $index;
 		print $newRow;
 	}
 	// Close out the table.	
 	print '</table>' . PHP_EOL;
 	
 	// Generate the javascript that lets users create new mapping rows.
-	$nrScript = AC_GenerateNewRowScript(count( $mappings ), "'" . WP88_CATEGORY_MAPPING_PREFIX . "'", "'#wp_category_mappings_table'",
+	$nrScript = AC_GenerateNewRowScript($highestMapping + 1, "'" . WP88_CATEGORY_MAPPING_PREFIX . "'", "'#wp_category_mappings_table'",
 										$categories, WP88_ANY, 
 										$listHash, WP88_NONE, 
 										$groupHash, WP88_ANY, 
@@ -413,7 +416,7 @@ if ( $active_tab == 'campaigns' )
 	// Add in the "new row" script.  Clicking on this executes the javascript to
 	// create a new row to map categories, lists, groups, and templates.
 	print '<p><a href="#" id="addNewCategoyMappingRow" onclick="' . $nrScript . '">Add new post category mapping</a></p>' . PHP_EOL;
-	print '</fieldset></p>';
+	print '</p>';
 
 	//	
 	// Custom UI from third party publish plugins go here

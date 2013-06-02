@@ -112,10 +112,9 @@ class PublishEventsManager extends ACPlugin
 	//
 	public function GenerateMappingsUI( $lists, $groups, $templates, $javaScript )
 	{
-		print '<p><strong>Since you are using Events Manager</strong>, you can create campaigns based on Event categories as well.  <em>If you use a \'user template\', be sure that the template\'s content section is called \'main\' so that your post\'s content can be substituted in the template.</em></p>' . PHP_EOL;
-		print '<p><fieldset style="margin-left: 20px;">' . PHP_EOL;
+		print '<p><strong>Since you are using Events Manager</strong>, you can create campaigns based on Event categories as well.  <em>If you use a \'user template\', be sure that the template\'s content section is called \'main\' so that your post\'s content can be substituted in the template.</em></p><p>' . PHP_EOL;
 		print '<table id="event_manager_table">' . PHP_EOL;
-		print '<tr><th>Category</th><th></th><th>Mailing List</th><th></th><th>Interest Group</th><th></th><th>User Template</th></tr>';
+		print '<tr><th>Category</th><th></th><th>Mailing List</th><th></th><th>Interest Group</th><th></th><th>User Template</th><th></th></tr>';
 
 		// Will need a list of the EM categories (terms) that the user has created.
 		$categories = get_terms( EM_TAXONOMY_CATEGORY, 'orderby=count&hide_empty=0' );
@@ -152,6 +151,7 @@ class PublishEventsManager extends ACPlugin
 		
 		// Now loop through the constructed array and generate a new row for each
 		// mapping found.
+		$highestMapping = 0;
 		foreach( $mappings as $index => $mapping )
 		{
 			// The category is contained in the 1st element of the returned array.
@@ -161,13 +161,15 @@ class PublishEventsManager extends ACPlugin
 													$lists, $mapping[2], $javaScript,	// "list" is third
 													$groups, $mapping[1],				// "group" is second
 													$templates, $mapping[3]  );			// "template" is fourth
+			if ( $index > $highestMapping )
+				$highestMapping = $index;
 			print $newRow;
 		}
 		// Close out the table.	
 		print '</table>' . PHP_EOL;
 		
 		// Generate the javascript that lets users create new mapping rows.
-		$nrScript = AC_GenerateNewRowScript(count( $mappings ), "'" . EVENTS_MANAGER_MAPPING_PREFIX . "'", "'#event_manager_table'",
+		$nrScript = AC_GenerateNewRowScript($highestMapping + 1, "'" . EVENTS_MANAGER_MAPPING_PREFIX . "'", "'#event_manager_table'",
 											$categories, WP88_ANY, 
 											$lists, WP88_NONE, 
 											$groups, WP88_ANY, 
@@ -176,7 +178,7 @@ class PublishEventsManager extends ACPlugin
 		// Add in the "new row" script.  Clicking on this executes the javascript to
 		// create a new row to map categories, lists, groups, and templates.
 		print '<p><a href="#" id="addNewEMRow" onclick="' . $nrScript . '">Add new Events Manager post category mapping</a></p>' . PHP_EOL;
-		print '</fieldset></p>';
+		print '</p>';
 	}
 
 	//
@@ -189,68 +191,7 @@ class PublishEventsManager extends ACPlugin
 	//
 	public function SaveMappings()
 	{
-		// Holds indexes of existing data saved.
-		$indexArray = array();
-		$indexCounter = 0;
-		
-		// Global DB object
-		global $wpdb;
-
-		// Build up an array of indexes.  A bit inefficient, but keeps the code much cleaner.
-		$options_table_name = $wpdb->prefix . 'options';
-		$sql = "SELECT option_name FROM $options_table_name WHERE option_name like '" . EVENTS_MANAGER_MAPPING_PREFIX . "%' ORDER BY option_name DESC";
-		$fields = $wpdb->get_results( $sql );
-		foreach ( $fields as $field )
-		{
-			$fieldInfo = split( '_', $field->option_name );
-			// For this class, the index is at position 3
-			array_push( $indexArray, $fieldInfo[3] );
-		}
-		// Remove the duplicates
-		$indexArray = array_unique( $indexArray );
-		
-		// Set the count now.
-		$count = isset( $indexArray[$indexCounter] ) ? $indexArray[$indexCounter] : 0;
-		
-		AC_Log("Searching at count $count.");
-
-		// Loop through the Events Manager category post variables until one is 
-		// not found.
-		while ( isset( $_POST[ EVENTS_MANAGER_MAPPING_PREFIX . $count . WP88_CATEGORY_SUFFIX ]) )
-		{
-			// Encode the general name of the fields for this set
-			$selectName = AC_EncodeUserOptionName( EVENTS_MANAGER_MAPPING_PREFIX, $count );
-
-			// Save the category selection - note if one of these POST variables is here,
-			// then they are all expected to be here.
-			$categorySelectName = $selectName . WP88_CATEGORY_SUFFIX;
-			$categorySelection = $_POST[ $categorySelectName ];
-			update_option( $categorySelectName, $categorySelection );
-			AC_Log("Wrote data $categorySelection to $categorySelectName in DB");
-						
-			// Save off the mailing list.  Exact same principle.						
-			$listSelectName = $selectName . WP88_LIST_SUFFIX;
-			$listSelection = $_POST[ $listSelectName ];
-			update_option( $listSelectName, $listSelection );
-			AC_Log("Wrote data $listSelection to $listSelectName in DB");
-			
-			// Save off interest group selection now. 
-			$groupSelectName = $selectName . WP88_GROUP_SUFFIX;
-			$groupSelection = $_POST[ $groupSelectName ];
-			update_option( $groupSelectName, $groupSelection );
-			AC_Log("Wrote data $groupSelection to $groupSelectName in DB");
-			
-			// Same thing for templates
-			$templateSelectName = $selectName . WP88_TEMPLATE_SUFFIX;
-			$templateSelection = $_POST[ $templateSelectName ];
-			update_option( $templateSelectName, $templateSelection );
-			AC_Log("Wrote data $templateSelection to $templateSelectName in DB");
-
-			$indexCounter++;
-			// Increment the counter either to the value of the next index or
-			// one beyond the last value.			
-			$count = isset( $indexArray[$indexCounter] ) ? $indexArray[$indexCounter] : $count + 1;
-		}
+		AC_SaveCampaignCategoryMappings( EVENTS_MANAGER_MAPPING_PREFIX );
 	}
 	
 	//
