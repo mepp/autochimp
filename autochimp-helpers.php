@@ -409,7 +409,8 @@ function AC_UpdateCampaignCategoryMappings()
 	$categories = get_categories( 'hide_empty=0&orderby=name' );
 	
 	// Data counter
-	$counter = 0;
+	$counter = 1;
+	$newIndex = 0;
 
 	// Pull all of the mappings from the DB and update the option name.  There
 	// will be only one row for each category, so an index of 0 is safe.
@@ -440,7 +441,7 @@ function AC_UpdateCampaignCategoryMappings()
 				{
 					
 					// Generate the new name and save it.
-					$newName = AC_EncodeUserOptionName( WP88_CATEGORY_MAPPING_PREFIX, $counter . $suffix );
+					$newName = AC_EncodeUserOptionName( WP88_CATEGORY_MAPPING_PREFIX, $newIndex . $suffix );
 					update_option( $newName, $field->option_value );
 					AC_Log( "Migrated $field->option_value from $field->option_name to $newName." );
 					// Note that in 2.02 and earlier, there were three rows per
@@ -449,12 +450,15 @@ function AC_UpdateCampaignCategoryMappings()
 					// take the time to write out "_category" too.
 					if ( 0 === strcmp( $suffix, '_list' ) )
 					{
-						$newName = AC_EncodeUserOptionName( WP88_CATEGORY_MAPPING_PREFIX, $counter . '_category' );
+						$newName = AC_EncodeUserOptionName( WP88_CATEGORY_MAPPING_PREFIX, $newIndex . '_category' );
 						update_option( $newName, $category->slug );
 						AC_Log( "Migrated $category->slug from $field->option_name to $newName." );
 					}					
 				}
 			}
+			// Update this every three passes.
+			if ( 0 == $counter % 3 )
+				$newIndex++;
 			$counter++;
 		}
 	}
