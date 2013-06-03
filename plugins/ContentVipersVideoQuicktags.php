@@ -133,60 +133,62 @@ class ContentVipersVideoQuicktags extends ACPlugin
 			. '(\\]?)';                          // 6: Optional second closing brocket for escaping shortcodes: [[tag]]
 	
 		// Callback function for each video tag instance. 			
-		return preg_replace_callback( "/$pattern/s", 'SwitchViperVideoTags', $content );
+		$updatedContent = preg_replace_callback( "/$pattern/s", 'VVQT_SwitchViperVideoTags', $content );
+		AC_Log( "ContentVipersVideoQuicktags has altered shortcode to this:  $updatedContent" );
+		return $updatedContent;
 	}
-	
-	//
-	//	This function is passed an array of information on the shortcode data.
-	//	0 => The complete shortcode
-	//	1 => Usually empty 
-	//	2 => The video service (the shortcode tag)
-	//	3 => The arguments (in string format)
-	//	4 => Usually empty
-	//	5 => The video link (between the two shortcode tags)
-	//	6 => Usually empty
-	//
-	protected function SwitchViperVideoTags( $m ) 
+}
+
+//
+//	This function is passed an array of information on the shortcode data.
+//	0 => The complete shortcode
+//	1 => Usually empty 
+//	2 => The video service (the shortcode tag)
+//	3 => The arguments (in string format)
+//	4 => Usually empty
+//	5 => The video link (between the two shortcode tags)
+//	6 => Usually empty
+//
+function VVQT_SwitchViperVideoTags( $m ) 
+{
+	// Get options
+	$showTitle = get_option( WP88_MC_VIDEO_SHOW_TITLE );
+	$showBorder = get_option( WP88_MC_VIDEO_SHOW_BORDER );
+	$trimBorder = get_option( WP88_MC_VIDEO_TRIM_BORDER );
+	$showRatings = get_option( WP88_MC_VIDEO_SHOW_RATINGS );
+	$showViews = get_option( WP88_MC_VIDEO_SHOW_NUM_VIEWS );
+
+	// allow [[foo]] syntax for escaping a tag
+	if ( $m[1] == '[' && $m[6] == ']' ) {
+		return substr($m[0], 1, -1);
+	}
+
+	// Generate tags
+	$service = strtoupper( $m[2] ); // Always upper case
+	$attr = shortcode_parse_atts( $m[3] );
+	if ( 0 === strcmp( $service, 'VIMEO') )	// Extracting VIMEO is easy
+		$vidID = basename( $m[5] );
+	elseif ( 0 === strcmp( $service, 'YOUTUBE' ) ) // YOUTUBE is a little harder
 	{
-		// Get options
-		$showTitle = get_option( WP88_MC_VIDEO_SHOW_TITLE );
-		$showBorder = get_option( WP88_MC_VIDEO_SHOW_BORDER );
-		$trimBorder = get_option( WP88_MC_VIDEO_TRIM_BORDER );
-		$showRatings = get_option( WP88_MC_VIDEO_SHOW_RATINGS );
-		$showViews = get_option( WP88_MC_VIDEO_SHOW_NUM_VIEWS );
-	
-		// allow [[foo]] syntax for escaping a tag
-		if ( $m[1] == '[' && $m[6] == ']' ) {
-			return substr($m[0], 1, -1);
-		}
-	
-		// Generate tags
-		$service = strtoupper( $m[2] ); // Always upper case
-		$attr = shortcode_parse_atts( $m[3] );
-		if ( 0 === strcmp( $service, 'VIMEO') )	// Extracting VIMEO is easy
-			$vidID = basename( $m[5] );
-		elseif ( 0 === strcmp( $service, 'YOUTUBE' ) ) // YOUTUBE is a little harder
-		{
-			$output = array();
-			// Extract the query string
-			$up = parse_url( $m[5], PHP_URL_QUERY );
-			// Parse it into components
-			parse_str( $up, $output );
-			// Get the 'v' argument
-			$vidID = $output['v'];  
-		}
-		$width = (isset( $attr['width'])) ? (', $max_width=' . $attr['width']) : '';
-		$title = ('0'===$showTitle) ? (', $title=N') : '';
-		$border = ('0'===$showBorder) ? (', $border=N') : '';
-		$trim = ('0'===$trimBorder) ? (', $trim_border=N') : '';
-		$ratings = ('0'===$showRatings) ? (', $ratings=N') : '';
-		$views = ('0'===$showViews) ? (', $views=N') : '';
-		
-		// Assemble the final MailChimp tag
-		$final = '*|'. $service .':[$vid=' . $vidID . $width . $title . $border . $trim . $ratings . $views . ']|*';
-		//print "Final string is: $final.";
-		//exit;
-		return $final;
+		$output = array();
+		// Extract the query string
+		$up = parse_url( $m[5], PHP_URL_QUERY );
+		// Parse it into components
+		parse_str( $up, $output );
+		// Get the 'v' argument
+		$vidID = $output['v'];  
 	}
+	$width = (isset( $attr['width'])) ? (', $max_width=' . $attr['width']) : '';
+	$title = ('0'===$showTitle) ? (', $title=N') : '';
+	$border = ('0'===$showBorder) ? (', $border=N') : '';
+	$trim = ('0'===$trimBorder) ? (', $trim_border=N') : '';
+	$ratings = ('0'===$showRatings) ? (', $ratings=N') : '';
+	$views = ('0'===$showViews) ? (', $views=N') : '';
+	
+	// Assemble the final MailChimp tag
+	$final = '*|'. $service .':[$vid=' . $vidID . $width . $title . $border . $trim . $ratings . $views . ']|*';
+	//print "Final string is: $final.";
+	//exit;
+	return $final;
 }
 ?>

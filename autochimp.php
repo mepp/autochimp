@@ -852,37 +852,60 @@ function AC_OnPublishPost( $postID )
 	// If it matches the user's category choice or is any category, then
 	// do the work.  This needs to be a loop because a post can belong to
 	// multiple categories.
+	global $wpdb;
 	foreach( $categories as $category )
 	{
-		$categoryOptionName = AC_EncodeUserOptionName( WP88_CATEGORY_LIST_MAPPING , $category->name );
-		$categoryMailingList = get_option( $categoryOptionName );
-		$categoryGroupName = get_option( $categoryOptionName . WP88_GROUP_SUFFIX );
-		$categoryTemplateID = get_option( $categoryOptionName . WP88_TEMPLATE_SUFFIX );
-
-		// If the mailing list is NOT "None" then create a campaign.		
-		if ( 0 != strcmp( $categoryMailingList, WP88_NONE ) )
+		// Do a SQL lookup of all category rows that match this category slug.
+		$options_table_name = $wpdb->prefix . 'options';
+		$sql = "SELECT option_name,option_value FROM $options_table_name WHERE option_value = '$category->slug'";
+		$fields = $wpdb->get_results( $sql );
+		if ( $fields )
 		{
-			// Create an instance of the MailChimp API
-			$apiKey = get_option( WP88_MC_APIKEY );
-			$api = new MCAPI_13( $apiKey );
-
-			// Do the work
-			$id = AC_CreateCampaignFromPost( $api, $postID, $categoryMailingList, $categoryGroupName, $categoryTemplateID );
-			$categoryName = $category->name;
-			AC_Log( "Created a campaign in category $categoryName." );
-
-			// Does the user want to send the campaigns right away?
-			$sendNow = get_option( WP88_MC_SEND_NOW );
-
-			// Send it, if necessary (if user wants it), and the $id is
-			// sufficiently long (just picking longer than 3 for fun).
-			if ( '1' == $sendNow && ( strlen( $id ) > 3 ) )
+			foreach ( $fields as $field )
 			{
-				$api->campaignSendNow( $id );
+				// NOTE:  This approach currently does have the problem that if a category
+				// and a plugin's term have the same slug, then campaigns could go to the 
+				// wrong place.  This is fairly unlikely, but this leak needs to be plugged
+				// with an improved architecture here.
+				//
+				// This can happen because the above SQL statement does not discriminate
+				// between categories or terms.  The prefix part of the string and the index
+				// can easily differ while the category slug is the same.
+				
+				// Split the results into an array which contains info about this mapping
+				$info = split( '_', $field->option_name );
+				
+				$categoryMailingList = get_option( str_replace( WP88_CATEGORY_SUFFIX, WP88_LIST_SUFFIX, $field->option_name ) );
+				$categoryGroupName = get_option( str_replace( WP88_CATEGORY_SUFFIX, WP88_GROUP_SUFFIX, $field->option_name ) );
+				$categoryTemplateID = get_option( str_replace( WP88_CATEGORY_SUFFIX, WP88_TEMPLATE_SUFFIX, $field->option_name ) );
+				AC_Log( "For the $category->slug category:  The mailing list is:  $categoryMailingList.  The group is:  $categoryGroupName.  The template ID is:  $categoryTemplateID." );
+		
+				// If the mailing list is NOT "None" then create a campaign.		
+				if ( 0 != strcmp( $categoryMailingList, WP88_NONE ) )
+				{
+					// Create an instance of the MailChimp API
+					$apiKey = get_option( WP88_MC_APIKEY );
+					$api = new MCAPI_13( $apiKey );
+		
+					// Do the work
+					$id = AC_CreateCampaignFromPost( $api, $postID, $categoryMailingList, $categoryGroupName, $categoryTemplateID );
+					$categoryName = $category->name;
+					AC_Log( "Created a campaign in category $categoryName." );
+		
+					// Does the user want to send the campaigns right away?
+					$sendNow = get_option( WP88_MC_SEND_NOW );
+		
+					// Send it, if necessary (if user wants it), and the $id is
+					// sufficiently long (just picking longer than 3 for fun).
+					if ( '1' == $sendNow && ( strlen( $id ) > 3 ) )
+					{
+						$api->campaignSendNow( $id );
+					}
+		
+					// Not breaking anymore.  Now, if you assign multiple categories to 
+					// create campaigns, then each will be created.
+				}
 			}
-
-			// Not breaking anymore.  Now, if you assign multiple categories to 
-			// create campaigns, then each will be created.
 		}
 	}
 }
