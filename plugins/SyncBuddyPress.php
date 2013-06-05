@@ -63,7 +63,7 @@ class SyncBuddyPress extends ACSyncPlugin
 		$xprofile_table_name = $wpdb->prefix . 'bp_xprofile_fields';
 		$fields = $wpdb->get_results( "SELECT name,type FROM $xprofile_table_name WHERE type != 'option'", ARRAY_A );
 		// Create a hidden field just to signal that the user can save their preferences
-		$finalText = '<br />'.PHP_EOL.'<input type="hidden" name="buddypress_running" />'.PHP_EOL;
+		print '<br />'.PHP_EOL.'<input type="hidden" name="buddypress_running" />'.PHP_EOL;
 	
 		if ( $fields )
 		{
@@ -75,9 +75,8 @@ class SyncBuddyPress extends ACSyncPlugin
 				$rowCode .= '<tr class="alternate">' . PHP_EOL . '<td width="65%">' . $field['name'] . '</td>' . PHP_EOL . '<td width="35%">' . $selectBox . '</td>' . PHP_EOL . '</tr>' . PHP_EOL;
 			}
 	
-			$finalText .= AC_GenerateFieldMappingCode( 'BuddyPress', $rowCode );
+			print( AC_GenerateFieldMappingCode( 'BuddyPress', $rowCode ) );
 		}
-		return $finalText;
 	}
 	
 	//

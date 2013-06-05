@@ -231,8 +231,7 @@ if ( $active_tab == 'mailing_lists' )
 
 			// Show UI for any active AutoChimp plugins
 			$syncPlugins = new ACSyncPlugins;
-			$out = $syncPlugins->GenerateMappingsUI( $tableWidth, $mergeVars );
-			print $out;
+			$syncPlugins->GenerateMappingsUI( $tableWidth, $mergeVars );
 			
 			// Show the user the last message
 			$lastMessage = get_option( WP88_MC_LAST_MAIL_LIST_ERROR );

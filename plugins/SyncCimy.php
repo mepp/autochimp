@@ -68,7 +68,7 @@ class SyncCimy extends ACSyncPlugin
 		$sql = "SELECT NAME,TYPE FROM $cimy_table_name";
 		$fields = $wpdb->get_results( $sql, ARRAY_A );
 		// Create a hidden field just to signal that the user can save their preferences
-		$finalText = '<br />'.PHP_EOL.'<input type="hidden" name="cimy_running" />'.PHP_EOL;
+		print '<br />'.PHP_EOL.'<input type="hidden" name="cimy_running" />'.PHP_EOL;
 		if ( $fields )
 		{
 			foreach ( $fields as $field )
@@ -79,9 +79,8 @@ class SyncCimy extends ACSyncPlugin
 				$rowCode .= '<tr class="alternate">' . PHP_EOL . '<td width="65%">' . $field['NAME'] . '</td>' . PHP_EOL . '<td width="35%">' . $selectBox . '</td>' . PHP_EOL . '</tr>' . PHP_EOL;
 			}
 	
-			$finalText .= AC_GenerateFieldMappingCode( 'Cimy', $rowCode );
+			print( AC_GenerateFieldMappingCode( 'Cimy', $rowCode ) );
 		}
-		return $finalText;
 	}
 	
 	

@@ -1,4 +1,9 @@
 <?php
+
+//
+// Special thanks to Aron Silverton for his help with this functionality.
+//
+
 define( 'AUTOCHIMP_SYNC_WPMEMBERS', 'wp88_mc_sync_wpmembers' );
 define( 'WP_MEMBERS_FIELDS', 'wpmembers_fields'); // This name is from the WP-Members plugin.  Don't change it!
 define( 'WP_MEMBERS_FIELD_DB_MAPPING', 'wp88_mc_wpmembers_' );
@@ -50,7 +55,6 @@ class SyncWPMembers extends ACSyncPlugin
 	
 	public function GenerateMappingsUI( $tableWidth, $mergeVars )
 	{
-		$finalText = '';
 		// This data is serializd but get_option will unserialize it, it seems.
 		$fields = get_option( WP_MEMBERS_FIELDS );
 		if ( FALSE !== $fields )
@@ -63,7 +67,7 @@ class SyncWPMembers extends ACSyncPlugin
 			// 3 - Option type (we care about this)
 			//
 			// There are other items as well which are described below as needed.
-			$finalText = '<br />'.PHP_EOL.'<input type="hidden" name="wpmembers_running" />'.PHP_EOL;
+			print '<br />'.PHP_EOL.'<input type="hidden" name="wpmembers_running" />'.PHP_EOL;
 			foreach ( $fields as $field )
 			{
 				// Check that there's a string.  Sometimes WP-Members will have 
@@ -75,9 +79,8 @@ class SyncWPMembers extends ACSyncPlugin
 				$selectBox = AC_GenerateSelectBox( $fieldNameTag, WP88_IGNORE_FIELD_TEXT, $mergeVars );
 				$rowCode .= '<tr class="alternate">' . PHP_EOL . '<td width="65%">' . $field[2] . '</td>' . PHP_EOL . '<td width="35%">' . $selectBox . '</td>' . PHP_EOL . '</tr>' . PHP_EOL;
 			}
-			$finalText .= AC_GenerateFieldMappingCode( 'WP-Members', $rowCode );
+			print( AC_GenerateFieldMappingCode( 'WP-Members', $rowCode ) );
 		}
-		return $finalText;
 	}
 	
 	//

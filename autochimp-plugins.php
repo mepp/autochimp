@@ -300,14 +300,13 @@ class ACSyncPlugins extends ACPlugins
 
 	public function GenerateMappingsUI( $tableWidth, $mergeVars )
 	{
-		$totalOut = '';
 		$syncPlugins = $this->GetPluginClasses( $this->GetType() );
 		foreach ( $syncPlugins as $plugin )
 		{
 			if ( $plugin::GetInstalled() && $plugin::GetUsePlugin() )
 			{
 				$mapper = new $plugin;
-				$totalOut .= $mapper->GenerateMappingsUI( $tableWidth, $mergeVars );
+				$mapper->GenerateMappingsUI( $tableWidth, $mergeVars );
 			}
 		}
 		return $totalOut;

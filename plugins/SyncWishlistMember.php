@@ -60,7 +60,7 @@ class SyncWishlistMember extends ACSyncPlugin
 		$sql = "SELECT option_name,option_value FROM $wishlist_table_name WHERE `option_name` LIKE 'CUSTOMREGFORM-%' ORDER BY `option_name` ASC";
 		$fields = $wpdb->get_results( $sql, ARRAY_A );
 		// Create a hidden field just to signal that the user can save their preferences
-		$finalText = '<br />'.PHP_EOL.'<input type="hidden" name="wishlist_running" />'.PHP_EOL;
+		print '<br />'.PHP_EOL.'<input type="hidden" name="wishlist_running" />'.PHP_EOL;
 		if ( $fields )
 		{
 			foreach ( $fields as $field )
@@ -82,8 +82,8 @@ class SyncWishlistMember extends ACSyncPlugin
 					$rowCode .= '<tr class="alternate">' . PHP_EOL . '<td width="65%">' . $formField . '</td>' . PHP_EOL . '<td width="35%">' . $selectBox . '</td>' . PHP_EOL . '</tr>' . PHP_EOL;
 				}
 				$formName = $data['form_name'];
-				$finalText .= AC_GenerateFieldMappingCode( "Wishlist Form '$formName'", $rowCode );
-				$finalText .= '<br />';
+				print( AC_GenerateFieldMappingCode( "Wishlist Form '$formName'", $rowCode ) );
+				print '<br />';
 			}
 		}
 		return $finalText;
