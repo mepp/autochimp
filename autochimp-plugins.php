@@ -17,7 +17,9 @@ class ACPlugin
 	}
 	
 	//
-	// Returns true if the user wants to use this plugin integration.
+	// Returns true if the user wants to use this plugin integration.  In other words,
+	// if the user has checked the option to integrate this plugin with AutoChimp,
+	// this function will return TRUE.
 	//
 	public static function GetUsePlugin()
 	{
@@ -25,8 +27,8 @@ class ACPlugin
 	}
 
 	//
-	// Function for registering hooks.  If you don't need any, then just don't 
-	// implement your own version.
+	// Function for registering hooks (like actions or filters).  If you don't need 
+	// any, then just don't implement your own version.
 	//
 	public function RegisterHooks()
 	{}
@@ -42,27 +44,31 @@ class ACPlugin
 	{}
 	
 	//
-	// Function for displaying the UI for XXX integration.  This UI will appear
+	// Function for displaying the UI for your integration.  This UI will appear
 	// on the "Plugins" tab.
 	//
 	public function ShowSettings()
 	{}
 	
 	//
-	// Function called when saving settings.  You can access _POST variables here
-	// and write them to the database.
+	// Function called when saving settings.  You can access $_POST variables based
+	// on variables that you created in the ShowSettings() method and write them to
+	// the database.
 	//
 	public function SaveSettings()
 	{}
 }
 
 //
-// ACSyncPlugin - All Sync plugins must derive from this class
+// ACSyncPlugin - All Sync plugins must derive from this class.  This is the most
+// popular type of plugin to support.  It syncs signup data with MailChimp.
 //
 class ACSyncPlugin extends ACPlugin
 {
 	//
-	// Returns the name of the HTML sync variable.  Make sure it's unique.
+	// Returns the name of the HTML sync control.  Make sure it's unique.  You'll
+	// read this variable and write the value to the DB when a user saves his or
+	// her settings.
 	//
 	public static function GetSyncVarName()
 	{}
@@ -85,21 +91,21 @@ class ACSyncPlugin extends ACPlugin
 	}
 	
 	//
-	// This function displays a table of plugin field names to select boxes of
+	// This method displays a table of plugin field names to select boxes of
 	// MailChimp fields. 
 	//	
 	public function GenerateMappingsUI( $tableWidth, $mergeVars )
 	{}
 	
 	//
-	// This function saves the user's choices of mappings to the database.  It
+	// This method saves the user's choices of mappings to the database.  It
 	// uses the global $_POST variable to read the mappings.
 	//
 	public function SaveMappings()
 	{}
 	
 	//
-	// This is the most challenging function.  It looks up data for the user ID
+	// This is the most challenging method.  It looks up data for the user ID
 	// passed in, collects the data that the plugin has set, and formats an array
 	// to be sent to sync MailChimp.
 	//
@@ -108,13 +114,23 @@ class ACSyncPlugin extends ACPlugin
 }
 
 //
-// ACPublishPlugin - All Publish plugins must derive from this class
+// ACPublishPlugin - All Publish plugins must derive from this class.
 //
 class ACPublishPlugin extends ACPlugin
 {
+	//
+	// Returns the name of the HTML publish control.  Make sure it's unique.  You'll
+	// read this variable and write the value to the DB when a user saves his or
+	// her settings.
+	//
 	public static function GetPublishVarName()
 	{}
 	
+	//
+	// This is a prefix string used to name your controls so that you can easily
+	// identify them when the user wants to save settings.  Make sure this is unique
+	// of course.
+	//
 	public static function GetPostTypeVarPrefix()
 	{}
 
@@ -124,12 +140,18 @@ class ACPublishPlugin extends ACPlugin
 	//
 	public static function GetTerms( $postID )
 	{}
-	
+
+	//
+	// Given an array of mailing lists, interest groups, and templates, as well as
+	// some Javascript to aid in select box handling, this method generates row-
+	// by-row UI of term (category) to list to group to template mappings.  This
+	// method should generate all of the UI inline with print statements.
+	//	
 	public function GenerateMappingsUI( $lists, $groups, $templates, $javaScript )
 	{}
 	
 	//
-	// This function saves the user's choices of mappings to the database.  It
+	// This method saves the user's choices of mappings to the database.  It
 	// uses the global $_POST variable to read the mappings.
 	//
 	public function SaveMappings()
@@ -137,10 +159,17 @@ class ACPublishPlugin extends ACPlugin
 }
 
 //
-// ACContentPlugin - All Content plugins must derive from this class
+// ACContentPlugin - All Content plugins must derive from this class.  Content
+// plugins are fairly simple.  They just detect shortcode for the WordPress plugin
+// that they represent then, when a post is created, runs the shortcode through
+// the plugin to generate the final text that will go to the campaign.
 //
 class ACContentPlugin extends ACPlugin
 {
+	//
+	// This straightforward method just takes content and converts any supported
+	// shortcode and returns the updated content.
+	//
 	public function ConvertShortcode( $content )
 	{
 		return $content;
@@ -148,8 +177,12 @@ class ACContentPlugin extends ACPlugin
 }
 
 //
+// Collection Classes
+//
+
+//
 // This class is used only by AutoChimp.  Third party plugins for AutoChimp do not
-// need this class.
+// need this class or any of the others below.
 //
 class ACPlugins
 {
@@ -171,7 +204,7 @@ class ACPlugins
 		$plugins = $this->GetPluginClasses( $this->GetType() );
 		foreach ( $plugins as $plugin )
 		{
-			if ( $plugin::GetInstalled() )
+			if ( $plugin::GetInstalled()&& $plugin::GetUsePlugin() )
 			{
 				$p = new $plugin;
 				$p->SaveSettings();
@@ -260,32 +293,11 @@ class ACPlugins
 //
 class ACSyncPlugins extends ACPlugins
 {
-	public function SaveSettings()
+	public function GetType()
 	{
-		$syncPlugins = $this->GetPluginClasses( $this->GetType() );
-		foreach ( $syncPlugins as $plugin )
-		{
-			if ( $plugin::GetInstalled() )
-			{
-				$sync = new $plugin;
-				$sync->SaveSettings();
-			}
-		}
+		return 'Sync';
 	}
-	
-	public function SaveMappings()
-	{
-		$syncPlugins = $this->GetPluginClasses( $this->GetType() );
-		foreach ( $syncPlugins as $plugin )
-		{
-			if ( $plugin::GetInstalled() && $plugin::GetUsePlugin() )
-			{
-				$mapper = new $plugin;
-				$mapper->SaveMappings();
-			}
-		}
-	}
-	
+
 	public function GenerateMappingsUI( $tableWidth, $mergeVars )
 	{
 		$totalOut = '';
@@ -314,11 +326,6 @@ class ACSyncPlugins extends ACPlugins
 				AC_AddUserFieldsToMergeArray( $merge_vars, $data );
 			}
 		}
-	}
-
-	public function GetType()
-	{
-		return 'Sync';
 	}
 }
 
@@ -364,6 +371,11 @@ class ACPublishPlugins extends ACPlugins
 //
 class ACContentPlugins extends ACPlugins
 {
+	public function GetType()
+	{
+		return 'Content';
+	}
+	
 	public function ConvertShortcode( $content )
 	{
 		$plugins = $this->GetPluginClasses( $this->GetType() );
@@ -378,11 +390,6 @@ class ACContentPlugins extends ACPlugins
 			}
 		}
 		return $content;				
-	}
-
-	public function GetType()
-	{
-		return 'Content';
 	}
 }
 ?>
