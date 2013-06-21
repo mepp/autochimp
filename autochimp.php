@@ -64,6 +64,8 @@ define( 'WP88_WORDPRESS_FIELD_MAPPING', 'wp88_mc_wp_f_' );
 define( 'WP88_CATEGORY_LIST_MAPPING', 'wp88_mc_category_list_' );		// Unused as of 2.02
 define( 'WP88_CATEGORY_MAPPING_PREFIX', 'wp88_mc_catmap_' );			// Used instead of WP88_CATEGORY_LIST_MAPPING
 define( 'WP88_PLUGIN_FIRST_ACTIVATION', 'wp88_mc_first_activation' );
+define( 'WP88_IGNORE_2_0_NOTICE', 'ac_20_ignore_notice' );				// Deprecated as of 2.1
+define( 'WP88_IGNORE_2_1_NOTICE', 'ac_21_ignore_notice' );
 define( 'WP88_CATEGORY_SUFFIX', '_category' );
 define( 'WP88_LIST_SUFFIX', '_list' );
 define( 'WP88_GROUP_SUFFIX', '_group' );
@@ -355,9 +357,9 @@ function AC_OnAdminInit()
 	$user_id = $current_user->ID;
 	// If user clicks to ignore the notice, add that to their user meta so that
 	// the notice doesn't come up anymore.
-	if ( isset($_GET['ac_20_nag_ignore']) && '0' == $_GET['ac_20_nag_ignore'] ) 
+	if ( isset($_GET['ac_21_nag_ignore']) && '0' == $_GET['ac_21_nag_ignore'] ) 
 	{
-		add_user_meta( $user_id, 'ac_20_ignore_notice', 'true', true );
+		add_user_meta( $user_id, WP88_IGNORE_2_1_NOTICE, 'true', true );
 	}
 	
 	// Register the AutoChimp JS scripts - they'll be loaded later when the
@@ -1148,7 +1150,8 @@ function AC_OnUpdateUser( $userID, $old_user_data, $writeDBMessages = TRUE )
 }
 
 //
-//	Added for 2.0 to do some slight conversion work when upgrading from 1.x to 2.0.
+// Added for 2.0 to do some slight conversion work when upgrading from 1.x to 2.0.
+// There are also upgrades from 2.02 to 2.1.
 //
 function AC_OnActivateAutoChimp()
 {
@@ -1184,7 +1187,7 @@ function AC_OnAdminNotice()
 	global $current_user;
 	$user_id = $current_user->ID;
 	// Check that the user hasn't already clicked to ignore the message
-	if ( !get_user_meta( $user_id, 'ac_20_ignore_notice' ) ) 
+	if ( !get_user_meta( $user_id, WP88_IGNORE_2_1_NOTICE ) ) 
 	{
 		global $pagenow;
 	    if ( 'plugins.php' == $pagenow || 'options-general.php' == $pagenow ) 
@@ -1194,9 +1197,9 @@ function AC_OnAdminNotice()
 			// If there are already arguments, append the ignore message.  Otherwise
 			// add it as the only variable.
 			if ( FALSE === strpos( $currentPage, '?' ) )
-				$currentPage .= '?ac_20_nag_ignore=0';
+				$currentPage .= '?ac_21_nag_ignore=0';
 			else
-				$currentPage .= '&ac_20_nag_ignore=0';
+				$currentPage .= '&ac_21_nag_ignore=0';
 			
 	    	$apiSetMessage = '';
 	    	$apiSet = get_option( WP88_MC_APIKEY, '0' );
@@ -1205,7 +1208,7 @@ function AC_OnAdminNotice()
 				$apiSetMessage = '<p>The first thing to do is set your MailChimp API key.  You can find your key on the MailChimp website under <em>Account</em> - <em>API Keys & Authorized Apps</em>.  Click <a target="_blank" href="options-general.php?page=autochimp.php">here</a> to set your API key now. | <a href="' . $currentPage . '">Dismiss</a></p>';
 			}
 			echo '<div class="updated"><p>';
-			printf(__('Welcome to AutoChimp 2.0.  Be sure to review <em>all</em> of your settings to ensure they are correct.  For more detail, please visit the <a href="http://www.wandererllc.com/company/plugins/autochimp/"">AutoChimp homepage</a>. | <a href="%1$s">Dismiss</a>'), $currentPage );
+			printf(__('Welcome to AutoChimp 2.1.  If you are upgrading, be sure to review your <a target="_blank" href="options-general.php?page=autochimp.php&tab=campaigns">campaign settings</a> which AutoChimp has just migrated.  To learn more about AutoChimp, please visit the <a href="http://www.wandererllc.com/company/plugins/autochimp/"">AutoChimp homepage</a>. | <a href="%1$s">Dismiss</a>'), $currentPage );
 			print( $apiSetMessage );
 			echo "</p></div>";
 		}

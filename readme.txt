@@ -3,7 +3,7 @@ Plugin Name: AutoChimp
 Contributors: WandererLLC
 Plugin URI: http://www.wandererllc.com/company/plugins/autochimp/
 Donate link: https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=HPCPB3GY5LUQW&lc=US
-Tags: MailChimp, Mail, Chimp, email, campaign, mailing list, interest, group, template, BuddyPress, Register, Plus, Redux, Profile Fields, XProfile, Cimy, merge, admin, create, automatically, subscribe, unsubscribe, sync, synchronize
+Tags: AutoChimp, MailChimp, Mail, Chimp, email, campaign, mailing list, interest, group, template, BuddyPress, Register, Plus, Redux, Profile Fields, XProfile, Cimy, Wishlist Member, WP-Member, Events Manager, merge, admin, create, automatically, subscribe, unsubscribe, sync, synchronize
 Requires at least: 2.8
 Tested up to: 3.4.1
 Stable tag: 2.02
@@ -37,13 +37,22 @@ To use, save your MailChimp API Key on the options page then start adding your n
 
 = Where can I find the complete FAQ? =
 
-You can find the complete FAQ [here](http://www.faqme.com/autochimp).
+You can find the complete FAQ [here](http://www.wandererllc.com/company/plugins/autochimp/).
 
 = How do I make suggestions or report bugs for this plugin? =
 
 Just go to <http://www.wandererllc.com/company/plugins/autochimp/> and follow the instructions.
 
 == Changelog ==
+
+= 2.10 =
+
+* Added support for WP-Members, Wishlist Member, and Events Manager
+* Support for creating campaigns from custom post types
+* Updated UI and data format for Campaign settings
+* Data migration code and reminders on activation
+* Added framework to allow other developers to quickly add support for third party WordPress plugins
+* Bug fixes
 
 = 2.02 =
 
@@ -142,6 +151,10 @@ Just go to <http://www.wandererllc.com/company/plugins/autochimp/> and follow th
 
 == Upgrade Notice ==
 
+= 2.10 =
+
+Major release.  Please upgrade.
+
 = 2.02 =
 
 Small UI improvements and fixes.  Please upgrade.
@@ -206,6 +219,7 @@ This version adds the ability to create campaigns from blog posts.
 
 There are many people who have suggested features for AutoChimp.  Special consideration needs to be made to the following people who had an active role in contributing by providing a detailed design, monetary sponsorship, or offering to test and provide useful feedback:
 
+1. Aron Silverton for his help with integrating the WP-Members plugin.
 1. Anton Alksnin at [Forex Alert](http://www.forex-alert.net "Forex Alert") for supporting the "blog post to campaign" feature.
 1. Peter Michael at [FlowDrops](http://www.flowdrops.com/) for some quality testing.
 1. [Latinos a Morir](http://www.latinosamorir.com/) for supporting the BuddyPress Synchronization feature.

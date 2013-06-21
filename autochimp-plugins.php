@@ -312,6 +312,19 @@ class ACSyncPlugins extends ACPlugins
 		return $totalOut;
 	}
 	
+	public function SaveMappings()
+	{
+		$publishPlugins = $this->GetPluginClasses( $this->GetType() );
+		foreach ( $publishPlugins as $plugin )
+		{
+			if ( $plugin::GetInstalled() && $plugin::GetUsePlugin() )
+			{
+				$mapper = new $plugin;
+				$mapper->SaveMappings();
+			}
+		}
+	}
+	
 	public function SyncData( &$merge_vars, $userID )
 	{
 		$syncPlugins = $this->GetPluginClasses( $this->GetType() );
