@@ -848,18 +848,19 @@ function AC_OnPublishPost( $postID )
 		}
 	}
 
-	AC_Log( "Creating a campaign for post ID $postID." );
+	AC_Log( "Attempting to a campaign for post ID $postID." );
 	AC_Log( $categories );
 	
-	// If it matches the user's category choice or is any category, then
+	// If it matches the user's category choice or is "Any" category, then
 	// do the work.  This needs to be a loop because a post can belong to
 	// multiple categories.
 	global $wpdb;
 	foreach( $categories as $category )
 	{
-		// Do a SQL lookup of all category rows that match this category slug.
+		// Do a SQL lookup of all category rows that match this category slug.  NOTE that
+		// the option for the "Any" category is in this SQL string.
 		$options_table_name = $wpdb->prefix . 'options';
-		$sql = "SELECT option_name,option_value FROM $options_table_name WHERE option_value = '$category->slug'";
+		$sql = "SELECT option_name,option_value FROM $options_table_name WHERE option_name LIKE 'wp88_mc_%' AND (option_value = '$category->slug' OR option_value = '" . WP88_ANY . "')";
 		$fields = $wpdb->get_results( $sql );
 		if ( $fields )
 		{
@@ -877,6 +878,15 @@ function AC_OnPublishPost( $postID )
 				// Split the results into an array which contains info about this mapping
 				$info = split( '_', $field->option_name );
 				
+				// The last part of $info should contain the word "category".  It's possible
+				// that other rows will be picked up (like when the option value is "Any", 
+				// the "group" option will be picked up too since it can have an "Any" value)
+				// so skip those here.
+				if ( 0 !== strcmp( $info[4], 'category') )
+					continue;
+				
+				// Yank off the "category" from the tail of each string and replace it with the 
+				// other values, then query them.
 				$categoryMailingList = get_option( str_replace( WP88_CATEGORY_SUFFIX, WP88_LIST_SUFFIX, $field->option_name ) );
 				$categoryGroupName = get_option( str_replace( WP88_CATEGORY_SUFFIX, WP88_GROUP_SUFFIX, $field->option_name ) );
 				$categoryTemplateID = get_option( str_replace( WP88_CATEGORY_SUFFIX, WP88_TEMPLATE_SUFFIX, $field->option_name ) );

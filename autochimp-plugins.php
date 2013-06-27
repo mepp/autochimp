@@ -309,7 +309,6 @@ class ACSyncPlugins extends ACPlugins
 				$mapper->GenerateMappingsUI( $tableWidth, $mergeVars );
 			}
 		}
-		return $totalOut;
 	}
 	
 	public function SaveMappings()

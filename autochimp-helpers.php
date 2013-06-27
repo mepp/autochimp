@@ -12,7 +12,7 @@
 function AC_GenerateFieldMappingCode( $pluginName, $rowCode )
 {
 	// Generate the table now
-	$tableText .= '<div id=\'filelist\'>' . PHP_EOL;
+	$tableText = '<div id=\'filelist\'>' . PHP_EOL;
 	$tableText .= '<table class="widefat" style="width:<?php echo $tableWidth; ?>px">
 			<thead>
 			<tr>
@@ -119,9 +119,13 @@ function AC_SaveCampaignCategoryMappings( $mappingPrefix )
 		$everyFourth++;
 	}
 	AC_Log($indexArray);
+	// All the prints here are for Nathan and MailChimp.
+	//print "<p>Mapping prefix is '$mappingPrefix'. Here's the index array for this save:</p>";
+	//print_r( $indexArray );
 	
 	// Set the count now.
 	$count = isset( $indexArray[$indexCounter] ) ? $indexArray[$indexCounter] : 0;
+	//print "<p>Starting with index count $count.</p>";
 
 	// Loop through the Events Manager category post variables until one is 
 	// not found.
@@ -131,6 +135,7 @@ function AC_SaveCampaignCategoryMappings( $mappingPrefix )
 		$selectName = AC_EncodeUserOptionName( $mappingPrefix, $count );
 		$dbName = AC_EncodeUserOptionName( $mappingPrefix, $condensedIndex );
 		AC_Log( "The select name is $selectName.  The dbName is $dbName." );
+		//print("<p>The select name is $selectName.  The dbName is $dbName.</p>");
 
 		// Save the category selection - note if one of these POST variables is here,
 		// then they are all expected to be here.  Also note that the $dbName 

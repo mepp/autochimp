@@ -221,6 +221,7 @@ if ( $active_tab == 'mailing_lists' )
 			// been moved to the main UI.  It's still represented by a DB value that makes
 			// it look like it belongs to BuddyPress, so heads up.
 			$selectBox = AC_GenerateSelectBox( WP88_MC_STATIC_FIELD, WP88_IGNORE_FIELD_TEXT, $mergeVars );
+			$staticText = get_option( WP88_MC_STATIC_TEXT );
 			$output .= '<tr class="alternate"><td width="65%">Static Text: <input type="text" name="static_select" value="' . $staticText . '"size="18" /></td><td width="30%">' . $selectBox . '</td></tr>';
 
 			$tableCode = AC_GenerateFieldMappingCode( 'WordPress', $output );
@@ -389,8 +390,10 @@ if ( $active_tab == 'campaigns' )
 	}
 	
 	// Now loop through the constructed array and generate a new row for each
-	// mapping found.  Save off the highest mapping.
-	$highestMapping = 0;
+	// mapping found.  Save off the highest mapping.  If there is no existing
+	// mapping.  The -1 will be changed to a 0 index in the call to 
+	// AC_GenerateNewRowScript().  The javascript will use that index.
+	$highestMapping = -1;
 	foreach( $mappings as $index => $mapping )
 	{
 		$newRow = AC_GenerateCategoryMappingRow($index, WP88_CATEGORY_MAPPING_PREFIX,
