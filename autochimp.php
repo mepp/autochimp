@@ -4,7 +4,7 @@ Plugin Name: AutoChimp
 Plugin URI: http://www.wandererllc.com/company/plugins/autochimp/
 Description: Keep MailChimp mailing lists in sync with your WordPress site.  AutoChimp supports many WordPress plugin profile extenders like WP-Members, Wishlist, BuddyPress, and Cimy User Extra fields. MailChimp also gives users the ability to create MailChimp mail campaigns from blog posts with the flexibility of sending different categories to different lists and interest groups.  You can use your user-defined templates as well.
 Author: Wanderer LLC Dev Team
-Version: 2.02
+Version: 2.10
 */
 
 //
