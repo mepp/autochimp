@@ -6,7 +6,7 @@ Donate link: https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_i
 Tags: AutoChimp, MailChimp, Mail, Chimp, email, campaign, mailing list, interest, group, template, BuddyPress, Register, Plus, Redux, Profile Fields, XProfile, Cimy, Wishlist Member, WP-Member, Events Manager, merge, admin, create, automatically, subscribe, unsubscribe, sync, synchronize
 Requires at least: 2.8
 Tested up to: 3.4.1
-Stable tag: 2.02
+Stable tag: 2.10
 
 Keep website users and MailChimp mailing lists in sync and create campaigns from posts.
 
