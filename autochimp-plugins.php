@@ -87,7 +87,7 @@ class ACSyncPlugin extends ACPlugin
 	//
 	public function SaveSettings()
 	{
-		AC_SetBooleanOption( GetSyncVarName(), GetSyncDBVarName() );
+		AC_SetBooleanOption( $this::GetSyncVarName(), $this::GetSyncDBVarName() );
 	}
 	
 	//
@@ -217,6 +217,7 @@ class ACPlugins
 		$plugins = $this->GetPluginClasses( $this->GetType() );
 		foreach ( $plugins as $plugin )
 		{
+			include_once( plugin_dir_path( __FILE__ ) . 'plugins/' . $plugin . '.php' );
 			if ( $plugin::GetInstalled() && $plugin::GetUsePlugin() )
 			{
 				$p = new $plugin;
