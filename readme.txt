@@ -6,7 +6,7 @@ Donate link: https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_i
 Tags: AutoChimp, MailChimp, Mail, Chimp, email, campaign, mailing list, interest, group, template, BuddyPress, Register, Plus, Redux, Profile Fields, XProfile, Cimy, Wishlist Member, WP-Member, Events Manager, merge, admin, create, automatically, subscribe, unsubscribe, sync, synchronize
 Requires at least: 2.8
 Tested up to: 3.5.2
-Stable tag: 2.11
+Stable tag: 2.12
 
 Keep website users and MailChimp mailing lists in sync and create campaigns from posts.
 
@@ -45,6 +45,15 @@ You can find the complete FAQ [here](http://www.wandererllc.com/company/plugins/
 Just go to <http://www.wandererllc.com/company/plugins/autochimp/> and follow the instructions.
 
 == Changelog ==
+
+= 2.12 =
+
+* Fixed the "Class 'XXX' not found" bug.
+
+= 2.11 =
+
+* Added notifications to let users know to upgrade PHP to 5.3.8 or higher.
+* Attempted mitigation of "Class 'XXX' not found" for clues on how to fix (not able to reproduce).
 
 = 2.10 =
 
@@ -152,9 +161,17 @@ Just go to <http://www.wandererllc.com/company/plugins/autochimp/> and follow th
 
 == Upgrade Notice ==
 
+= 2.12 =
+
+'Class XXX not found' bug has been fixed.  Please upgrade.
+
+= 2.11 = 
+
+No need to upgrade unless you're running into activation problems or 'Class XXX not found' errors.
+
 = 2.10 =
 
-Major release.  Please upgrade.
+Major release.  Please upgrade.  NOTE:  Requires PHP 5.3.8 and higher.
 
 = 2.02 =
 
@@ -234,6 +251,7 @@ There are many people who have suggested features for AutoChimp.  Special consid
 1. [Allen Hancock](http://www.kayakmississippi.com/), sponsor of the Phatwater Kayak Challenge 42 miles on the Mighty Mississippi.
 1. Several anonymous contributions to the AutoChimp 2.0 project.
 1. Katherine Boroski, [BKB Design Group](http://www.bkbdesigngroup.com), for reporting the '.' in Category names bug.
+1. Travis Clinton for helping debug the mysterious AutoChimp 2.10 plugin files not loading.
 
 == License ==
 

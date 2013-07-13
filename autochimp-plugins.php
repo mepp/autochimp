@@ -186,6 +186,21 @@ class ACContentPlugin extends ACPlugin
 //
 class ACPlugins
 {
+	// The constructor is used to load up all plugin files and include them.  See
+	// this post (problem number two):  
+	//		http://www.wandererllc.com/company/2013/07/problems-with-autochimp-2-10/
+	// Loading the classes may not be happening properly for functions that call
+	// static members, so this constructor attempts to include each of the plugin
+	// files.
+	function __construct()
+	{
+		$plugins = $this->GetPluginClasses( $this->GetType() );
+		foreach ( $plugins as $plugin )
+		{
+			include_once( plugin_dir_path( __FILE__ ) . 'plugins/' . $plugin . '.php' );
+		}
+	}
+	
 	public function ShowSettings()
 	{
 		$plugins = $this->GetPluginClasses( $this->GetType() );
@@ -217,7 +232,6 @@ class ACPlugins
 		$plugins = $this->GetPluginClasses( $this->GetType() );
 		foreach ( $plugins as $plugin )
 		{
-			include_once( plugin_dir_path( __FILE__ ) . 'plugins/' . $plugin . '.php' );
 			if ( $plugin::GetInstalled() && $plugin::GetUsePlugin() )
 			{
 				$p = new $plugin;
