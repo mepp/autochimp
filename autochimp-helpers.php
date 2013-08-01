@@ -216,7 +216,7 @@ function AC_GenerateNewRowScript($numExistingRows, $objectPrefix, $appendTo,
 	$nrScript .= "'$specialCategory':null"; 
 	foreach ( $categories as $name => $slug ) 
 	{
-		$nrScript .= ",'$name':'$slug'";
+		$nrScript .= ",'" . addslashes($name) . "':'$slug'";
 	}
 	$nrScript .= '};';
 
@@ -226,15 +226,14 @@ function AC_GenerateNewRowScript($numExistingRows, $objectPrefix, $appendTo,
 	foreach ( $lists as $list => $id ) 
 	{
 		$name = $list;
-		$id = $id;
-		$nrScript .= ",'$name':'$id'";
+		$nrScript .= ",'" . addslashes($name) . "':'$id'";
 	}
 	// As part of the lists, set up the change options which will affect the
 	// groups select box.  Close off the previous array too!
 	$nrScript .= "};listCO={};";
 	foreach( $groups as $listID => $lg )
 	{
-		$groupCSVString = implode(',', array_values( $lg ));
+		$groupCSVString = addslashes( implode( ',', array_values( $lg ) ) );
 		$nrScript .= "listCO['$listID']='$groupCSVString'.split(',');";
 	}
 
@@ -248,8 +247,7 @@ function AC_GenerateNewRowScript($numExistingRows, $objectPrefix, $appendTo,
 	foreach ( $templates as $template => $id ) 
 	{
 		$name = $template;
-		$id = $id;
-		$nrScript .= ",'$name':'$id'";
+		$nrScript .= ",'" . addslashes($name) . "':'$id'";
 	}
 	$nrScript .= '};';
 			

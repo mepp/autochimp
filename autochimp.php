@@ -4,7 +4,7 @@ Plugin Name: AutoChimp
 Plugin URI: http://www.wandererllc.com/company/plugins/autochimp/
 Description: Keep MailChimp mailing lists in sync with your WordPress site.  AutoChimp supports many WordPress plugin profile extenders like WP-Members, Wishlist, BuddyPress, and Cimy User Extra fields. MailChimp also gives users the ability to create MailChimp mail campaigns from blog posts with the flexibility of sending different categories to different lists and interest groups.  You can use your user-defined templates as well.  NOTE:  <a href="http://www.wandererllc.com/company/2013/07/problems-with-autochimp-2-10/" target="_blank">AutoChimp 2.10 and up requires PHP 5.3.x or higher</a>. Please update (here is <a href="http://support.hostgator.com/articles/hosting-guide/hardware-software/php-5-3">an example</a> for HostGator users) if you are unable to activate the plugin.
 Author: Wanderer LLC Dev Team
-Version: 2.12
+Version: 2.13
 */
 
 //
