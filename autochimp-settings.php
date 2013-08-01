@@ -54,14 +54,14 @@ if ( $active_tab == 'api_key' )
 		if ( empty( $apiKey ) )
 		{
 			print "<p><em>No API Key has been saved yet!</em></p>";
-			print "<p>Set your Mailchimp API Key, which you can find on the <a target=\"_blank\" href=\"http://us1.admin.mailchimp.com/account/api\">MailChimp website</a>, ";
-			print "in the text box below. Once the API Key is set, you will see the various options that AutoChimp provides.</p>";
-			print '<p>Set Your MailChimp API Key: ';
+			print "<p>Save your Mailchimp API Key in the box below. You can find this special key by logging into the MailChimp website.  Once logged in, click on your username (on the left, under the MailChimp image).  From the popup menu, choose <em>Account Settings</em>, then <em>Extras</em>, then <em>API Keys</em>.";
+			print "Once the API Key is saved, you will see the various options that AutoChimp provides.</p>";
+			print '<p>Save Your MailChimp API Key: ';
 		}
 		else
 		{
 			print "<p>Your Current MailChimp API Key:  <strong>$apiKey</strong><p/>";
-			print '<p><em>There is no need to set your API Key again unless you have acquired a new API key at <a href="http://eepurl.com/MnhD">mailchimp.com</a>.</em></p>';
+			print '<p><em>There is no need to set your API Key again unless you have acquired a new API key.</em></p>';
 			print '<p>Change Your MailChimp API Key: ';
 		}
 	?>
