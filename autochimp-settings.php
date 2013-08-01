@@ -398,7 +398,7 @@ if ( $active_tab == 'campaigns' )
 	{
 		$newRow = AC_GenerateCategoryMappingRow($index, WP88_CATEGORY_MAPPING_PREFIX,
 												$categories, $mapping[0], 			// In alphabetical order!! "category" is first.
-												$listHash, $mapping[2], $javaScript,// "list" is third
+												$listHash, $mapping[2], $javaScript,// "list" is third, the javascript is what runs when the user chooses another list (need to switch out interest groups).
 												$groupHash, $mapping[1], 			// "group" is second
 												$templatesHash, $mapping[3] );		// "template" is fourth
 		if ( $index > $highestMapping )
