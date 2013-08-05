@@ -36,7 +36,7 @@ class SyncBuddyPress extends ACSyncPlugin
 	//	exists (because this file has been included), then it means that BuddyPress
 	//	is installed.  See "bp_init" action. 
 	//
-	public function ShowSettings()
+	public function ShowPluginSettings()
 	{
 		// Get settings
 		$sync = SyncBuddyPress::GetUsePlugin();

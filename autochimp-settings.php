@@ -377,7 +377,7 @@ if ( $active_tab == 'campaigns' )
 		foreach ( $fields as $field )
 		{
 			// Split the results into an array which contains info about this mapping
-			$info = split( '_', $field['option_name'] );
+			$info = explode( '_', $field['option_name'] );
 			
 			// Create a new array for each new index (at the 3rd element of the split
 			// string.  
@@ -500,13 +500,13 @@ if ( $active_tab == 'plugins' )
 		}
 
 		$syncPlugins = new ACSyncPlugins;
-		$syncPlugins->ShowSettings();
+		$syncPlugins->ShowPluginSettings();
 		
 		$publishPlugins = new ACPublishPlugins;
-		$publishPlugins->ShowSettings();
+		$publishPlugins->ShowPluginSettings();
 		
 		$contentPlugins = new ACContentPlugins;
-		$contentPlugins->ShowSettings();
+		$contentPlugins->ShowPluginSettings();
 	?>
 	
 	<div class="submit"><input type="submit" name="save_plugin_options" class="button-primary" value="Save Options" /></div>

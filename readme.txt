@@ -5,7 +5,7 @@ Plugin URI: http://www.wandererllc.com/company/plugins/autochimp/
 Donate link: https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=HPCPB3GY5LUQW&lc=US
 Tags: AutoChimp, MailChimp, Mail, Chimp, email, campaign, mailing list, interest, group, template, BuddyPress, Register, Plus, Redux, Profile Fields, XProfile, Cimy, Wishlist Member, WP-Member, Events Manager, merge, admin, create, automatically, subscribe, unsubscribe, sync, synchronize
 Requires at least: 2.8
-Tested up to: 3.5.2
+Tested up to: 3.6
 Stable tag: 2.13
 
 Keep website users and MailChimp mailing lists in sync and create campaigns from posts.
@@ -45,6 +45,10 @@ You can find the complete FAQ [here](http://www.wandererllc.com/company/plugins/
 Just go to <http://www.wandererllc.com/company/plugins/autochimp/> and follow the instructions.
 
 == Changelog ==
+
+= 2.14 =
+
+* Fixed the missing paragraph breaks bug.
 
 = 2.13 =
 
@@ -165,6 +169,10 @@ Just go to <http://www.wandererllc.com/company/plugins/autochimp/> and follow th
 * Basic UI for keeping a mailing list in sync with your site's users.
 
 == Upgrade Notice ==
+
+= 2.14 =
+
+Bug fixes.  Please upgrade.  Fixed bug:  stripped paragraph breaks in excerpts.  Actually, this is standard WordPress behavior, but it doesn't work so well as an email campaign, so the fix just overrides the standard WordPress behavior and does everything else except strip out the paragraph breaks.
 
 = 2.13 =
 
