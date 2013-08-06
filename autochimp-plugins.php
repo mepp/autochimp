@@ -47,15 +47,15 @@ class ACPlugin
 	// Function for displaying the UI for your integration.  This UI will appear
 	// on the "Plugins" tab.
 	//
-	public function ShowSettings()
+	public function ShowPluginSettings()
 	{}
 	
 	//
-	// Function called when saving settings.  You can access $_POST variables based
-	// on variables that you created in the ShowSettings() method and write them to
-	// the database.
+	// Function called when plugin saving settings.  You can access $_POST variables
+	// based on variables that you created in the ShowPluginSettings() method and write 
+	// them to the database.
 	//
-	public function SaveSettings()
+	public function SavePluginSettings()
 	{}
 }
 
@@ -85,7 +85,7 @@ class ACSyncPlugin extends ACPlugin
 	// simple settings, you get saving for free.  Only implement if you have special
 	// settings, but strive hard not to.
 	//
-	public function SaveSettings()
+	public function SavePluginSettings()
 	{
 		AC_SetBooleanOption( $this::GetSyncVarName(), $this::GetSyncDBVarName() );
 	}
@@ -201,7 +201,7 @@ class ACPlugins
 		}
 	}
 	
-	public function ShowSettings()
+	public function ShowPluginSettings()
 	{
 		$plugins = $this->GetPluginClasses( $this->GetType() );
 		foreach ( $plugins as $plugin )
@@ -209,20 +209,21 @@ class ACPlugins
 			if ( $plugin::GetInstalled() )
 			{
 				$p = new $plugin;
-				$p->ShowSettings();
+				$p->ShowPluginSettings();
 			}
 		}
 	}
 
-	public function SaveSettings()
+	public function SavePluginSettings()
 	{
+		//AC_Log( 'Running ACPlugins::SavePluginSettings()' );
 		$plugins = $this->GetPluginClasses( $this->GetType() );
 		foreach ( $plugins as $plugin )
 		{
-			if ( $plugin::GetInstalled()&& $plugin::GetUsePlugin() )
+			if ( $plugin::GetInstalled() )
 			{
 				$p = new $plugin;
-				$p->SaveSettings();
+				$p->SavePluginSettings();
 			}
 		}
 	}
@@ -410,11 +411,10 @@ class ACContentPlugins extends ACPlugins
 			if ( $plugin::GetInstalled() && $plugin::GetUsePlugin() )
 			{
 				$p = new $plugin;
-				$converted = $p->ConvertShortcode( $content );
-				// Now run the content through the_content engine.
-				$content = apply_filters( 'the_content', $converted );
+				$content = $p->ConvertShortcode( $content );
 			}
 		}
+		$content = apply_filters( 'the_content', $content );
 		return $content;				
 	}
 }

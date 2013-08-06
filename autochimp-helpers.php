@@ -112,20 +112,19 @@ function AC_SaveCampaignCategoryMappings( $mappingPrefix )
 		$mod = $everyFourth % 4;
 		if ( 0 === $mod )
 		{
-			$fieldInfo = split( '_', $field->option_name );
+			$fieldInfo = explode( '_', $field->option_name );
 			// For this class, the index is at position 3
 			$indexArray[] = $fieldInfo[3];			
 		}
 		$everyFourth++;
 	}
-	AC_Log($indexArray);
-	// All the prints here are for Nathan and MailChimp.
-	//print "<p>Mapping prefix is '$mappingPrefix'. Here's the index array for this save:</p>";
-	//print_r( $indexArray );
+	AC_Log( "Mapping prefix is '$mappingPrefix'." );
+	if ( !empty( $indexArray ) )
+		AC_Log( $indexArray );
 	
 	// Set the count now.
 	$count = isset( $indexArray[$indexCounter] ) ? $indexArray[$indexCounter] : 0;
-	//print "<p>Starting with index count $count.</p>";
+	AC_Log("Starting with index count $count.");
 
 	// Loop through the Events Manager category post variables until one is 
 	// not found.
@@ -135,7 +134,6 @@ function AC_SaveCampaignCategoryMappings( $mappingPrefix )
 		$selectName = AC_EncodeUserOptionName( $mappingPrefix, $count );
 		$dbName = AC_EncodeUserOptionName( $mappingPrefix, $condensedIndex );
 		AC_Log( "The select name is $selectName.  The dbName is $dbName." );
-		//print("<p>The select name is $selectName.  The dbName is $dbName.</p>");
 
 		// Save the category selection - note if one of these POST variables is here,
 		// then they are all expected to be here.  Also note that the $dbName 
@@ -216,7 +214,7 @@ function AC_GenerateNewRowScript($numExistingRows, $objectPrefix, $appendTo,
 	$nrScript .= "'$specialCategory':null"; 
 	foreach ( $categories as $name => $slug ) 
 	{
-		$nrScript .= ",'$name':'$slug'";
+		$nrScript .= ",'" . addslashes($name) . "':'$slug'";
 	}
 	$nrScript .= '};';
 
@@ -226,15 +224,14 @@ function AC_GenerateNewRowScript($numExistingRows, $objectPrefix, $appendTo,
 	foreach ( $lists as $list => $id ) 
 	{
 		$name = $list;
-		$id = $id;
-		$nrScript .= ",'$name':'$id'";
+		$nrScript .= ",'" . addslashes($name) . "':'$id'";
 	}
 	// As part of the lists, set up the change options which will affect the
 	// groups select box.  Close off the previous array too!
 	$nrScript .= "};listCO={};";
 	foreach( $groups as $listID => $lg )
 	{
-		$groupCSVString = implode(',', array_values( $lg ));
+		$groupCSVString = addslashes( implode( ',', array_values( $lg ) ) );
 		$nrScript .= "listCO['$listID']='$groupCSVString'.split(',');";
 	}
 
@@ -248,8 +245,7 @@ function AC_GenerateNewRowScript($numExistingRows, $objectPrefix, $appendTo,
 	foreach ( $templates as $template => $id ) 
 	{
 		$name = $template;
-		$id = $id;
-		$nrScript .= ",'$name':'$id'";
+		$nrScript .= ",'" . addslashes($name) . "':'$id'";
 	}
 	$nrScript .= '};';
 			
@@ -321,13 +317,20 @@ function AC_DecodeUserOptionName( $decodePrefix, $optionName )
 function AC_SetBooleanOption( $postVar, $optionName )
 {
 	if ( isset( $_POST[$postVar] ) )
+	{
 		update_option( $optionName, '1' );
+		//AC_Log( "TURNING ON:  The POST variable is $postVar.  The optionName is $optionName" );
+	}
 	else
+	{
 		update_option( $optionName, '0' );
+		//AC_Log( "TURNING OFF:  The POST variable is $postVar.  The optionName is $optionName" );
+	}
 }
 
 //
-// Trimps the excerpt of a post.
+// Trimps the excerpt of a post.  This is a replacement of wp_trim_excerpt() 'cause
+// I'm not a fan of how it works sometimes, specifically when it strips out stuff.
 //
 function AC_TrimExcerpt( $text )
 {
@@ -335,8 +338,49 @@ function AC_TrimExcerpt( $text )
 	$text = apply_filters('the_content', $text);
 	$text = str_replace(']]>', ']]&gt;', $text);
 	$excerpt_length = apply_filters('excerpt_length', 55);
-	$excerpt_more = apply_filters('excerpt_more', ' ' . '[...]');
-	return wp_trim_words( $text, $excerpt_length, $excerpt_more );
+	$permalink = get_permalink( $postID );
+	$linkTo = "<p>Read the post <a href=\"$permalink\">here</a>.</p>";
+	$excerpt_more = apply_filters('excerpt_more', ' ' . $linkTo);
+	return AC_TrimWords( $text, $excerpt_length, $excerpt_more );
+}
+//
+// Trimps words up to a certain point.  This is a replacement of wp_trim_words() 'cause
+// I'm not a fan of how it works sometimes, specifically when it strips out stuff.
+//
+function AC_TrimWords( $text, $excerpt_length, $excerpt_more )
+{
+	if ( null === $more )
+		$more = __( '&hellip;' );
+	$original_text = $text;
+	//
+	// THE FALSE IN wp_strip_all_tags() IS THE ONLY DIFFERENCE!!!
+	//
+	$text = wp_strip_all_tags( $text, FALSE );
+	/* translators: If your word count is based on single characters (East Asian characters),
+	   enter 'characters'. Otherwise, enter 'words'. Do not translate into your own language. */
+	if ( 'characters' == _x( 'words', 'word count: words or characters?' ) && preg_match( '/^utf\-?8$/i', get_option( 'blog_charset' ) ) ) 
+	{
+		$text = trim( preg_replace( "/[\n\r\t ]+/", ' ', $text ), ' ' );
+		preg_match_all( '/./u', $text, $words_array );
+		$words_array = array_slice( $words_array[0], 0, $num_words + 1 );
+		$sep = '';
+	}
+	else
+	{
+        $words_array = preg_split( "/[\n\r\t ]+/", $text, $num_words + 1, PREG_SPLIT_NO_EMPTY );
+		$sep = ' ';
+	}
+	if ( count( $words_array ) > $num_words ) 
+	{
+        array_pop( $words_array );
+        $text = implode( $sep, $words_array );
+        $text = $text . $more;
+	}
+	else
+	{
+        $text = implode( $sep, $words_array );
+	}
+	return apply_filters( 'wp_trim_words', $text, $num_words, $more, $original_text );
 }
 
 //	(Note: AutoChimp 2.0 only supports the first level of interest groups.
@@ -370,9 +414,12 @@ function AC_AssembleGroupsArray( $mcGroupsArray )
 function AC_AssembleTermsArray( $terms )
 {
 	$formatted = array();
-	foreach( $terms as $term )
+	if ( $terms )
 	{
-		$formatted[$term->name] = $term->slug;
+		foreach( $terms as $term )
+		{
+			$formatted[$term->name] = $term->slug;
+		}
 	}
 	return $formatted;	
 }
@@ -391,11 +438,11 @@ function AC_Log( $message )
 	{
         if ( is_array( $message ) || is_object( $message ) )
         {
-            error_log( "AutoChimp: " . print_r( $message, true ) );
+            error_log( 'AutoChimp: ' . print_r( $message, true ) );
         }
         else
         {
-            error_log( "AutoChimp: $message" );
+            error_log( "AutoChimp:  $message" );
         }
     }
 }
@@ -427,7 +474,7 @@ function AC_UpdateCampaignCategoryMappings()
 		foreach ( $fields as $field )
 		{
 			$data = AC_DecodeUserOptionName( WP88_CATEGORY_LIST_MAPPING , $field->option_name );
-			$catInfo = split( '&', $data );
+			$catInfo = explode( '&', $data );
 
 			// Set a suffix.  Will be either "list", "group", or "template".  The
 			// original mapping didn't include "list".

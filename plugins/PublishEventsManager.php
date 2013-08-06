@@ -55,7 +55,7 @@ class PublishEventsManager extends ACPlugin
 	//	Function for displaying the UI for Events Manager integration.  Asks the user
 	//	what type of posts they'd like to create campaigns for.
 	//
-	public function ShowSettings()
+	public function ShowPluginSettings()
 	{
 		// Get settings
 		$publish = PublishEventsManager::GetUsePlugin();
@@ -88,10 +88,10 @@ class PublishEventsManager extends ACPlugin
 	}
 
 	//
-	//	This method saves the settings that are displayed in the ShowSettings method.
-	//	It relies on the _POST hash.
+	//	This method saves the settings that are displayed in the ShowPluginSettings
+	//	method. It relies on the _POST hash.
 	//
-	public function SaveSettings()
+	public function SavePluginSettings()
 	{
 		// Save the option to turn on the plugin
 		$publish = PublishEventsManager::GetPublishVarName();
@@ -137,7 +137,7 @@ class PublishEventsManager extends ACPlugin
 			foreach ( $fields as $field )
 			{
 				// Split the results into an array which contains info about this mapping
-				$info = split( '_', $field['option_name'] );
+				$info = explode( '_', $field['option_name'] );
 				
 				// Create a new array for each new index (at the 3rd element of the split
 				// string.  
@@ -151,7 +151,7 @@ class PublishEventsManager extends ACPlugin
 		
 		// Now loop through the constructed array and generate a new row for each
 		// mapping found.
-		$highestMapping = 0;
+		$highestMapping = -1;
 		foreach( $mappings as $index => $mapping )
 		{
 			// The category is contained in the 1st element of the returned array.
@@ -191,6 +191,7 @@ class PublishEventsManager extends ACPlugin
 	//
 	public function SaveMappings()
 	{
+		AC_Log( 'Attempting to save mappings for Events Manager campaigns...' );
 		AC_SaveCampaignCategoryMappings( EVENTS_MANAGER_MAPPING_PREFIX );
 	}
 	
@@ -200,7 +201,7 @@ class PublishEventsManager extends ACPlugin
 	//
 	public static function OnPublishEventsManagerPostType( $postID )
 	{
-		AC_Log( "An custom post type from Events Manager was published with ID $postID. Forwarding to AC_OnPublishPost()." );
+		AC_Log( "A custom post type from Events Manager was published with ID $postID. Forwarding to AC_OnPublishPost()." );
 		AC_OnPublishPost( $postID );
 	}
 	
@@ -208,7 +209,8 @@ class PublishEventsManager extends ACPlugin
 	//	Protected 
 	//
 
-	// Array of custom post types that Events Manager supports
+	// Array of custom post types that Events Manager supports.  These IDs come from
+	// the Event Manager plugin itself.
 	protected $m_PostTypes = array( EM_POST_TYPE_EVENT, EM_POST_TYPE_LOCATION, 'event-recurring' );
 }
 ?>

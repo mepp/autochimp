@@ -36,7 +36,7 @@ class SyncBuddyPress extends ACSyncPlugin
 	//	exists (because this file has been included), then it means that BuddyPress
 	//	is installed.  See "bp_init" action. 
 	//
-	public function ShowSettings()
+	public function ShowPluginSettings()
 	{
 		// Get settings
 		$sync = SyncBuddyPress::GetUsePlugin();
@@ -132,7 +132,7 @@ class SyncBuddyPress extends ACSyncPlugin
 		// values for those fields and stick them into an array.
 		foreach ( $fieldNames as $field )
 		{
-			$optionName = DecodeUserOptionName( WP88_BP_XPROFILE_FIELD_MAPPING, $field['option_name'] );
+			$optionName = AC_DecodeUserOptionName( WP88_BP_XPROFILE_FIELD_MAPPING, $field['option_name'] );
 	
 			// Big JOIN to get the user's value for the field in question
 			// Best to offload this on SQL than PHP.

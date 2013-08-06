@@ -32,7 +32,7 @@ class SyncWishlistMember extends ACSyncPlugin
 	//
 	//	Function for displaying the UI for WPMembers integration.  
 	//
-	public function ShowSettings()
+	public function ShowPluginSettings()
 	{
 		// Get settings
 		$sync = SyncWishlistMember::GetUsePlugin();

@@ -30,7 +30,7 @@ class SyncCimy extends ACSyncPlugin
 	}
 	
 	
-	public function ShowSettings()
+	public function ShowPluginSettings()
 	{
 		// Get settings
 		$syncCimy = SyncCimy::GetUsePlugin();
