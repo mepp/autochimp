@@ -411,11 +411,10 @@ class ACContentPlugins extends ACPlugins
 			if ( $plugin::GetInstalled() && $plugin::GetUsePlugin() )
 			{
 				$p = new $plugin;
-				$converted = $p->ConvertShortcode( $content );
-				// Now run the content through the_content engine.
-				$content = apply_filters( 'the_content', $converted );
+				$content = $p->ConvertShortcode( $content );
 			}
 		}
+		$content = apply_filters( 'the_content', $content );
 		return $content;				
 	}
 }

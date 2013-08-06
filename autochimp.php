@@ -919,7 +919,7 @@ function AC_OnPublishPost( $postID )
 		
 					// Do the work
 					$id = AC_CreateCampaignFromPost( $api, $postID, $categoryMailingList, $categoryGroupName, $categoryTemplateID );
-					AC_Log( "Created a campaign in category $categoryName." );
+					AC_Log( "Created a campaign with ID $id in category $categoryName." );
 		
 					// Does the user want to send the campaigns right away?
 					$sendNow = get_option( WP88_MC_SEND_NOW );
@@ -1235,7 +1235,7 @@ function AC_OnAdminNotice()
 				$apiSetMessage = '<p>The first thing to do is set your MailChimp API key.  You can find your key on the MailChimp website under <em>Account</em> - <em>API Keys & Authorized Apps</em>.  Click <a target="_blank" href="options-general.php?page=autochimp.php">here</a> to set your API key now. | <a href="' . $currentPage . '">Dismiss</a></p>';
 			}
 			echo '<div class="updated"><p>';
-			printf(__('Welcome to AutoChimp 2.11.  If you are upgrading, be sure to review your <a target="_blank" href="options-general.php?page=autochimp.php&tab=campaigns">campaign settings</a> which AutoChimp has just migrated.  To learn more about AutoChimp, please visit the <a href="http://www.wandererllc.com/company/plugins/autochimp/"">AutoChimp homepage</a>. | <a href="%1$s">Dismiss</a>'), $currentPage );
+			printf(__('Welcome to AutoChimp 2.14.  If you are upgrading, be sure to review your <a target="_blank" href="options-general.php?page=autochimp.php&tab=campaigns">campaign settings</a> which AutoChimp has just migrated.  To learn more about AutoChimp, please visit the <a href="http://www.wandererllc.com/company/plugins/autochimp/"">AutoChimp homepage</a>. | <a href="%1$s">Dismiss</a>'), $currentPage );
 			print( $apiSetMessage );
 			echo "</p></div>";
 		}
