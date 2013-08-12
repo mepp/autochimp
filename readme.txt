@@ -6,7 +6,7 @@ Donate link: https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_i
 Tags: AutoChimp, MailChimp, Mail, Chimp, email, campaign, mailing list, interest, group, template, BuddyPress, Register, Plus, Redux, Profile Fields, XProfile, Cimy, Wishlist Member, WP-Member, Events Manager, merge, admin, create, automatically, subscribe, unsubscribe, sync, synchronize
 Requires at least: 2.8
 Tested up to: 3.6
-Stable tag: 2.14
+Stable tag: 2.15
 
 Keep website users and MailChimp mailing lists in sync and create campaigns from posts.
 
@@ -45,6 +45,10 @@ You can find the complete FAQ [here](http://www.wandererllc.com/company/plugins/
 Just go to <http://www.wandererllc.com/company/plugins/autochimp/> and follow the instructions.
 
 == Changelog ==
+
+= 2.15 =
+
+* BuddyPress update/sync problem fixed.
 
 = 2.14 =
 
@@ -173,6 +177,10 @@ Just go to <http://www.wandererllc.com/company/plugins/autochimp/> and follow th
 * Basic UI for keeping a mailing list in sync with your site's users.
 
 == Upgrade Notice ==
+
+= 2.15 =
+
+All users of BuddyPress should update.
 
 = 2.14 =
 

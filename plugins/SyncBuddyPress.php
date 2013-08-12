@@ -165,7 +165,7 @@ class SyncBuddyPress extends ACSyncPlugin
 		return $dataArray;
 	}
 
-	protected function OnBuddyPressUserUpdate( $user_id = 0 )
+	public function OnBuddyPressUserUpdate( $user_id = 0 )
 	{
 		if ( 0 == $user_id )
 		{
