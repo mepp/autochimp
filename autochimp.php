@@ -4,7 +4,7 @@ Plugin Name: AutoChimp
 Plugin URI: http://www.wandererllc.com/company/plugins/autochimp/
 Description: Keep MailChimp mailing lists in sync with your WordPress site.  AutoChimp supports many WordPress plugin profile extenders like WP-Members, Wishlist, BuddyPress, and Cimy User Extra fields. MailChimp also gives users the ability to create MailChimp mail campaigns from blog posts with the flexibility of sending different categories to different lists and interest groups.  You can use your user-defined templates as well.  NOTE:  <a href="http://www.wandererllc.com/company/2013/07/problems-with-autochimp-2-10/" target="_blank">AutoChimp 2.10 and up requires PHP 5.3.x or higher</a>. Please update (here is <a href="http://support.hostgator.com/articles/hosting-guide/hardware-software/php-5-3">an example</a> for HostGator users) if you are unable to activate the plugin.
 Author: Wanderer LLC Dev Team
-Version: 2.12
+Version: 2.15
 */
 
 //
@@ -18,6 +18,9 @@ if ( !class_exists( 'MCAPI_13' ) )
 }
 require_once 'autochimp-helpers.php';	// General helper functions
 require_once 'autochimp-plugins.php';	// Plugin class framework
+
+// Set the time zone to UTC
+date_default_timezone_set('UTC');
 
 define( "WP88_MC_APIKEY", "wp88_mc_apikey" );
 
@@ -518,13 +521,13 @@ function AC_AutoChimpOptions()
 		
 		// Plugins for AutoChimp are handled here.
 		$plugins = new ACSyncPlugins;
-		$plugins->SaveSettings();
+		$plugins->SavePluginSettings();
 		
 		$plugins = new ACContentPlugins;
-		$plugins->SaveSettings();
+		$plugins->SavePluginSettings();
 		
 		$plugins = new ACPublishPlugins;
-		$plugins->SaveSettings();
+		$plugins->SavePluginSettings();
 
 		// Tell the user
 		print '<div id="message" class="updated fade"><p>Successfully saved your AutoChimp plugin options.</p></div>';
@@ -604,7 +607,8 @@ function AC_ManageMailUser( $mode, $user_info, $old_user_data, $writeDBMessages 
 							// Check to see if the site wishes to bypass the double opt-in feature
 							$doubleOptIn = ( 0 === strcmp( '1', get_option( WP88_MC_BYPASS_OPT_IN ) ) ) ? false : true;
 							$retval = $api->listSubscribe( $list_id, $user_info->user_email, $merge_vars, 'html', $doubleOptIn );
-							$errorString = '';
+							// Start all error notifications with a date.
+							$errorString = date("(Y-m-d H:i:s) ");
 							if ( $api->errorCode )
 							{
 								$errorCode = $api->errorCode;
@@ -628,6 +632,7 @@ function AC_ManageMailUser( $mode, $user_info, $old_user_data, $writeDBMessages 
 							$sendNotify = ( '1' === get_option( WP88_MC_SEND_ADMIN_NOTIFICATION ) );
 							update_option( WP88_MC_LAST_MAIL_LIST_ERROR, $lastMessage );
 							$retval = $api->listUnsubscribe( $list_id, $user_info->user_email, $deleteMember, $sendGoodbye, $sendNotify );
+							$rightNow = date("(Y-m-d H:i:s) ");
 							if ( $api->errorCode )
 							{
 								$errorCode = $api->errorCode;
@@ -635,19 +640,20 @@ function AC_ManageMailUser( $mode, $user_info, $old_user_data, $writeDBMessages 
 								if ( FALSE != $writeDBMessages )
 								{
 									// Set latest activity - displayed in the admin panel
-									update_option( WP88_MC_LAST_MAIL_LIST_ERROR, "Problem removing $user_info->first_name $user_info->last_name ('$user_info->user_email') from list $list_id.  Error Code: $errorCode, Message: $api->errorMessage" );
+									update_option( WP88_MC_LAST_MAIL_LIST_ERROR, "$rightNow Problem removing $user_info->first_name $user_info->last_name ('$user_info->user_email') from list $list_id.  Error Code: $errorCode, Message: $api->errorMessage" );
 								}
 							}
 							else
 							{
 								if ( FALSE != $writeDBMessages )
-									update_option( WP88_MC_LAST_MAIL_LIST_ERROR, "Removed $user_info->first_name $user_info->last_name ('$user_info->user_email') from list $list_id." );
+									update_option( WP88_MC_LAST_MAIL_LIST_ERROR, "$rightNow Removed $user_info->first_name $user_info->last_name ('$user_info->user_email') from list $list_id." );
 							}
 							break;
 						}
 						case MMU_UPDATE:
 						{
 							$updateEmail = $old_user_data->user_email;
+							$rightNow = date("(Y-m-d H:i:s) ");
 
 							// Potential update to the email address (more likely than name!)
 							$merge_vars['EMAIL'] = $user_info->user_email;
@@ -660,7 +666,7 @@ function AC_ManageMailUser( $mode, $user_info, $old_user_data, $writeDBMessages 
 								if ( FALSE != $writeDBMessages )
 								{
 									// Set latest activity - displayed in the admin panel
-									$errorString = "Problem updating $user_info->first_name $user_info->last_name ('$user_info->user_email') from list $list_id.  Error Code: $errorCode, Message: $api->errorMessage, Data: ";
+									$errorString = "$rightNow Problem updating $user_info->first_name $user_info->last_name ('$user_info->user_email') from list $list_id.  Error Code: $errorCode, Message: $api->errorMessage, Data: ";
 									$errorString .= print_r( $merge_vars, TRUE );
 									update_option( WP88_MC_LAST_MAIL_LIST_ERROR, $errorString );
 								}
@@ -669,7 +675,7 @@ function AC_ManageMailUser( $mode, $user_info, $old_user_data, $writeDBMessages 
 							{
 								if ( FALSE != $writeDBMessages )
 								{
-									$errorString = "Updated $user_info->first_name $user_info->last_name ('$user_info->user_email') from list $list_id.";
+									$errorString = "$rightNow Updated $user_info->first_name $user_info->last_name ('$user_info->user_email') from list $list_id.";
 									// Uncomment this to see debug info on success
 									//$errorString .= ' Data: ';
 									//$errorString .= print_r( $merge_vars, TRUE );
@@ -829,39 +835,50 @@ function AC_OnPublishPost( $postID )
 {
 	// Get the info on this post
 	$post = get_post( $postID );
-	$categories = get_the_category( $postID );	// Potentially several categories
+	$categories = AC_AssembleTermsArray( get_the_category( $postID ) );	// Potentially several categories
+	// Need to have the "Any" category for the big foreach below to work.  Add it
+	// here.
+	$categories['Any'] = 'any';
 	
 	if ( empty( $categories ) )
 	{
-		// Now, search for custom categories (actually taxonomy terms) in the various
-		// Publish plugins.
+		AC_Log( "There is no standard category for post $postID.  Searching for a third-party plugin category." );
+		// Now, search for custom categories (actually taxonomy terms) in the
+		// various Publish plugins.
 		$publishPlugins = new ACPublishPlugins;
 		$pluginCollection = $publishPlugins->GetPluginClasses( $publishPlugins->GetType() );
 		foreach ( $pluginCollection as $plugin )
 		{
 			if ( $plugin::GetInstalled() && $plugin::GetUsePlugin() )
 			{
-				$categories = $plugin::GetTerms( $postID );
+				$newTerms = AC_AssembleTermsArray( $plugin::GetTerms( $postID ) );
+				foreach ($newTerms as $name => $slum) 
+				{
+					$categories[$name] = $slum;
+				}
 			}
 			// If a category was found, break out.
 			if ( !empty( $categories ) )
-				break;
+			{
+				AC_Log( "Found additional categories through the plugin $plugin." );
+			}
 		}
 	}
 
-	AC_Log( "Attempting to a campaign for post ID $postID." );
-	AC_Log( $categories );
+	AC_Log( "Attempting to create a campaign for post ID $postID." );
+	if ( !empty( $categories ) )
+		AC_Log( $categories );
 	
 	// If it matches the user's category choice or is "Any" category, then
 	// do the work.  This needs to be a loop because a post can belong to
 	// multiple categories.
 	global $wpdb;
-	foreach( $categories as $category )
+	foreach( $categories as $categoryName => $categorySlug )
 	{
 		// Do a SQL lookup of all category rows that match this category slug.  NOTE that
 		// the option for the "Any" category is in this SQL string.
 		$options_table_name = $wpdb->prefix . 'options';
-		$sql = "SELECT option_name,option_value FROM $options_table_name WHERE option_name LIKE 'wp88_mc_%' AND (option_value = '$category->slug' OR option_value = '" . WP88_ANY . "')";
+		$sql = "SELECT option_name,option_value FROM $options_table_name WHERE option_name LIKE 'wp88_mc_%' AND (option_value = '$categorySlug' OR option_value = '" . WP88_ANY . "')";
 		$fields = $wpdb->get_results( $sql );
 		if ( $fields )
 		{
@@ -877,7 +894,7 @@ function AC_OnPublishPost( $postID )
 				// can easily differ while the category slug is the same.
 				
 				// Split the results into an array which contains info about this mapping
-				$info = split( '_', $field->option_name );
+				$info = explode( '_', $field->option_name );
 				
 				// The last part of $info should contain the word "category".  It's possible
 				// that other rows will be picked up (like when the option value is "Any", 
@@ -891,7 +908,7 @@ function AC_OnPublishPost( $postID )
 				$categoryMailingList = get_option( str_replace( WP88_CATEGORY_SUFFIX, WP88_LIST_SUFFIX, $field->option_name ) );
 				$categoryGroupName = get_option( str_replace( WP88_CATEGORY_SUFFIX, WP88_GROUP_SUFFIX, $field->option_name ) );
 				$categoryTemplateID = get_option( str_replace( WP88_CATEGORY_SUFFIX, WP88_TEMPLATE_SUFFIX, $field->option_name ) );
-				AC_Log( "For the $category->slug category:  The mailing list is:  $categoryMailingList.  The group is:  $categoryGroupName.  The template ID is:  $categoryTemplateID." );
+				AC_Log( "For the $categorySlug category:  The mailing list is:  $categoryMailingList.  The group is:  $categoryGroupName.  The template ID is:  $categoryTemplateID." );
 		
 				// If the mailing list is NOT "None" then create a campaign.		
 				if ( 0 != strcmp( $categoryMailingList, WP88_NONE ) )
@@ -902,8 +919,7 @@ function AC_OnPublishPost( $postID )
 		
 					// Do the work
 					$id = AC_CreateCampaignFromPost( $api, $postID, $categoryMailingList, $categoryGroupName, $categoryTemplateID );
-					$categoryName = $category->name;
-					AC_Log( "Created a campaign in category $categoryName." );
+					AC_Log( "Created a campaign with ID $id in category $categoryName." );
 		
 					// Does the user want to send the campaigns right away?
 					$sendNow = get_option( WP88_MC_SEND_NOW );
@@ -1219,7 +1235,7 @@ function AC_OnAdminNotice()
 				$apiSetMessage = '<p>The first thing to do is set your MailChimp API key.  You can find your key on the MailChimp website under <em>Account</em> - <em>API Keys & Authorized Apps</em>.  Click <a target="_blank" href="options-general.php?page=autochimp.php">here</a> to set your API key now. | <a href="' . $currentPage . '">Dismiss</a></p>';
 			}
 			echo '<div class="updated"><p>';
-			printf(__('Welcome to AutoChimp 2.11.  If you are upgrading, be sure to review your <a target="_blank" href="options-general.php?page=autochimp.php&tab=campaigns">campaign settings</a> which AutoChimp has just migrated.  To learn more about AutoChimp, please visit the <a href="http://www.wandererllc.com/company/plugins/autochimp/"">AutoChimp homepage</a>. | <a href="%1$s">Dismiss</a>'), $currentPage );
+			printf(__('Welcome to AutoChimp 2.14.  If you are upgrading, be sure to review your <a target="_blank" href="options-general.php?page=autochimp.php&tab=campaigns">campaign settings</a> which AutoChimp has just migrated.  To learn more about AutoChimp, please visit the <a href="http://www.wandererllc.com/company/plugins/autochimp/"">AutoChimp homepage</a>. | <a href="%1$s">Dismiss</a>'), $currentPage );
 			print( $apiSetMessage );
 			echo "</p></div>";
 		}

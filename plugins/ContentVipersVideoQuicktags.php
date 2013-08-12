@@ -29,7 +29,7 @@ class ContentVipersVideoQuicktags extends ACPlugin
 	//
 	//	This function shows the Viper Video Quick Tags UI for AutoChimp.  Prints HTML.
 	//
-	public function ShowSettings()
+	public function ShowPluginSettings()
 	{
 		// Get settings
 		$integrateViper = ContentVipersVideoQuicktags::GetUsePlugin();
@@ -78,7 +78,7 @@ class ContentVipersVideoQuicktags extends ACPlugin
 		print '</fieldset></fieldset>' . PHP_EOL;
 	}
 	
-	public function SaveSettings()
+	public function SavePluginSettings()
 	{
 		AC_SetBooleanOption( 'on_integrate_viper', WP88_MC_INTEGRATE_VIPER );
 		AC_SetBooleanOption( 'on_show_title', WP88_MC_VIDEO_SHOW_TITLE );
