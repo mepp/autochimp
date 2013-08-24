@@ -1,6 +1,6 @@
 <div class="wrap" style="max-width:950px !important;">
 <div id="poststuff" style="margin-top:10px;">
-<div id="mainblock" style="width:710px">
+<div id="mainblock" style="width:740px">
 <div class="dbx-content">
 
 <form enctype="multipart/form-data" action="<?php echo $action_url ?>" method="POST">
@@ -10,7 +10,7 @@ require_once 'inc/MCAPI.class.php';
 wp_nonce_field('mailchimpz-nonce');
 
 // Set the master UI width here
-$uiWidth = '708';
+$uiWidth = '738';
 $tableWidth = '675';
 
 $pluginFolder = get_bloginfo('wpurl') . '/wp-content/plugins/autochimp/';
@@ -36,6 +36,7 @@ if( isset( $_GET[ 'tab' ] ) )
 	<a href="?page=autochimp.php&tab=campaigns" class="nav-tab<?php echo $active_tab == 'campaigns' ? ' nav-tab-active' : ''; ?>">Campaigns</a>
 	<a href="?page=autochimp.php&tab=plugins" class="nav-tab<?php echo $active_tab == 'plugins' ? ' nav-tab-active' : ''; ?>">Plugins</a>
 	<a href="?page=autochimp.php&tab=api_key" class="nav-tab<?php echo $active_tab == 'api_key' ? ' nav-tab-active' : ''; ?>">API Key</a>
+	<a href="?page=autochimp.php&tab=customization" class="nav-tab <?php echo $active_tab == 'customization' ? 'nav-tab-active': ''; ?>">Customization</a>
 </h2>
 
 <?php
@@ -514,7 +515,66 @@ if ( $active_tab == 'plugins' )
 	<div class="clear"></div>
 	</div>
 	</div>
+<?php
+}
+?>
 
+<?php 
+      //
+      // Customization
+      //
+      if( $active_tab == 'customization' ){
+?>            
+
+<div id="customization" class="postbox" style="width:<?php echo $uiWidth; ?>">
+  <h3 class="hndle">Customization</h3>
+  <div class="inside">
+    <p><?php 
+      $showPrefix = get_option( "autochimp_show_prefix" );
+      if( $showPrefix == '1'){
+        $showPrefixChecked = true;
+      }
+      else {
+        $showPrefixChecked = false;
+      }
+    ?>
+    <input type="checkbox" name="showPrefix" <?php if ( $showPrefixChecked ){ echo "checked=\"checked\""; } ?>> Add prefix to subject</p>
+ 
+    <p><?php 
+      $prefix = get_option( "autochimp_prefix" );
+    ?>
+     &nbsp;&nbsp;Prefix: <input type="text" name="prefix" value="<?php echo $prefix; ?>" size="55" /><br>
+     &nbsp;&nbsp;<em>This will allow your users to easily identify mail from your blog.  
+     <br>&nbsp;&nbsp;You can use the variables {site_title} and {poster}.</em>
+   </p>
+
+   <p><?php
+	$showBlurb = get_option( "autochimp_show_blurb" );
+	if( $showBlurb == '1'){
+	  $showBlurbChecked = true;
+	}
+	else {
+	  $showBlurbChecked = false;
+	}
+       ?>
+       <input type="checkbox" name="showBlurb" <?php if ( $showBlurbChecked ){ echo "checked=\"checked\""; } ?>> Add blurb to body
+     </p>
+
+     <p><?php	
+          $blurb = get_option( "autochimp_blurb" ); 
+     	 ?>
+	 &nbsp;&nbsp;Content:<br>
+	 &nbsp;&nbsp;<textarea rows="2" cols="50" name="blurb"><?php echo $blurb; ?></textarea><br>
+	 &nbsp;&nbsp;<em>This will add a small snippet of text before the main body of your post.<br>
+	 &nbsp;&nbsp;You can use the variables {site_title}, {site_url}, {title}, {permalink}, and {poster}.</em>
+     </p>
+
+    <div class="submit">
+      <input type="submit" name="save_customization_options" class="button-primary" value="Save Options">
+    </div>
+    <div class="clear"></div>
+  </div>
+</div>        
 <?php
 }
 // End of all tab-specific code

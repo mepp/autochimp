@@ -79,13 +79,17 @@ define( 'WP88_CATEGORY_CONTROL_PREFIX', 'wp88_categories_select_' );
 define( 'WP88_LIST_CONTROL_PREFIX', 'wp88_lists_select_' );
 define( 'WP88_GROUP_CONTROL_PREFIX', 'wp88_groups_select_' );
 define( 'WP88_TEMPLATE_CONTROL_PREFIX', 'wp88_templates_select_' );
-
 define( 'WP88_IGNORE_FIELD_TEXT', 'Ignore this field' );
 define( 'WP88_NONE', 'None' );
 define( 'WP88_ANY', 'Any' );
 define( 'WP88_GROUPINGS_TEXT', 'GROUPINGS' ); // This value is required by MailChimp
 define( 'WP88_FIELD_DELIMITER', '+++' );
 
+// Customization
+define( 'WP88_CUSTOMIZATION_SHOW_PREFIX', 0 );
+define( 'WP88_CUSTOMIZATION_PREFIX', '' );
+define( 'WP88_CUSTOMIZATION_SHOW_BLURB', 0 );
+define( 'WP88_CUSTOMIZATION_BLURB', '' );
 //
 // Autoload for plugin scripts.  This function is part of the simple platform that
 // allows third party developers to add support for other plugins without having to
@@ -533,6 +537,30 @@ function AC_AutoChimpOptions()
 		print '<div id="message" class="updated fade"><p>Successfully saved your AutoChimp plugin options.</p></div>';
 	}
 
+	if ( isset( $_POST['save_customization_options'] ) ){
+	   // Show prefix checkbox
+	   if ( isset( $_POST['showPrefix'] ) ){
+	       update_option( 'autochimp_show_prefix', '1' );
+	   } 
+	   else {
+	       update_option( 'autochimp_show_prefix', '0') ;
+	   }
+	   
+	   // Prefix text
+	   update_option( 'autochimp_prefix', $_POST['prefix'] );
+	   
+	   // Show blurb checkbox
+	   if ( isset( $_POST['showBlurb'] ) ){
+	        update_option( 'autochimp_show_blurb', '1' );
+	   }
+	   else {
+	   	update_option( 'autochimp_show_blurb', '0' );
+	  }
+
+	  // Blurb text
+	  update_option( 'autochimp_blurb', $_POST['blurb'] );
+	}
+
 	// The file that will handle uploads is this one (see the "if" above)
 	$action_url = $_SERVER['REQUEST_URI'];
 	require_once 'autochimp-settings.php';
@@ -737,6 +765,10 @@ function AC_CreateCampaignFromPost( $api, $postID, $listID, $interestGroupName, 
 	$options = array();
 	$options['list_id']	= $listID;
 	$options['subject']	= $post->post_title;
+	if( get_option( 'autochimp_show_prefix' ) == '1' ){
+	  $prefix = get_option( 'autochimp_prefix' );
+	  $options['subject'] = $prefix . $options['subject'];
+	}
 	$options['from_email'] = $list['default_from_email'];
 	$options['from_name'] = $list['default_from_name'];
 	$options['to_email'] = '*|FNAME|*';
